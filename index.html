@@ -795,6 +795,10 @@
         <button class="btn btn-ghost py-2 px-3 text-sm" onclick="openQuizEditModal(_qeCurrentQuiz)" data-i18n="qe_edit_quiz" id="qe-edit-quiz-btn">✏️ Éditer ce quiz</button>
         <button class="btn btn-ghost py-2 px-3 text-sm" onclick="askDeleteQuiz()" style="color:#dc2626;border-color:#fecaca;" data-i18n="qe_del_quiz" id="qe-del-quiz-btn">🗑️ Supprimer ce quiz</button>
         <button class="btn btn-ghost py-2 px-3 text-sm" onclick="askResetLesson()" style="color:#92400e;border-color:#fcd34d;" data-i18n="qe_reset_btn">🔄 Réinitialiser</button>
+        <span style="border-left: 1px solid #e5e7eb; height: 24px;"></span>
+        <button class="btn btn-ghost py-2 px-3 text-sm" onclick="downloadImportTemplate()" style="color:#7c3aed;border-color:#ddd6fe;" data-i18n="qe_template">📋 Template Excel</button>
+        <button class="btn btn-ghost py-2 px-3 text-sm" onclick="$('qe-import-file').click()" style="color:#16a34a;border-color:#bbf7d0;" data-i18n="qe_import">📥 Importer Excel</button>
+        <input type="file" id="qe-import-file" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleExcelImport(event)">
       </div>
     </div>
 
@@ -806,6 +810,26 @@
     </div>
   </div>
 </section>
+
+<!-- IMPORT EXCEL — APERÇU MODAL -->
+<div id="import-preview-modal" class="session-detail-modal hidden" onclick="if(event.target===this)closeImportModal()">
+  <div class="session-detail-content" style="max-width: 900px; max-height: 90vh;">
+    <div class="detail-header">
+      <h3 class="display-fr text-2xl">📥 Aperçu de l'import</h3>
+      <button class="detail-close" onclick="closeImportModal()">✕</button>
+    </div>
+    <div style="padding: 0 4px;">
+      <div id="import-summary" class="card p-4 mb-4" style="background: linear-gradient(135deg, #f0fdf4, white); border-left: 4px solid #16a34a;"></div>
+      <div id="import-errors" class="hidden card p-4 mb-4" style="background: #fef2f2; border-left: 4px solid #dc2626;"></div>
+      <div id="import-preview-list" style="max-height: 400px; overflow-y: auto;"></div>
+      <div class="flex gap-3 mt-5 justify-end">
+        <button class="btn btn-ghost" onclick="closeImportModal()" data-i18n="cancel">Annuler</button>
+        <button class="btn btn-primary" id="import-confirm-btn" onclick="confirmImport()" data-i18n="qe_import_confirm">✅ Importer maintenant</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <!-- THEME EDIT MODAL -->
 <div id="theme-edit-modal" class="session-detail-modal hidden" onclick="if(event.target===this)closeThemeEditModal()">
@@ -1868,6 +1892,9 @@ const I18N = {
     quiz_time: "⏱️ Temps par question (secondes)",
     quiz_del_title: "Supprimer ce quiz ?",
     quiz_del_sub: "Toutes les questions de ce quiz seront supprimées.",
+    qe_template: "📋 Template Excel",
+    qe_import: "📥 Importer Excel",
+    qe_import_confirm: "✅ Importer maintenant",
     an_title: "📊 Évaluation des acquis",
     an_sub: "Analyse complète par apprenant, par session et par question",
     an_lesson: "📚 Thème (leçon)",
@@ -2195,6 +2222,9 @@ const I18N = {
     quiz_time: "⏱️ الوقت لكل سؤال (ثواني)",
     quiz_del_title: "حذف هذا الاختبار ؟",
     quiz_del_sub: "سيتم حذف جميع أسئلة هذا الاختبار.",
+    qe_template: "📋 قالب Excel",
+    qe_import: "📥 استيراد من Excel",
+    qe_import_confirm: "✅ استيراد الآن",
     an_title: "📊 تقييم المكتسبات",
     an_sub: "تحليل شامل حسب المتدرب، الجلسة والسؤال",
     an_lesson: "📚 الموضوع",
@@ -3116,8 +3146,8 @@ function startTeacherTimer(startTs, total) {
     
     if (left <= 0) {
       clearInterval(timerInterval);
-      // 🆕 Son final "BIP" plus grave pour signaler la fin
-      playTickSound(400, 200);
+      // 🆕 Son final "BIP" plus grave + plus long pour signaler la fin
+      playTickSound(400, 400);
       // Retirer les animations
       if (timerCircleEl) timerCircleEl.classList.remove('panic');
       if (timerNumEl) timerNumEl.classList.remove('panic');
@@ -3147,9 +3177,10 @@ function playTickSound(frequency, duration) {
     osc.type = 'square';  // Son sec, percussif (TIC)
     osc.frequency.value = frequency;
     // Enveloppe : attaque rapide, descente rapide
+    // Volume max augmenté à 0.5 (3x plus fort qu'avant)
     const now = _audioCtx.currentTime;
     gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.15, now + 0.005);  // attaque 5ms
+    gain.gain.linearRampToValueAtTime(0.5, now + 0.005);  // attaque 5ms, volume max
     gain.gain.exponentialRampToValueAtTime(0.001, now + duration / 1000);
     osc.connect(gain);
     gain.connect(_audioCtx.destination);
@@ -6502,6 +6533,383 @@ window.saveQuiz = saveQuiz;
 window.askDeleteQuiz = askDeleteQuiz;
 window.closeQuizDeleteModal = closeQuizDeleteModal;
 window.confirmDeleteQuiz = confirmDeleteQuiz;
+
+// =====================================
+// IMPORT / EXPORT EXCEL QUESTIONS
+// =====================================
+// Données prêtes à être importées (peuplées par handleExcelImport, puis utilisées par confirmImport)
+let _importData = null;
+
+// Télécharge un template Excel vide pour aider le formateur à remplir ses questions
+function downloadImportTemplate() {
+  const headers = [
+    'Theme_FR', 'Theme_AR', 'Theme_Icon',
+    'Quiz_Name', 'Quiz_Time',
+    'Question_FR', 'A_FR', 'B_FR', 'C_FR', 'D_FR',
+    'Question_AR', 'A_AR', 'B_AR', 'C_AR', 'D_AR',
+    'Correct'
+  ];
+  const example = [
+    'Pasteurisation', 'البسترة', '🧪',
+    'Quiz 1 - Bases', '30',
+    'Quelle est la température HTST ?', '50°C', '65°C', '72°C', '95°C',
+    'ما هي درجة حرارة البسترة HTST ؟', '50°C', '65°C', '72°C', '95°C',
+    'C'
+  ];
+  const note = [
+    '⚠️ INSTRUCTIONS', '', '', '', '',
+    'Une ligne par question. Correct = A, B, C ou D.', '', '', '', '',
+    'Si pas de version arabe, laisse les colonnes _AR vides.', '', '', '', '',
+    'Quiz_Time en secondes (15-120). Theme_Icon = emoji.'
+  ];
+  
+  const data = [headers, note, example];
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  
+  // Largeurs colonnes
+  ws['!cols'] = headers.map((h, i) => ({ wch: i < 5 ? 18 : 35 }));
+  
+  // Style header (ligne 0)
+  for (let c = 0; c < headers.length; c++) {
+    const addr = XLSX.utils.encode_cell({ r: 0, c });
+    if (ws[addr]) {
+      ws[addr].s = {
+        font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 11 },
+        fill: { fgColor: { rgb: '1E2A78' }, patternType: 'solid' },
+        alignment: { horizontal: 'center', vertical: 'center' }
+      };
+    }
+  }
+  // Style ligne note (ligne 1)
+  for (let c = 0; c < headers.length; c++) {
+    const addr = XLSX.utils.encode_cell({ r: 1, c });
+    if (ws[addr]) {
+      ws[addr].s = {
+        font: { italic: true, color: { rgb: '92400E' }, sz: 10 },
+        fill: { fgColor: { rgb: 'FEF3C7' }, patternType: 'solid' }
+      };
+    }
+  }
+  
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Questions');
+  XLSX.writeFile(wb, 'COPAG_Academy_Template_Import.xlsx');
+  toast('📋 Template téléchargé !');
+}
+
+// Quand l'utilisateur sélectionne un fichier Excel
+async function handleExcelImport(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  try {
+    const buf = await file.arrayBuffer();
+    const wb = XLSX.read(buf, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    if (!ws) {
+      toast('❌ Fichier vide ou format invalide');
+      return;
+    }
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+    
+    // Parser les lignes
+    if (rows.length < 2) {
+      toast('❌ Fichier vide ou pas de données');
+      return;
+    }
+    
+    // Détecter la ligne d'en-tête (peut être 0 ou 1 selon présence note)
+    let headerRowIdx = 0;
+    for (let i = 0; i < Math.min(rows.length, 3); i++) {
+      const row = rows[i].map(c => String(c).toLowerCase().trim());
+      if (row.includes('theme_fr') || row.includes('question_fr')) {
+        headerRowIdx = i;
+        break;
+      }
+    }
+    
+    const headers = rows[headerRowIdx].map(c => String(c).trim());
+    const dataRows = rows.slice(headerRowIdx + 1).filter(r => {
+      // Garder uniquement les lignes qui ont au moins un Question_FR
+      const qIdx = headers.findIndex(h => h.toLowerCase() === 'question_fr');
+      return qIdx >= 0 && String(r[qIdx] || '').trim().length > 0;
+    });
+    
+    // Helper : index de colonne
+    const col = (name) => headers.findIndex(h => h.toLowerCase() === name.toLowerCase());
+    
+    const themeFrCol = col('Theme_FR');
+    const themeArCol = col('Theme_AR');
+    const themeIconCol = col('Theme_Icon');
+    const quizNameCol = col('Quiz_Name');
+    const quizTimeCol = col('Quiz_Time');
+    const qFrCol = col('Question_FR');
+    const aFrCol = col('A_FR');
+    const bFrCol = col('B_FR');
+    const cFrCol = col('C_FR');
+    const dFrCol = col('D_FR');
+    const qArCol = col('Question_AR');
+    const aArCol = col('A_AR');
+    const bArCol = col('B_AR');
+    const cArCol = col('C_AR');
+    const dArCol = col('D_AR');
+    const correctCol = col('Correct');
+    
+    if (themeFrCol < 0 || qFrCol < 0 || correctCol < 0) {
+      toast('❌ Colonnes manquantes (Theme_FR, Question_FR ou Correct)');
+      return;
+    }
+    
+    // Organiser : Map<theme_id, { themeData, quizzes: Map<quiz_name, [questions]> }>
+    const themesMap = new Map();
+    const errors = [];
+    
+    dataRows.forEach((row, rowIdx) => {
+      const themeFr = String(row[themeFrCol] || '').trim();
+      const themeAr = String(row[themeArCol] || '').trim() || themeFr;
+      const themeIcon = String(row[themeIconCol] || '').trim() || '🎓';
+      const quizName = String(row[quizNameCol] || '').trim() || 'Quiz 1';
+      const quizTime = parseInt(row[quizTimeCol]) || 30;
+      const qFr = String(row[qFrCol] || '').trim();
+      const aFr = String(row[aFrCol] || '').trim();
+      const bFr = String(row[bFrCol] || '').trim();
+      const cFr = String(row[cFrCol] || '').trim();
+      const dFr = String(row[dFrCol] || '').trim();
+      const qAr = String(row[qArCol] || '').trim();
+      const aAr = String(row[aArCol] || '').trim();
+      const bAr = String(row[bArCol] || '').trim();
+      const cAr = String(row[cArCol] || '').trim();
+      const dAr = String(row[dArCol] || '').trim();
+      const correct = String(row[correctCol] || '').trim().toUpperCase();
+      
+      // Validation
+      if (!themeFr) { errors.push(`Ligne ${rowIdx + headerRowIdx + 2} : Theme_FR vide`); return; }
+      if (!qFr) { errors.push(`Ligne ${rowIdx + headerRowIdx + 2} : Question_FR vide`); return; }
+      if (!aFr || !bFr || !cFr || !dFr) { errors.push(`Ligne ${rowIdx + headerRowIdx + 2} : Une ou plusieurs options FR sont vides`); return; }
+      if (!['A', 'B', 'C', 'D'].includes(correct)) {
+        errors.push(`Ligne ${rowIdx + headerRowIdx + 2} : Correct doit être A, B, C ou D (reçu: "${correct}")`);
+        return;
+      }
+      
+      const correctIdx = correct.charCodeAt(0) - 65;  // A=0, B=1, C=2, D=3
+      
+      // Identifier le thème
+      const themeId = slugify(themeFr);
+      if (!themesMap.has(themeId)) {
+        themesMap.set(themeId, {
+          themeId,
+          name: themeFr,
+          nameAr: themeAr,
+          icon: themeIcon,
+          descFr: '',
+          descAr: '',
+          quizzes: new Map()
+        });
+      }
+      const theme = themesMap.get(themeId);
+      
+      // Identifier le quiz
+      const quizId = slugify(quizName);
+      if (!theme.quizzes.has(quizId)) {
+        theme.quizzes.set(quizId, {
+          quizId,
+          name: quizName,
+          timePerQuestion: quizTime,
+          questions: []
+        });
+      }
+      const quiz = theme.quizzes.get(quizId);
+      
+      // Ajouter la question
+      quiz.questions.push({
+        qFr,
+        qAr: qAr || qFr,
+        optionsFr: [aFr, bFr, cFr, dFr],
+        optionsAr: [aAr || aFr, bAr || bFr, cAr || cFr, dAr || dFr],
+        correctIdx
+      });
+    });
+    
+    // Compter
+    let totalThemes = themesMap.size;
+    let totalQuizzes = 0;
+    let totalQuestions = 0;
+    themesMap.forEach(t => {
+      totalQuizzes += t.quizzes.size;
+      t.quizzes.forEach(q => totalQuestions += q.questions.length);
+    });
+    
+    _importData = { themesMap, errors };
+    showImportPreview(totalThemes, totalQuizzes, totalQuestions, errors);
+    
+  } catch(e) {
+    console.error('Import Excel error:', e);
+    toast('❌ Erreur de lecture : ' + e.message);
+  } finally {
+    event.target.value = '';  // Reset input
+  }
+}
+
+// Transforme "Mon Thème ! ÉPIC" → "mon_theme_epic"
+function slugify(str) {
+  return String(str || '')
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // retire accents
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 50) || 'theme_' + Date.now();
+}
+
+// Affiche le modal de prévisualisation
+function showImportPreview(nThemes, nQuizzes, nQuestions, errors) {
+  $('import-summary').innerHTML = `
+    <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center;">
+      <div><strong style="font-size:24px; color:#16a34a;">${nThemes}</strong><br><span style="font-size:12px;">thème(s)</span></div>
+      <div><strong style="font-size:24px; color:#16a34a;">${nQuizzes}</strong><br><span style="font-size:12px;">quiz</span></div>
+      <div><strong style="font-size:24px; color:#16a34a;">${nQuestions}</strong><br><span style="font-size:12px;">question(s)</span></div>
+    </div>
+    <p class="text-sm mt-3" style="color:#065f46;">✅ Prêt à importer dans Firebase.</p>
+  `;
+  
+  const errEl = $('import-errors');
+  if (errors.length > 0) {
+    errEl.classList.remove('hidden');
+    errEl.innerHTML = '<p class="font-bold text-red-700 mb-2">⚠️ ' + errors.length + ' erreur(s) — ces lignes seront ignorées :</p>';
+    errEl.innerHTML += '<ul style="list-style:disc; padding-left:20px; font-size:12px;">' +
+      errors.slice(0, 10).map(e => '<li>' + escapeHtml(e) + '</li>').join('') +
+      (errors.length > 10 ? '<li>... et ' + (errors.length - 10) + ' autres</li>' : '') +
+      '</ul>';
+  } else {
+    errEl.classList.add('hidden');
+  }
+  
+  // Liste des thèmes/quiz détectés
+  let html = '<h4 class="font-bold mb-2 text-sm" style="color: var(--copag-navy);">📚 Détails par thème :</h4>';
+  _importData.themesMap.forEach(t => {
+    html += `<div style="background:#f9fafb; border-radius:10px; padding:12px; margin-bottom:8px;">
+      <div style="font-weight:700; font-size:14px;">${escapeHtml(t.icon)} ${escapeHtml(t.name)}</div>
+      <div style="margin-top:6px; font-size:12px; color:#6b7280;">`;
+    t.quizzes.forEach(q => {
+      html += `<div>📝 ${escapeHtml(q.name)} — <strong>${q.questions.length}</strong> Q (${q.timePerQuestion}s)</div>`;
+    });
+    html += `</div></div>`;
+  });
+  $('import-preview-list').innerHTML = html;
+  
+  $('import-confirm-btn').disabled = (nQuestions === 0);
+  $('import-preview-modal').classList.remove('hidden');
+}
+
+function closeImportModal() {
+  $('import-preview-modal').classList.add('hidden');
+  _importData = null;
+}
+
+// Effectue l'import dans Firebase
+async function confirmImport() {
+  if (!_importData) return;
+  const fb = window.fb;
+  const btn = $('import-confirm-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Import en cours...';
+  
+  try {
+    // Pour chaque thème → créer/mettre à jour
+    const themesMap = _importData.themesMap;
+    let nbImported = 0;
+    
+    for (const t of themesMap.values()) {
+      // Vérifier si le thème existe (sinon le créer)
+      const themeSnap = await fb.get(fb.ref(fb.db, 'themes/' + t.themeId));
+      if (!themeSnap.exists()) {
+        const allThemes = await loadThemes(true);
+        const maxOrder = allThemes.reduce((m, x) => Math.max(m, x.order || 0), -1);
+        await fb.set(fb.ref(fb.db, 'themes/' + t.themeId), {
+          name: t.name,
+          nameAr: t.nameAr,
+          icon: t.icon,
+          descFr: t.descFr || '',
+          descAr: t.descAr || '',
+          isDefault: false,
+          order: maxOrder + 1,
+          createdAt: Date.now()
+        });
+      }
+      
+      // Pour chaque quiz → créer/mettre à jour
+      for (const q of t.quizzes.values()) {
+        const quizSnap = await fb.get(fb.ref(fb.db, 'theme_quizzes/' + t.themeId + '/' + q.quizId));
+        if (!quizSnap.exists()) {
+          await fb.set(fb.ref(fb.db, 'theme_quizzes/' + t.themeId + '/' + q.quizId), {
+            name: q.name,
+            descFr: '', descAr: '',
+            timePerQuestion: q.timePerQuestion,
+            isDefault: false,
+            order: 0,
+            createdAt: Date.now()
+          });
+        }
+        
+        // Path des questions : quiz "default" ou autre
+        const qPath = (q.quizId === 'default')
+          ? 'lesson_questions/' + t.themeId
+          : 'quiz_questions/' + t.themeId + '_' + q.quizId;
+        
+        // Ajouter les questions (sans écraser les existantes)
+        // On lit d'abord pour connaître l'ordre max
+        const existSnap = await fb.get(fb.ref(fb.db, qPath));
+        let maxOrder = -1;
+        if (existSnap.exists()) {
+          Object.values(existSnap.val()).forEach(eq => {
+            if (eq.order != null && eq.order > maxOrder) maxOrder = eq.order;
+          });
+        }
+        
+        // Batch update
+        const updates = {};
+        q.questions.forEach((qData, idx) => {
+          const newId = 'import_' + Date.now() + '_' + idx + '_' + Math.floor(Math.random() * 1000);
+          updates[newId] = {
+            qFr: qData.qFr,
+            qAr: qData.qAr,
+            optionsFr: qData.optionsFr,
+            optionsAr: qData.optionsAr,
+            correctIdx: qData.correctIdx,
+            isDefault: false,
+            order: maxOrder + 1 + idx,
+            createdAt: Date.now()
+          };
+          nbImported++;
+        });
+        await fb.update(fb.ref(fb.db, qPath), updates);
+      }
+    }
+    
+    toast('✅ ' + nbImported + ' question(s) importée(s) !');
+    closeImportModal();
+    
+    // Refresh
+    _themesCache = null;
+    _quizzesCache = {};
+    await renderLessons();
+    await refreshQuizSelectForDashboard();
+    if ($('screen-question-editor') && !$('screen-question-editor').classList.contains('hidden')) {
+      await goToQuestionEditor();
+    }
+    
+  } catch(e) {
+    console.error('Import failed:', e);
+    toast('❌ Erreur d\'import : ' + e.message);
+    btn.disabled = false;
+    btn.textContent = '✅ Importer maintenant';
+  }
+}
+
+window.downloadImportTemplate = downloadImportTemplate;
+window.handleExcelImport = handleExcelImport;
+window.closeImportModal = closeImportModal;
+window.confirmImport = confirmImport;
+
 window.onQeQuizChange = onQeQuizChange;
 window.onQuizSelectChange = onQuizSelectChange;
 window.refreshQuizSelectForDashboard = refreshQuizSelectForDashboard;
