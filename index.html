@@ -55,8 +55,32 @@
   .timer-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
   .timer-ring circle { fill: none; stroke-width: 8; }
   .timer-ring .bg { stroke: rgba(255,255,255,0.2); }
-  .timer-ring .fg { stroke: white; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
-  .timer-num { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 36px; color: white; z-index: 1; }
+  .timer-ring .fg { stroke: white; stroke-linecap: round; transition: stroke-dashoffset 1s linear, stroke 0.3s; }
+  .timer-num { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 36px; color: white; z-index: 1; transition: color 0.3s, transform 0.2s; }
+  
+  /* 🆕 Animation PANIC : timer dans les dernières secondes */
+  @keyframes timerPanicPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.15); }
+  }
+  @keyframes timerNumPulse {
+    0%, 100% { transform: scale(1); color: #fef3c7; }
+    50% { transform: scale(1.25); color: #fff; }
+  }
+  .timer-num.panic {
+    animation: timerNumPulse 0.5s ease-in-out infinite;
+    color: #fff;
+    text-shadow: 0 0 8px rgba(255, 100, 100, 0.8);
+  }
+  #timer-circle.panic {
+    stroke: #ef4444 !important;
+    filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.7));
+    animation: timerPanicPulse 0.5s ease-in-out infinite;
+    transform-origin: center;
+  }
+  .timer-ring:has(#timer-circle.panic) {
+    animation: timerPanicPulse 0.5s ease-in-out infinite;
+  }
   .chip { background: linear-gradient(135deg, var(--blue-500), var(--blue-700)); color: white; padding: 8px 16px; border-radius: 999px; font-weight: 700; font-size: 14px; animation: pop 0.4s cubic-bezier(.4,2,.6,1); display: inline-flex; align-items: center; gap: 6px; }
   @keyframes pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   .podium-bar { background: linear-gradient(180deg, var(--blue-500), var(--blue-700)); border-radius: 16px 16px 0 0; width: 100%; display: flex; align-items: flex-start; justify-content: center; padding-top: 16px; color: white; font-weight: 900; font-family: 'Outfit', sans-serif; font-size: 32px; position: relative; transition: height 0.8s cubic-bezier(.4,.2,.2,1); height: 0; }
@@ -3051,6 +3075,12 @@ function showTeacherQuestion(info) {
 function startTeacherTimer(startTs, total) {
   total = total || 30;
   clearInterval(timerInterval);
+  
+  // 🆕 Seuil "panique" : 1/3 du temps total
+  // Ex : 30s → panique à 10s | 60s → panique à 20s | 15s → panique à 5s
+  const panicThreshold = Math.max(3, Math.floor(total / 3));
+  let lastTickSecond = -1;
+  
   const update = () => {
     const elapsed = (Date.now() - startTs) / 1000;
     const left = Math.max(0, Math.ceil(total - elapsed));
@@ -3058,10 +3088,76 @@ function startTeacherTimer(startTs, total) {
     $('time-left-teacher').textContent = left;
     const dash = 282.7 * (1 - left / total);
     $('timer-circle').style.strokeDashoffset = dash;
-    if (left <= 0) { clearInterval(timerInterval); revealAnswer(); }
+    
+    // 🆕 Animation visuelle + son TIC dans la zone "panique"
+    const timerCircleEl = document.getElementById('timer-circle');
+    const timerNumEl = document.getElementById('timer-num-teacher');
+    if (left <= panicThreshold && left > 0) {
+      // Ajouter la classe d'animation
+      if (timerCircleEl && !timerCircleEl.classList.contains('panic')) {
+        timerCircleEl.classList.add('panic');
+      }
+      if (timerNumEl && !timerNumEl.classList.contains('panic')) {
+        timerNumEl.classList.add('panic');
+      }
+      // Jouer le son TIC une fois par seconde
+      if (left !== lastTickSecond) {
+        lastTickSecond = left;
+        // Pitch augmente quand le temps diminue (effet d'accélération sonore)
+        const ratio = left / panicThreshold; // 1.0 au début, 0.0 à la fin
+        const pitch = 800 + (1 - ratio) * 400;  // 800Hz → 1200Hz
+        playTickSound(pitch);
+      }
+    } else {
+      // Réinitialiser les animations
+      if (timerCircleEl) timerCircleEl.classList.remove('panic');
+      if (timerNumEl) timerNumEl.classList.remove('panic');
+    }
+    
+    if (left <= 0) {
+      clearInterval(timerInterval);
+      // 🆕 Son final "BIP" plus grave pour signaler la fin
+      playTickSound(400, 200);
+      // Retirer les animations
+      if (timerCircleEl) timerCircleEl.classList.remove('panic');
+      if (timerNumEl) timerNumEl.classList.remove('panic');
+      revealAnswer();
+    }
   };
   update();
   timerInterval = setInterval(update, 250);
+}
+
+// 🆕 Générateur de son TIC via Web Audio API (pas besoin de fichier audio)
+let _audioCtx = null;
+function playTickSound(frequency, duration) {
+  frequency = frequency || 800;
+  duration = duration || 60;
+  try {
+    if (!_audioCtx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return;
+      _audioCtx = new AC();
+    }
+    // Reprendre le contexte si suspendu (politique mobile)
+    if (_audioCtx.state === 'suspended') _audioCtx.resume();
+    
+    const osc = _audioCtx.createOscillator();
+    const gain = _audioCtx.createGain();
+    osc.type = 'square';  // Son sec, percussif (TIC)
+    osc.frequency.value = frequency;
+    // Enveloppe : attaque rapide, descente rapide
+    const now = _audioCtx.currentTime;
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.15, now + 0.005);  // attaque 5ms
+    gain.gain.exponentialRampToValueAtTime(0.001, now + duration / 1000);
+    osc.connect(gain);
+    gain.connect(_audioCtx.destination);
+    osc.start(now);
+    osc.stop(now + duration / 1000);
+  } catch(e) {
+    // Audio non supporté : ignorer silencieusement
+  }
 }
 
 async function revealAnswer() {
