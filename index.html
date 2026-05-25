@@ -966,6 +966,12 @@
         <div id="qe-options-fr-container" style="display:flex; flex-direction:column; gap:8px;"></div>
       </div>
 
+      <!-- Explication FR -->
+      <div class="mb-4" style="background:#fef9c3; padding:12px; border-radius:10px; border-left:4px solid #eab308;">
+        <label class="block text-sm font-bold mb-2" style="color:#854d0e;">💡 <span data-i18n="qe_explanation_fr">Explication (FR) — affichée après la révélation</span></label>
+        <textarea id="qe-explanation-fr" rows="3" placeholder="Pourquoi cette réponse est correcte ? Détail pédagogique pour les apprenants..." style="width:100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #fde68a; font-family: inherit; font-size: 13px; resize: vertical; background: white;"></textarea>
+      </div>
+
       <!-- Question AR -->
       <details style="margin-top: 16px;">
         <summary style="cursor:pointer; font-weight:700; color: var(--copag-navy); padding: 6px 0;" data-i18n="qe_ar_section">🌐 Version arabe (optionnel)</summary>
@@ -976,6 +982,12 @@
           </div>
           <label class="block text-sm font-bold mb-2" data-i18n="qe_options_ar">Réponses (AR) :</label>
           <div id="qe-options-ar-container" style="display:flex; flex-direction:column; gap:8px;"></div>
+          
+          <!-- Explication AR -->
+          <div class="mt-3" style="background:#fef9c3; padding:12px; border-radius:10px; border-left:4px solid #eab308;">
+            <label class="block text-sm font-bold mb-2" style="color:#854d0e;">💡 <span data-i18n="qe_explanation_ar">شرح (AR) — يظهر بعد كشف الإجابة</span></label>
+            <textarea id="qe-explanation-ar" rows="3" dir="rtl" placeholder="لماذا هذه الإجابة صحيحة؟ تفصيل تربوي للمتدربين..." style="width:100%; padding: 10px 12px; border-radius: 8px; border: 1px solid #fde68a; font-family: inherit; font-size: 13px; resize: vertical; background: white;"></textarea>
+          </div>
         </div>
       </details>
 
@@ -1589,7 +1601,13 @@
     <div id="student-result-card" class="student-result">
       <div class="text-7xl mb-4" id="student-result-icon">✅</div>
       <h3 class="text-2xl font-black mb-2" id="student-result-title">Bonne réponse !</h3>
-      <p class="text-lg opacity-90" id="student-result-explanation">—</p>
+    </div>
+    <div id="student-explanation-box" class="hidden card mt-4 p-4" style="background: linear-gradient(135deg, #fef3c7, #fde68a); border-left: 4px solid #eab308; text-align:left;">
+      <div class="flex items-center gap-2 mb-2" style="font-weight: 700; font-size: 14px; color: #78350f;">
+        <span style="font-size: 22px;">💡</span>
+        <span data-i18n="s_explain">Explication</span>
+      </div>
+      <p style="color: #78350f; font-size: 14px; line-height: 1.55; margin: 0;" id="student-result-explanation">—</p>
     </div>
     <div class="card p-4 mt-4 text-center">
       <div class="text-sm text-gray-500" data-i18n="s_your_score">Votre score</div>
@@ -1641,9 +1659,12 @@
       <div class="text-7xl mb-4">✅</div>
       <div class="text-sm opacity-80 mb-2" data-i18n="ar_correct">Réponse correcte</div>
       <h3 class="display-fr text-3xl md:text-5xl mb-4" id="reveal-correct">—</h3>
-      <div class="bg-white/10 rounded-2xl p-5 max-w-2xl mx-auto backdrop-blur-sm">
-        <div class="text-sm opacity-80 mb-2" data-i18n="ar_explain">Explication</div>
-        <p class="text-lg" id="reveal-explanation">—</p>
+      <div id="reveal-explanation-box" class="hidden" style="background: linear-gradient(135deg, #fef3c7, #fde68a); color: #78350f; border-radius: 16px; padding: 20px 24px; max-width: 800px; margin: 0 auto; text-align: left; box-shadow: 0 8px 24px rgba(0,0,0,0.15);">
+        <div class="flex items-center gap-2 mb-3" style="font-weight: 700; font-size: 16px;">
+          <span style="font-size: 28px;">💡</span>
+          <span data-i18n="ar_explain">Explication</span>
+        </div>
+        <p style="font-size: 17px; line-height: 1.6; margin: 0;" id="reveal-explanation">—</p>
       </div>
     </div>
     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
@@ -1895,6 +1916,9 @@ const I18N = {
     qe_template: "📋 Template Excel",
     qe_import: "📥 Importer Excel",
     qe_import_confirm: "✅ Importer maintenant",
+    qe_explanation_fr: "Explication (FR) — affichée après la révélation",
+    qe_explanation_ar: "Explication (AR) — affichée après la révélation",
+    s_explain: "Explication",
     an_title: "📊 Évaluation des acquis",
     an_sub: "Analyse complète par apprenant, par session et par question",
     an_lesson: "📚 Thème (leçon)",
@@ -2225,6 +2249,9 @@ const I18N = {
     qe_template: "📋 قالب Excel",
     qe_import: "📥 استيراد من Excel",
     qe_import_confirm: "✅ استيراد الآن",
+    qe_explanation_fr: "الشرح (FR) — يظهر بعد كشف الإجابة",
+    qe_explanation_ar: "الشرح (AR) — يظهر بعد كشف الإجابة",
+    s_explain: "الشرح",
     an_title: "📊 تقييم المكتسبات",
     an_sub: "تحليل شامل حسب المتدرب، الجلسة والسؤال",
     an_lesson: "📚 الموضوع",
@@ -3246,7 +3273,13 @@ async function revealAnswer() {
   const total = Object.keys(players).length;
   $('stat-rate').textContent = total > 0 ? Math.round(correctCount / total * 100) : 0;
   $('reveal-correct').textContent = q.options[correctIdx];
-  $('reveal-explanation').textContent = q.explanation;
+  const expl = q.explanation || '';
+  if (expl) {
+    $('reveal-explanation').textContent = expl;
+    $('reveal-explanation-box').classList.remove('hidden');
+  } else {
+    $('reveal-explanation-box').classList.add('hidden');
+  }
 
   setTimeout(() => goTo('screen-answer-reveal'), 1200);
 }
@@ -3928,7 +3961,13 @@ async function showStudentResult(info) {
     $('student-result-icon').textContent = '❌';
     $('student-result-title').textContent = t('s_wrong');
   }
-  $('student-result-explanation').textContent = q.explanation;
+  $('student-result-explanation').textContent = q.explanation || '';
+  const explBox = $('student-explanation-box');
+  if (q.explanation) {
+    explBox.classList.remove('hidden');
+  } else {
+    explBox.classList.add('hidden');
+  }
   $('student-score').textContent = me ? (me.score || 0) : 0;
 
   const sorted = Object.entries(allPlayers).sort((a,b) => (b[1].score||0) - (a[1].score||0));
@@ -6049,6 +6088,8 @@ function openQuestionEditModal(questionId) {
   $('qe-modal-title').textContent = q ? t('qe_modal_edit') : t('qe_modal_add');
   $('qe-q-fr').value = q ? (q.qFr || '') : '';
   $('qe-q-ar').value = q ? (q.qAr || '') : '';
+  $('qe-explanation-fr').value = q ? (q.explanationFr || '') : '';
+  $('qe-explanation-ar').value = q ? (q.explanationAr || '') : '';
   
   const optionsFr = q ? (q.optionsFr || ['', '', '', '']) : ['', '', '', ''];
   const optionsAr = q ? (q.optionsAr || ['', '', '', '']) : ['', '', '', ''];
@@ -6070,6 +6111,8 @@ function closeQuestionEditModal() {
 async function saveQuestion() {
   const qFr = $('qe-q-fr').value.trim();
   const qAr = $('qe-q-ar').value.trim();
+  const explanationFr = $('qe-explanation-fr').value.trim();
+  const explanationAr = $('qe-explanation-ar').value.trim();
   const errEl = $('qe-form-err');
   
   // Récupérer options FR + AR
@@ -6115,6 +6158,7 @@ async function saveQuestion() {
         qFr, qAr,
         optionsFr, optionsAr,
         correctIdx,
+        explanationFr, explanationAr,
         updatedAt: Date.now()
       };
       delete payload._id;
@@ -6127,6 +6171,7 @@ async function saveQuestion() {
         qFr, qAr,
         optionsFr, optionsAr,
         correctIdx,
+        explanationFr, explanationAr,
         isDefault: false,
         order: maxOrder + 1,
         createdAt: Date.now()
@@ -6547,27 +6592,31 @@ function downloadImportTemplate() {
     'Quiz_Name', 'Quiz_Time',
     'Question_FR', 'A_FR', 'B_FR', 'C_FR', 'D_FR',
     'Question_AR', 'A_AR', 'B_AR', 'C_AR', 'D_AR',
-    'Correct'
+    'Correct',
+    'Explanation_FR', 'Explanation_AR'
   ];
   const example = [
     'Pasteurisation', 'البسترة', '🧪',
     'Quiz 1 - Bases', '30',
     'Quelle est la température HTST ?', '50°C', '65°C', '72°C', '95°C',
     'ما هي درجة حرارة البسترة HTST ؟', '50°C', '65°C', '72°C', '95°C',
-    'C'
+    'C',
+    "La pasteurisation HTST utilise 72°C/15s pour éliminer 5 log de pathogènes. Marqueur : phosphatase alcaline négative.",
+    "البسترة HTST تستخدم 72°C/15ث للقضاء على 5 log من المسببات. المؤشر : فوسفاتاز قلوي سلبي."
   ];
   const note = [
     '⚠️ INSTRUCTIONS', '', '', '', '',
     'Une ligne par question. Correct = A, B, C ou D.', '', '', '', '',
     'Si pas de version arabe, laisse les colonnes _AR vides.', '', '', '', '',
-    'Quiz_Time en secondes (15-120). Theme_Icon = emoji.'
+    'Quiz_Time en secondes (15-120). Theme_Icon = emoji.',
+    'Explication = pourquoi la réponse est correcte (facultatif mais recommandé)', ''
   ];
   
   const data = [headers, note, example];
   const ws = XLSX.utils.aoa_to_sheet(data);
   
   // Largeurs colonnes
-  ws['!cols'] = headers.map((h, i) => ({ wch: i < 5 ? 18 : 35 }));
+  ws['!cols'] = headers.map((h, i) => ({ wch: i < 5 ? 18 : (i >= 16 ? 50 : 35) }));
   
   // Style header (ligne 0)
   for (let c = 0; c < headers.length; c++) {
@@ -6654,6 +6703,8 @@ async function handleExcelImport(event) {
     const cArCol = col('C_AR');
     const dArCol = col('D_AR');
     const correctCol = col('Correct');
+    const explanationFrCol = col('Explanation_FR');
+    const explanationArCol = col('Explanation_AR');
     
     if (themeFrCol < 0 || qFrCol < 0 || correctCol < 0) {
       toast('❌ Colonnes manquantes (Theme_FR, Question_FR ou Correct)');
@@ -6681,6 +6732,8 @@ async function handleExcelImport(event) {
       const cAr = String(row[cArCol] || '').trim();
       const dAr = String(row[dArCol] || '').trim();
       const correct = String(row[correctCol] || '').trim().toUpperCase();
+      const explanationFr = explanationFrCol >= 0 ? String(row[explanationFrCol] || '').trim() : '';
+      const explanationAr = explanationArCol >= 0 ? String(row[explanationArCol] || '').trim() : '';
       
       // Validation
       if (!themeFr) { errors.push(`Ligne ${rowIdx + headerRowIdx + 2} : Theme_FR vide`); return; }
@@ -6726,7 +6779,9 @@ async function handleExcelImport(event) {
         qAr: qAr || qFr,
         optionsFr: [aFr, bFr, cFr, dFr],
         optionsAr: [aAr || aFr, bAr || bFr, cAr || cFr, dAr || dFr],
-        correctIdx
+        correctIdx,
+        explanationFr,
+        explanationAr: explanationAr || explanationFr
       });
     });
     
@@ -6875,6 +6930,8 @@ async function confirmImport() {
             optionsFr: qData.optionsFr,
             optionsAr: qData.optionsAr,
             correctIdx: qData.correctIdx,
+            explanationFr: qData.explanationFr || '',
+            explanationAr: qData.explanationAr || '',
             isDefault: false,
             order: maxOrder + 1 + idx,
             createdAt: Date.now()
