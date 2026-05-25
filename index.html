@@ -1500,7 +1500,7 @@
       <div id="matricule-found" class="text-xs text-green-600 font-bold mt-1 hidden">✅ <span data-i18n="sj_matricule_found">Profil trouvé !</span></div>
       
       <label class="block text-sm font-bold mb-2 mt-5 text-gray-700" data-i18n="sj_name">Nom et Prénom</label>
-      <input type="text" id="student-name" maxlength="60" placeholder="..." class="w-full p-4 rounded-xl border-2 border-blue-100 focus:border-blue-500 outline-none text-lg font-bold" readonly style="background-color: #f9fafb;">
+      <input type="text" id="student-name" maxlength="60" placeholder="..." class="w-full p-4 rounded-xl border-2 border-blue-100 focus:border-blue-500 outline-none text-lg font-bold">
       
       <div id="join-error" class="text-red-500 text-sm mt-3 font-bold hidden"></div>
       <button class="btn btn-primary w-full mt-5 py-4 text-lg" id="join-btn" onclick="studentJoin()" data-i18n="sj_join">🚀 Rejoindre</button>
@@ -1696,7 +1696,7 @@ const I18N = {
     lobby_empty: "Les apprenants apparaîtront ici",
     lobby_group_name: "👥 Groupe",
     sj_title: "Rejoindre le jeu", sj_sub: "Entrez le code affiché par le formateur",
-    sj_pin: "Code du jeu", sj_name: "Votre nom", sj_join: "🚀 Rejoindre",
+    sj_pin: "Code du jeu", sj_name: "Nom et Prénom", sj_join: "🚀 Rejoindre",
     sj_matricule: "Matricule COPAG",
     sj_optional: "(optionnel)",
     sj_required: "(obligatoire)",
@@ -3475,7 +3475,8 @@ async function studentJoin() {
   if (!/^[0-9]+$/.test(matricule)) {
     errEl.textContent = t('sj_matricule_invalid'); errEl.classList.remove('hidden'); return;
   }
-  if (!name) { errEl.textContent = t('err_no_name_from_matricule') || 'Matricule introuvable dans la base — contactez votre formateur'; errEl.classList.remove('hidden'); return; }
+  // Si pas trouvé dans la base, l'apprenant tape son nom manuellement
+  if (!name) { errEl.textContent = t('err_no_name'); errEl.classList.remove('hidden'); return; }
 
   $('join-btn').disabled = true;
   try {
