@@ -1375,7 +1375,7 @@
     <p class="italic text-base text-gray-500 mb-10" data-i18n="tagline" style="color: var(--copag-cyan); font-weight: 600;">Compétences d'aujourd'hui, Avenir assuré</p>
     <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
       <button class="btn btn-primary text-lg" onclick="goToTeacher()" data-i18n="enter_teacher">👨‍🏫 Espace formateur</button>
-      <button class="btn btn-ghost text-lg" onclick="goTo('screen-student-join')" data-i18n="enter_student">🎮 Espace Apprenant</button>
+      <button class="btn btn-ghost text-lg" onclick="openStudentJoin()" data-i18n="enter_student">🎮 Espace Apprenant</button>
     </div>
     <div class="flex items-center justify-center mb-16">
       <button class="btn btn-ghost text-sm py-2 px-4" onclick="goToGeneralLeaderboard()" data-i18n="lb_general_btn" style="border-color: var(--copag-cyan); color: var(--copag-cyan);">🏆 Classement général</button>
@@ -1406,6 +1406,30 @@
   <div class="max-w-6xl mx-auto px-6 py-10">
     <h2 class="display-fr text-4xl mb-1" data-i18n="td_title">Tableau de bord</h2>
     <p class="text-gray-500 mb-8" data-i18n="td_sub">Choisissez une leçon et lancez une session</p>
+    
+    <!-- 🆕 Phase 2C : Bannière session active -->
+    <div id="active-session-banner" class="card p-5 mb-6 hidden" style="background: linear-gradient(135deg, #fef3c7, #fde68a); border: 2px solid #f59e0b;">
+      <div class="flex items-center justify-between gap-4 flex-wrap">
+        <div class="flex items-center gap-3">
+          <div class="text-3xl">⚠️</div>
+          <div>
+            <div class="font-bold text-lg" style="color: #92400e;" data-i18n="td_active_session_title">Session active en cours</div>
+            <div class="text-sm" style="color: #78350f;">
+              <span data-i18n="td_active_session_code">Code</span>: <span id="active-session-pin" style="font-weight:700;font-family:'Outfit',monospace;">—</span>
+              · <span id="active-session-group" style="font-weight:600;">—</span>
+            </div>
+            <div class="text-xs mt-1" style="color: #92400e;" data-i18n="td_active_session_warning">
+              Pour changer de thème, tu dois d'abord clôturer cette session.
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-2 flex-wrap">
+          <button class="btn btn-primary py-2 px-4 text-sm" onclick="resumeActiveSession()" data-i18n="td_resume_session">↩ Reprendre</button>
+          <button class="btn btn-ghost py-2 px-4 text-sm" onclick="closeActiveSession()" data-i18n="td_close_session" style="border-color:#f59e0b;color:#92400e;">🏁 Clôturer</button>
+        </div>
+      </div>
+    </div>
+    
     <div class="flex justify-end mb-4 gap-2 flex-wrap">
       <button class="btn btn-ghost py-2 px-4 text-sm" onclick="goToQuestionEditor()" data-i18n="td_edit_questions">📝 Gérer les questions</button>
       <button class="btn btn-ghost py-2 px-4 text-sm" onclick="goToGroups()" data-i18n="td_view_groups">🎓 Groupes</button>
@@ -1491,16 +1515,16 @@
     </div>
     <div class="card p-6 mb-4">
       <label class="block text-sm font-bold mb-2 text-gray-700" data-i18n="sj_pin">Code du jeu</label>
-      <input type="text" id="student-pin" maxlength="6" inputmode="numeric" placeholder="123456" class="w-full text-center text-3xl font-bold tracking-widest p-4 rounded-xl border-2 border-blue-100 focus:border-blue-500 outline-none" style="font-family: 'Outfit', sans-serif; letter-spacing: 8px;">
+      <input type="text" id="student-pin" maxlength="6" inputmode="numeric" autocomplete="off" placeholder="123456" class="w-full text-center text-3xl font-bold tracking-widest p-4 rounded-xl border-2 border-blue-100 focus:border-blue-500 outline-none" style="font-family: 'Outfit', sans-serif; letter-spacing: 8px;">
       
       <div class="flex items-center justify-between mt-5 mb-2">
         <label class="block text-sm font-bold text-gray-700"><span data-i18n="sj_matricule">Matricule COPAG</span> <span class="text-xs font-normal text-red-500" data-i18n="sj_required">(obligatoire)</span></label>
       </div>
-      <input type="text" id="student-matricule" maxlength="10" inputmode="numeric" pattern="[0-9]*" placeholder="500702" class="w-full text-center text-2xl font-bold p-3 rounded-xl border-2 border-blue-100 focus:border-blue-500 outline-none" style="font-family: 'Outfit', sans-serif; letter-spacing: 4px;">
+      <input type="text" id="student-matricule" maxlength="10" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="500702" class="w-full text-center text-2xl font-bold p-3 rounded-xl border-2 border-blue-100 focus:border-blue-500 outline-none" style="font-family: 'Outfit', sans-serif; letter-spacing: 4px;">
       <div id="matricule-found" class="text-xs text-green-600 font-bold mt-1 hidden">✅ <span data-i18n="sj_matricule_found">Profil trouvé !</span></div>
       
       <label class="block text-sm font-bold mb-2 mt-5 text-gray-700" data-i18n="sj_name">Nom et Prénom</label>
-      <input type="text" id="student-name" maxlength="60" placeholder="..." class="w-full p-4 rounded-xl border-2 border-blue-100 focus:border-blue-500 outline-none text-lg font-bold">
+      <input type="text" id="student-name" maxlength="60" autocomplete="off" placeholder="..." class="w-full p-4 rounded-xl border-2 border-blue-100 focus:border-blue-500 outline-none text-lg font-bold">
       
       <div id="join-error" class="text-red-500 text-sm mt-3 font-bold hidden"></div>
       <button class="btn btn-primary w-full mt-5 py-4 text-lg" id="join-btn" onclick="studentJoin()" data-i18n="sj_join">🚀 Rejoindre</button>
@@ -1652,9 +1676,34 @@
     </div>
     <h3 class="font-bold text-2xl mb-4" data-i18n="fin_all">📋 Classement complet</h3>
     <div id="final-list" class="mb-8 max-w-xl mx-auto"></div>
-    <button class="btn btn-primary" onclick="restartFromHome()" data-i18n="fin_restart">🔄 Nouvelle session</button>
+    <!-- 🆕 Phase 2A : Boutons d'action de fin de quiz -->
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 flex-wrap">
+      <button class="btn btn-primary text-lg" id="btn-next-quiz" onclick="openNextQuizModal()" data-i18n="fin_next_quiz">▶ Nouveau quiz (même thème)</button>
+      <button class="btn btn-ghost text-lg" onclick="restartFromHome()" data-i18n="fin_close_session">🏁 Clôturer la session</button>
+    </div>
+    <!-- Compteur de quiz joués dans la session -->
+    <p class="text-sm text-gray-400 mt-6" id="session-quiz-count" style="display:none;">
+      <span data-i18n="fin_session_quizes">Quiz joués dans cette session</span>: <span id="session-quiz-num" style="font-weight:700;">1</span>
+    </p>
   </div>
 </section>
+
+<!-- 🆕 Phase 2A : Modal "Nouveau quiz du même thème" -->
+<div id="next-quiz-modal" class="auth-overlay hidden" onclick="if(event.target===this)closeNextQuizModal()">
+  <div class="auth-modal" style="max-width: 540px;">
+    <div class="text-center mb-5">
+      <div class="text-5xl mb-2">▶</div>
+      <h3 class="display-fr text-2xl mb-1" data-i18n="nqm_title">Lancer un nouveau quiz</h3>
+      <p class="text-gray-500 text-sm"><span data-i18n="nqm_sub">Choisissez un quiz du même thème</span> : <span id="nqm-theme-name" style="color:var(--copag-cyan);font-weight:700;">—</span></p>
+    </div>
+    <div id="nqm-quiz-list" class="mb-5" style="max-height: 320px; overflow-y: auto;">
+      <p class="text-center text-gray-400 py-6" data-i18n="nqm_loading">Chargement...</p>
+    </div>
+    <div class="flex gap-2 justify-end">
+      <button class="btn btn-ghost py-2 px-4 text-sm" onclick="closeNextQuizModal()" data-i18n="cancel">Annuler</button>
+    </div>
+  </div>
+</div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -1720,6 +1769,21 @@ const I18N = {
     fin_title: "Jeu terminé !", fin_sub: "Voici les résultats finaux",
     fin_pts: "pts", fin_all: "📋 Classement complet",
     fin_restart: "🔄 Nouvelle session", finish: "🏁 Terminer",
+    fin_next_quiz: "▶ Nouveau quiz (même thème)",
+    fin_close_session: "🏁 Clôturer la session",
+    fin_session_quizes: "Quiz joués dans cette session",
+    fin_session_total: "Total session",
+    fin_session_ranking: "Classement de la session",
+    fin_quizzes: "quiz",
+    nqm_title: "Lancer un nouveau quiz",
+    nqm_sub: "Choisissez un quiz du même thème",
+    nqm_loading: "Chargement...",
+    nqm_empty: "Aucun quiz disponible",
+    nqm_launch: "Lancer",
+    nqm_launching: "Préparation du nouveau quiz...",
+    nqm_ready: "Quiz prêt — les apprenants reviennent au lobby",
+    new_quiz_started: "Nouveau quiz lancé par le formateur !",
+    rejoin_success: "Reconnexion réussie !",
     err_invalid_pin: "Code invalide (6 chiffres)", err_no_name: "Veuillez entrer votre nom",
     err_game_started: "Cette partie a déjà démarré", err_game_not_found: "Aucune partie avec ce code",
     err_name_taken: "Ce nom est déjà pris",
@@ -1737,6 +1801,15 @@ const I18N = {
     logout_done: "Déconnexion réussie",
     td_view_history: "📊 Voir l'historique",
     td_view_students: "👥 Apprenants",
+    td_active_session_title: "Session active en cours",
+    td_active_session_code: "Code",
+    td_active_session_warning: "Pour changer de thème, tu dois d'abord clôturer cette session.",
+    td_resume_session: "↩ Reprendre",
+    td_close_session: "🏁 Clôturer",
+    td_session_active_warn: "Une session est déjà active. Tu dois la clôturer avant d'en créer une nouvelle. Clôturer maintenant ?",
+    td_confirm_close: "Clôturer définitivement la session ? Les apprenants seront déconnectés.",
+    td_session_closed: "Session clôturée",
+    td_resume_warning: "Session reprise — vérifiez l'état du quiz",
     sd_badge: "Apprenants",
     sd_title: "Liste des apprenants",
     sd_sub: "Gérez les apprenants enregistrés et consultez leurs performances",
@@ -2051,6 +2124,21 @@ const I18N = {
     fin_title: "انتهت اللعبة!", fin_sub: "هذه هي النتائج النهائية",
     fin_pts: "نقطة", fin_all: "📋 الترتيب الكامل",
     fin_restart: "🔄 جلسة جديدة", finish: "🏁 إنهاء",
+    fin_next_quiz: "▶ كويز جديد (نفس الموضوع)",
+    fin_close_session: "🏁 إنهاء الجلسة",
+    fin_session_quizes: "عدد الكويزات في هذه الجلسة",
+    fin_session_total: "مجموع الجلسة",
+    fin_session_ranking: "ترتيب الجلسة",
+    fin_quizzes: "كويز",
+    nqm_title: "إطلاق كويز جديد",
+    nqm_sub: "اختر كويز من نفس الموضوع",
+    nqm_loading: "جاري التحميل...",
+    nqm_empty: "لا يوجد كويز متاح",
+    nqm_launch: "إطلاق",
+    nqm_launching: "تحضير الكويز الجديد...",
+    nqm_ready: "الكويز جاهز — يعود المتدربون إلى الانتظار",
+    new_quiz_started: "أطلق المعلم كويز جديد!",
+    rejoin_success: "تمت إعادة الاتصال بنجاح!",
     err_invalid_pin: "رمز غير صحيح (6 أرقام)", err_no_name: "الرجاء إدخال اسمك",
     err_game_started: "هذه اللعبة بدأت مسبقاً", err_game_not_found: "ما كاينش جلسة بهاد الرمز",
     err_name_taken: "هاد الاسم مستعمل",
@@ -2068,6 +2156,15 @@ const I18N = {
     logout_done: "تم تسجيل الخروج بنجاح",
     td_view_history: "📊 عرض السجل",
     td_view_students: "👥 المتدربين",
+    td_active_session_title: "جلسة نشطة جارية",
+    td_active_session_code: "الرمز",
+    td_active_session_warning: "لتغيير الموضوع، يجب إنهاء هذه الجلسة أولاً.",
+    td_resume_session: "↩ استئناف",
+    td_close_session: "🏁 إنهاء",
+    td_session_active_warn: "هناك جلسة نشطة بالفعل. يجب إنهاؤها قبل إنشاء جلسة جديدة. إنهاء الآن؟",
+    td_confirm_close: "إنهاء الجلسة نهائياً؟ سيتم قطع اتصال المتدربين.",
+    td_session_closed: "تم إنهاء الجلسة",
+    td_resume_warning: "تم استئناف الجلسة — تحقق من حالة الكويز",
     sd_badge: "المتدربين",
     sd_title: "قائمة المتدربين",
     sd_sub: "تدبير المتدربين المسجلين وعرض أدائهم",
@@ -2782,6 +2879,8 @@ function goTo(screenId) {
   if (screenId === 'screen-teacher-dashboard') {
     const cb = document.getElementById('td-shuffle-toggle');
     if (cb) cb.checked = _shuffleEnabled;
+    // 🆕 Phase 2C : rafraîchir la bannière session active à chaque entrée
+    if (typeof refreshActiveSessionBanner === 'function') refreshActiveSessionBanner();
   }
 }
 
@@ -2904,6 +3003,18 @@ function whenFbReady(cb) {
 async function createGame() {
   const fb = window.fb;
   if (!fb) { toast('Firebase not ready'); return; }
+  // 🆕 Phase 2C : si une session est déjà active, bloquer + proposer de la clôturer
+  if (currentPin && role === 'teacher') {
+    const ok = confirm(t('td_session_active_warn') ||
+      'Une session est déjà active (code: ' + currentPin + '). Tu dois la clôturer avant d\'en créer une nouvelle. Clôturer maintenant ?');
+    if (ok) {
+      try { await fb.remove(fb.ref(fb.db, 'games/' + currentPin)); } catch(e) {}
+      unsubAll();
+      currentPin = null; _currentQ = -1; _lastQIdxShown = -1;
+    } else {
+      return;
+    }
+  }
   role = 'teacher';
   let pin, exists = true, attempts = 0;
   while (exists && attempts < 10) {
@@ -3395,6 +3506,10 @@ async function showFinal() {
     console.error('Failed to save history:', e);
   }
 
+  // 🆕 Phase 2B : détecter si on est en session multi-quiz (quizHistory existe)
+  const hasMultiQuiz = (info.quizHistory && info.quizHistory.length > 0);
+  const sessionQuizCount = (info.quizHistory ? info.quizHistory.length : 0) + 1;
+
   const slots = [
     { rank: 1, h: 220, k: 'podium-1' },
     { rank: 2, h: 160, k: 'podium-2' },
@@ -3408,17 +3523,78 @@ async function showFinal() {
   });
   setTimeout(() => { slots.forEach(s => { $(s.k + '-bar').style.height = s.h + 'px'; }); }, 300);
 
+  // 🆕 Phase 2B : afficher le compteur de quiz de la session si multi-quiz
+  const cntEl = $('session-quiz-count');
+  const cntNum = $('session-quiz-num');
+  if (cntEl && cntNum) {
+    if (hasMultiQuiz) {
+      cntEl.style.display = 'block';
+      cntNum.textContent = sessionQuizCount;
+    } else {
+      cntEl.style.display = 'none';
+    }
+  }
+
   const list = $('final-list');
   list.innerHTML = '';
   sorted.forEach((p, idx) => {
+    const quizScore = p.score || 0;
+    const totalPrev = p.totalScore || 0;
+    const sessionTotal = totalPrev + quizScore;
     const row = document.createElement('div');
     row.className = 'leader-row';
-    row.innerHTML = `
-      <div class="leader-rank">${idx + 1}</div>
-      <div class="leader-name">${p.name}</div>
-      <div class="leader-score">${p.score || 0} ${t('fin_pts')}</div>`;
+    // 🆕 Phase 2B : si multi-quiz, afficher aussi le total de session
+    if (hasMultiQuiz) {
+      row.innerHTML = `
+        <div class="leader-rank">${idx + 1}</div>
+        <div class="leader-name">${p.name}</div>
+        <div style="text-align:right;">
+          <div class="leader-score">${quizScore} ${t('fin_pts')}</div>
+          <div style="font-size:12px;color:#6b7280;margin-top:2px;">
+            <span style="font-weight:600;color:#1ea8e0;">${t('fin_session_total') || 'Total session'}</span>: 
+            <span style="font-weight:800;color:#1e2a78;">${sessionTotal} ${t('fin_pts')}</span>
+          </div>
+        </div>`;
+    } else {
+      row.innerHTML = `
+        <div class="leader-rank">${idx + 1}</div>
+        <div class="leader-name">${p.name}</div>
+        <div class="leader-score">${quizScore} ${t('fin_pts')}</div>`;
+    }
     list.appendChild(row);
   });
+
+  // 🆕 Phase 2B : si multi-quiz, ajouter un classement séparé par TOTAL DE SESSION
+  if (hasMultiQuiz) {
+    const sortedBySession = [...Object.values(players)].sort((a, b) => {
+      const ta = (a.totalScore || 0) + (a.score || 0);
+      const tb = (b.totalScore || 0) + (b.score || 0);
+      return tb - ta;
+    });
+    const sessionList = document.createElement('div');
+    sessionList.style.cssText = 'margin-top:32px;padding:20px;background:linear-gradient(135deg,#eef7fc,#d4ecfb);border-radius:18px;border:1px solid #d4ecfb;';
+    sessionList.innerHTML = `
+      <h3 style="font-family:'DM Serif Display',serif;font-size:22px;color:#1e2a78;margin-bottom:14px;text-align:center;">
+        🏆 ${t('fin_session_ranking') || 'Classement de la session'} 
+        <span style="font-size:14px;color:#6b7280;font-weight:400;">(${sessionQuizCount} ${t('fin_quizzes') || 'quiz'})</span>
+      </h3>`;
+    const sessionRows = document.createElement('div');
+    sortedBySession.slice(0, 10).forEach((p, idx) => {
+      const total = (p.totalScore || 0) + (p.score || 0);
+      const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '';
+      const r = document.createElement('div');
+      r.className = 'leader-row';
+      r.style.background = 'white';
+      r.innerHTML = `
+        <div class="leader-rank">${medal || (idx + 1)}</div>
+        <div class="leader-name">${p.name}</div>
+        <div class="leader-score" style="color:#1ea8e0;">${total} ${t('fin_pts')}</div>`;
+      sessionRows.appendChild(r);
+    });
+    sessionList.appendChild(sessionRows);
+    list.appendChild(sessionList);
+  }
+
   goTo('screen-final');
   launchConfetti();
 }
@@ -3443,8 +3619,171 @@ async function endGame() {
   const fb = window.fb;
   if (currentPin) { try { await fb.remove(fb.ref(fb.db, 'games/' + currentPin)); } catch(e) {} }
   unsubAll();
+  clearStudentSession();        // 🆕 Phase 2A : nettoie sessionStorage
   currentPin = null; role = null; _currentQ = -1; _lastQIdxShown = -1;
   goTo('screen-welcome');
+}
+
+// 🆕 Phase 2A : Ouvre le modal pour choisir un nouveau quiz du même thème
+async function openNextQuizModal() {
+  if (!currentPin || role !== 'teacher') return;
+  const fb = window.fb;
+  const infoSnap = await fb.get(fb.ref(fb.db, 'games/' + currentPin + '/info'));
+  if (!infoSnap.exists()) { toast('Session introuvable'); return; }
+  const info = infoSnap.val();
+  const themeId = info.lesson;
+  const themeName = info.themeName || themeId;
+  const playedQuizIds = (info.quizHistory || []).map(h => h.quizId);
+  // Ajouter aussi le quiz qui vient de se terminer
+  if (info.quizId) playedQuizIds.push(info.quizId);
+
+  $('nqm-theme-name').textContent = themeName;
+  const listEl = $('nqm-quiz-list');
+  listEl.innerHTML = '<p class="text-center text-gray-400 py-6">' + (t('nqm_loading') || 'Chargement...') + '</p>';
+  $('next-quiz-modal').classList.remove('hidden');
+
+  try {
+    const quizzes = await loadQuizzesForTheme(themeId, true);
+    if (!quizzes || quizzes.length === 0) {
+      listEl.innerHTML = '<p class="text-center text-gray-400 py-6">' + (t('nqm_empty') || 'Aucun quiz disponible') + '</p>';
+      return;
+    }
+    listEl.innerHTML = '';
+    quizzes.forEach(qz => {
+      const alreadyPlayed = playedQuizIds.includes(qz.id);
+      const card = document.createElement('div');
+      card.className = 'card p-4 mb-2 cursor-pointer transition-all';
+      card.style.cssText = 'border:1px solid #e6eeff;' + (alreadyPlayed ? 'opacity:0.55;' : 'cursor:pointer;');
+      card.innerHTML = `
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex-1 text-left">
+            <div class="font-bold text-base">${qz.name || qz.id}</div>
+            <div class="text-xs text-gray-500 mt-1">
+              ${(qz.questionsCount || 0)} questions · ${qz.timePerQuestion || 30}s/question
+              ${alreadyPlayed ? ' · <span style="color:#f59e0b;font-weight:700;">⚠ Déjà joué dans cette session</span>' : ''}
+            </div>
+          </div>
+          <button class="btn ${alreadyPlayed ? 'btn-ghost' : 'btn-primary'} py-2 px-4 text-sm" onclick="launchNextQuiz('${qz.id}')">
+            ▶ <span data-i18n="nqm_launch">Lancer</span>
+          </button>
+        </div>`;
+      listEl.appendChild(card);
+    });
+  } catch(e) {
+    console.error('Could not load quizzes:', e);
+    listEl.innerHTML = '<p class="text-center text-red-500 py-6">Erreur de chargement</p>';
+  }
+}
+
+function closeNextQuizModal() {
+  $('next-quiz-modal').classList.add('hidden');
+}
+
+// 🆕 Phase 2A : Lance un nouveau quiz du même thème dans la SESSION EXISTANTE
+//    - Garde le même PIN
+//    - Garde tous les joueurs connectés (avec leur score cumulé)
+//    - Sauvegarde l'historique du quiz précédent
+//    - Reset l'état pour le nouveau quiz
+async function launchNextQuiz(newQuizId) {
+  if (!currentPin || role !== 'teacher') return;
+  const fb = window.fb;
+  closeNextQuizModal();
+  toast('⏳ ' + (t('nqm_launching') || 'Préparation du nouveau quiz...'));
+
+  try {
+    // 1) Récupérer infos actuelles
+    const [infoSnap, playersSnap, answersSnap] = await Promise.all([
+      fb.get(fb.ref(fb.db, 'games/' + currentPin + '/info')),
+      fb.get(fb.ref(fb.db, 'games/' + currentPin + '/players')),
+      fb.get(fb.ref(fb.db, 'games/' + currentPin + '/answers'))
+    ]);
+    const info = infoSnap.val() || {};
+    const players = playersSnap.val() || {};
+    const previousAnswers = answersSnap.val() || {};
+
+    // 2) Cumuler les scores du quiz qui vient de finir dans totalScore
+    //    Et archiver le détail du quiz précédent dans history/
+    const playerUpdates = {};
+    Object.entries(players).forEach(([pid, p]) => {
+      const prevTotal = p.totalScore || 0;
+      const quizScore = p.score || 0;
+      playerUpdates['players/' + pid + '/totalScore'] = prevTotal + quizScore;
+      playerUpdates['players/' + pid + '/lastQuizScore'] = quizScore;
+      // Reset pour le prochain quiz
+      playerUpdates['players/' + pid + '/score'] = 0;
+      playerUpdates['players/' + pid + '/streak'] = 0;
+    });
+
+    // Archiver le quiz précédent
+    const historyEntry = {
+      quizId: info.quizId || 'unknown',
+      quizName: info.quizName || '',
+      completedAt: Date.now(),
+      totalQuestions: info.totalQuestions || 0,
+      players: Object.fromEntries(Object.entries(players).map(([pid, p]) => [
+        pid, { name: p.name, matricule: p.matricule || null, score: p.score || 0 }
+      ])),
+      answers: previousAnswers
+    };
+    playerUpdates['history/' + (info.quizId || 'unknown') + '__' + Date.now()] = historyEntry;
+
+    // Ajouter à quizHistory dans info
+    const quizHistoryArr = info.quizHistory || [];
+    quizHistoryArr.push({ quizId: info.quizId, quizName: info.quizName, completedAt: Date.now() });
+
+    // 3) Charger le NOUVEAU quiz (questions)
+    await setQuestionsForQuiz(info.lesson, newQuizId);
+    const quizzes = await loadQuizzesForTheme(info.lesson);
+    const newQuizMeta = quizzes.find(q => q.id === newQuizId) || { timePerQuestion: 30, name: newQuizId };
+    if (_shuffleEnabled) {
+      QUESTIONS = shuffleQuestionsAndOptions(QUESTIONS);
+    }
+    if (!QUESTIONS || QUESTIONS.length === 0) {
+      toast('⚠️ Ce quiz n\'a aucune question.');
+      return;
+    }
+    const newQuizDataArr = QUESTIONS.map(q => ({
+      qFr: q.fr.q, qAr: q.ar.q,
+      optionsFr: q.fr.options, optionsAr: q.ar.options,
+      correctIdx: q.fr.correct,
+      explanationFr: q.fr.explanation || '',
+      explanationAr: q.ar.explanation || ''
+    }));
+
+    // 4) Mettre à jour le nœud game (garde PIN, players, mais reset state + new quiz)
+    const updates = {
+      ...playerUpdates,
+      'quizData': newQuizDataArr,
+      'answers': {},   // vider les réponses
+      'info/quizId': newQuizId,
+      'info/quizName': newQuizMeta.name || newQuizId,
+      'info/quizHistory': quizHistoryArr,
+      'info/state': 'lobby',
+      'info/currentQuestion': 0,
+      'info/totalQuestions': QUESTIONS.length,
+      'info/timePerQuestion': newQuizMeta.timePerQuestion || 30,
+      'info/sessionQuizCount': quizHistoryArr.length + 1,
+    };
+    await fb.update(fb.ref(fb.db, 'games/' + currentPin), updates);
+
+    // 5) Mettre à jour les variables locales formateur
+    _selectedQuizId = newQuizId;
+    _currentQ = -1;
+    _lastQIdxShown = -1;
+
+    // 6) Mettre à jour l'affichage du lobby (compteur + nom de groupe inchangé)
+    $('game-pin').textContent = currentPin;
+    const cntEl = $('session-quiz-count');
+    if (cntEl) {
+      cntEl.style.display = 'block';
+      $('session-quiz-num').textContent = quizHistoryArr.length + 1;
+    }
+    goTo('screen-teacher-lobby');
+    toast('✅ ' + (t('nqm_ready') || 'Quiz prêt — les apprenants reviennent au lobby'));
+  } catch(e) {
+    console.error('launchNextQuiz failed:', e);
+    toast('❌ Erreur : ' + (e.message || 'inconnue'));
+  }
 }
 
 async function restartFromHome() {
@@ -3453,13 +3792,96 @@ async function restartFromHome() {
     try { await fb.remove(fb.ref(fb.db, 'games/' + currentPin)); } catch(e) {}
   }
   unsubAll();
+  clearStudentSession();        // 🆕 Phase 2A : nettoie sessionStorage
   currentPin = null; role = null; _currentQ = -1; _lastQIdxShown = -1;
   ['podium-1-bar','podium-2-bar','podium-3-bar'].forEach(id => { const el = $(id); if (el) el.style.height = '0'; });
   goTo('screen-welcome');
 }
 
 let currentMatricule = null;
+
+// 🆕 Phase 2A : Persistance de session apprenant (sessionStorage = par onglet)
+//    Permet à un apprenant qui rafraîchit la page de reprendre automatiquement
+const STUDENT_SESSION_KEY = 'copag_student_session';
+function saveStudentSession(data) {
+  try { sessionStorage.setItem(STUDENT_SESSION_KEY, JSON.stringify(data)); } catch(e) {}
+}
+function getStudentSession() {
+  try {
+    const raw = sessionStorage.getItem(STUDENT_SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+function clearStudentSession() {
+  try { sessionStorage.removeItem(STUDENT_SESSION_KEY); } catch(e) {}
+}
+
+// Tente une reconnexion silencieuse à partir des infos sauvegardées
+async function tryAutoReconnectStudent() {
+  const saved = getStudentSession();
+  if (!saved || !saved.pin || !saved.playerId) return false;
+  try {
+    const fb = window.fb;
+    const gameSnap = await fb.get(fb.ref(fb.db, 'games/' + saved.pin));
+    if (!gameSnap.exists()) {
+      clearStudentSession();
+      return false;
+    }
+    const game = gameSnap.val();
+    const player = (game.players || {})[saved.playerId];
+    if (!player) {
+      // Le joueur n'existe plus dans la partie
+      clearStudentSession();
+      return false;
+    }
+    // Restaurer les variables globales
+    role = 'student';
+    currentPin = saved.pin;
+    currentPlayerId = saved.playerId;
+    currentPlayerName = player.name || saved.name || '';
+    currentMatricule = player.matricule || saved.matricule || null;
+
+    // Marquer la reconnexion
+    await fb.update(fb.ref(fb.db, 'games/' + saved.pin + '/players/' + saved.playerId), {
+      lastReconnect: Date.now()
+    });
+
+    // Aller à l'écran approprié
+    const state = game.info.state;
+    const displayEl = $('display-student-name');
+    if (displayEl) displayEl.textContent = currentPlayerName;
+    if (state === 'lobby')                                          goTo('screen-student-waiting');
+    else if (state === 'question' || state === 'reveal' || state === 'leaderboard') goTo('screen-student-question');
+    else if (state === 'final')                                     goTo('screen-student-question');
+    else                                                            goTo('screen-student-waiting');
+    watchGameAsStudent();
+    toast('👋 ' + (t('rejoin_success') || 'Reconnexion réussie !'));
+    return true;
+  } catch(e) {
+    console.warn('Auto-reconnect failed:', e);
+    clearStudentSession();
+    return false;
+  }
+}
+
 let _matriculeLookupTimeout = null;
+
+// 🆕 Nettoie le formulaire avant d'afficher l'écran apprenant
+// (évite que le navigateur pré-remplisse avec les valeurs d'un précédent apprenant)
+function openStudentJoin() {
+  const pinEl = $('student-pin');
+  const matrEl = $('student-matricule');
+  const nameEl = $('student-name');
+  const foundDiv = $('matricule-found');
+  const errEl = $('join-error');
+  if (pinEl)  pinEl.value = '';
+  if (matrEl) matrEl.value = '';
+  if (nameEl) nameEl.value = '';
+  if (foundDiv) foundDiv.classList.add('hidden');
+  if (errEl) errEl.classList.add('hidden');
+  goTo('screen-student-join');
+  setTimeout(() => { if (pinEl) pinEl.focus(); }, 200);
+}
 
 async function studentJoin() {
   const fb = window.fb;
@@ -3527,6 +3949,9 @@ async function studentJoin() {
         name,
         lastReconnect: Date.now()
       });
+      
+      // 🆕 Phase 2A : sauvegarder pour reconnexion auto au refresh
+      saveStudentSession({ pin, playerId: existingPlayerId, matricule: currentMatricule, name });
       
       $('display-student-name').textContent = name;
       $('join-btn').disabled = false;
@@ -3601,6 +4026,9 @@ async function studentJoin() {
     // 🆕 Tracker la dernière activité pour info formateur, mais sans supprimer
     fb.onDisconnect(fb.ref(fb.db, 'games/' + pin + '/players/' + currentPlayerId + '/lastDisconnect')).set(Date.now());
 
+    // 🆕 Phase 2A : sauvegarder pour reconnexion auto au refresh
+    saveStudentSession({ pin, playerId: currentPlayerId, matricule, name });
+
     $('display-student-name').textContent = name;
     $('join-btn').disabled = false;
     goTo('screen-student-waiting');
@@ -3660,35 +4088,25 @@ function setupMatriculeListener() {
 
 function watchGameAsStudent() {
   const fb = window.fb;
-  // Load the EXACT quiz sequence created by the teacher (with eventual shuffle).
-  // Stored at games/{pin}/quizData — falls back to the lesson default if absent (older games).
-  window.fb.get(window.fb.ref(window.fb.db, 'games/' + currentPin + '/quizData')).then(snap => {
-    if (snap.exists()) {
-      const arr = snap.val();
-      QUESTIONS = arr.map(q => ({
-        fr: {
-          q: q.qFr || '',
-          options: q.optionsFr || ['', '', '', ''],
-          correct: q.correctIdx != null ? q.correctIdx : 0,
-          explanation: q.explanationFr || ''
-        },
-        ar: {
-          q: q.qAr || q.qFr || '',
-          options: q.optionsAr || q.optionsFr || ['', '', '', ''],
-          correct: q.correctIdx != null ? q.correctIdx : 0,
-          explanation: q.explanationAr || q.explanationFr || ''
-        }
-      }));
-    } else {
-      // Fallback : ancien format (parties créées avant le shuffle) → charger la leçon
-      return window.fb.get(window.fb.ref(window.fb.db, 'games/' + currentPin + '/info')).then(s => {
-        if (s.exists()) {
-          const info = s.val();
-          if (info.lesson) return setQuestionsForLesson(info.lesson);
-        }
-      });
-    }
-  }).catch(e => console.warn('Could not load quizData:', e));
+  // Helper : recharger les questions du quiz courant
+  async function reloadQuizData() {
+    try {
+      const snap = await fb.get(fb.ref(fb.db, 'games/' + currentPin + '/quizData'));
+      if (snap.exists()) {
+        const arr = snap.val();
+        QUESTIONS = arr.map(q => ({
+          fr: { q: q.qFr || '', options: q.optionsFr || ['','','',''], correct: q.correctIdx != null ? q.correctIdx : 0, explanation: q.explanationFr || '' },
+          ar: { q: q.qAr || q.qFr || '', options: q.optionsAr || q.optionsFr || ['','','',''], correct: q.correctIdx != null ? q.correctIdx : 0, explanation: q.explanationAr || q.explanationFr || '' }
+        }));
+      } else {
+        const s = await fb.get(fb.ref(fb.db, 'games/' + currentPin + '/info'));
+        if (s.exists() && s.val().lesson) await setQuestionsForLesson(s.val().lesson);
+      }
+    } catch(e) { console.warn('reloadQuizData error:', e); }
+  }
+  // Chargement initial des questions
+  reloadQuizData();
+
   const playersRef = fb.ref(fb.db, 'games/' + currentPin + '/players');
   const u1 = fb.onValue(playersRef, (snap) => {
     const n = snap.exists() ? Object.keys(snap.val()).length : 0;
@@ -3696,14 +4114,25 @@ function watchGameAsStudent() {
   });
   gameListeners.push(u1);
 
+  // 🆕 Phase 2A : Détecter le changement de quizId (nouveau quiz dans la même session)
+  let _lastKnownQuizId = null;
   const infoRef = fb.ref(fb.db, 'games/' + currentPin + '/info');
-  const u2 = fb.onValue(infoRef, (snap) => {
+  const u2 = fb.onValue(infoRef, async (snap) => {
     if (!snap.exists()) {
       toast(t('game_ended'));
+      clearStudentSession();   // 🆕 nettoyer le sessionStorage
       setTimeout(() => { unsubAll(); goTo('screen-welcome'); }, 1500);
       return;
     }
-    handleStudentState(snap.val());
+    const info = snap.val();
+    // Si le quizId a changé → recharger les questions et reset l'état local
+    if (_lastKnownQuizId !== null && info.quizId && info.quizId !== _lastKnownQuizId) {
+      await reloadQuizData();
+      _lastStateShown = null;        // reset pour que la nouvelle question s'affiche
+      toast('▶ ' + (t('new_quiz_started') || 'Nouveau quiz lancé par le formateur !'));
+    }
+    if (info.quizId) _lastKnownQuizId = info.quizId;
+    handleStudentState(info);
   });
   gameListeners.push(u2);
 }
@@ -3894,9 +4323,120 @@ function isTeacherAuthed() {
 function goToTeacher() {
   if (isTeacherAuthed()) {
     goTo('screen-teacher-dashboard');
+    // 🆕 Phase 2C : afficher la bannière si session active
+    refreshActiveSessionBanner();
+    // 🆕 Phase 2D : nettoyer les sessions zombies (>12h)
+    cleanupZombieSessions();
   } else {
     showAuthModal();
   }
+}
+
+// 🆕 Phase 2D : Nettoyer les sessions qui traînent depuis > 12h
+//    Fonctionne en arrière-plan, ne bloque pas l'UI
+async function cleanupZombieSessions() {
+  const fb = window.fb;
+  if (!fb) return;
+  try {
+    const allGamesSnap = await fb.get(fb.ref(fb.db, 'games'));
+    if (!allGamesSnap.exists()) return;
+    const games = allGamesSnap.val();
+    const now = Date.now();
+    const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+    const toDelete = [];
+    Object.entries(games).forEach(([pin, game]) => {
+      const createdAt = (game.info && game.info.createdAt) || 0;
+      // Garde la session active courante intacte
+      if (pin === currentPin) return;
+      if (createdAt && (now - createdAt) > TWELVE_HOURS) {
+        toDelete.push(pin);
+      }
+    });
+    if (toDelete.length > 0) {
+      console.log('🧹 Nettoyage de', toDelete.length, 'session(s) zombie(s) (>12h)');
+      await Promise.all(toDelete.map(pin =>
+        fb.remove(fb.ref(fb.db, 'games/' + pin)).catch(()=>{})
+      ));
+    }
+  } catch(e) {
+    console.warn('cleanupZombieSessions failed:', e);
+  }
+}
+
+// 🆕 Phase 2C : Détecter et afficher une session active en cours
+function refreshActiveSessionBanner() {
+  const banner = $('active-session-banner');
+  if (!banner) return;
+  if (currentPin && role === 'teacher') {
+    // Une session est active en mémoire
+    banner.classList.remove('hidden');
+    $('active-session-pin').textContent = currentPin;
+    // Récupérer le nom de groupe depuis Firebase
+    const fb = window.fb;
+    if (fb) {
+      fb.get(fb.ref(fb.db, 'games/' + currentPin + '/info')).then(snap => {
+        if (snap.exists()) {
+          const info = snap.val();
+          $('active-session-group').textContent = info.groupName || (info.themeName || '') + ' / ' + (info.quizName || '');
+        } else {
+          // Session disparue (clôturée ailleurs) → masquer bannière
+          banner.classList.add('hidden');
+          currentPin = null;
+        }
+      }).catch(()=>{});
+    }
+  } else {
+    banner.classList.add('hidden');
+  }
+}
+
+// 🆕 Phase 2C : Reprendre la session active
+async function resumeActiveSession() {
+  if (!currentPin) { refreshActiveSessionBanner(); return; }
+  const fb = window.fb;
+  try {
+    const snap = await fb.get(fb.ref(fb.db, 'games/' + currentPin + '/info'));
+    if (!snap.exists()) {
+      toast('Session introuvable');
+      currentPin = null;
+      refreshActiveSessionBanner();
+      return;
+    }
+    const info = snap.val();
+    // Selon l'état, retourner à l'écran approprié
+    if (info.state === 'lobby') {
+      $('game-pin').textContent = currentPin;
+      const lobbyGroupEl = $('lobby-group-name');
+      if (lobbyGroupEl) lobbyGroupEl.textContent = info.groupName || '—';
+      goTo('screen-teacher-lobby');
+      watchLobbyAsTeacher();
+    } else if (info.state === 'final') {
+      // Reconstruire le podium final
+      await showFinal();
+    } else {
+      // En plein quiz : retour à l'écran quiz
+      goTo('screen-quiz-teacher');
+      // Note : pour reprendre en plein milieu, il faudrait restaurer beaucoup d'état → on simplifie
+      toast('⚠️ ' + (t('td_resume_warning') || 'Session reprise — vérifiez l\'état du quiz'));
+    }
+  } catch(e) {
+    console.error(e);
+    toast('Erreur : ' + e.message);
+  }
+}
+
+// 🆕 Phase 2C : Clôturer la session active depuis le dashboard
+async function closeActiveSession() {
+  if (!currentPin) { refreshActiveSessionBanner(); return; }
+  if (!confirm(t('td_confirm_close') || 'Clôturer définitivement la session ' + currentPin + ' ? Les apprenants seront déconnectés.')) return;
+  const fb = window.fb;
+  try {
+    await fb.remove(fb.ref(fb.db, 'games/' + currentPin));
+  } catch(e) {}
+  unsubAll();
+  currentPin = null; _currentQ = -1; _lastQIdxShown = -1;
+  refreshActiveSessionBanner();
+  toast('🏁 ' + (t('td_session_closed') || 'Session clôturée'));
 }
 
 function showAuthModal() {
@@ -3951,6 +4491,9 @@ async function verifyAuth() {
       sessionStorage.setItem(AUTH_SESSION_KEY, 'yes');
       closeAuthModal();
       goTo('screen-teacher-dashboard');
+      // 🆕 Phase 2C/2D : rafraîchir bannière + nettoyage zombies
+      refreshActiveSessionBanner();
+      cleanupZombieSessions();
     } else {
       showAuthError(t('err_wrong_pwd'));
       $('auth-pwd').value = '';
@@ -7537,8 +8080,11 @@ function init() {
       await refreshQuizSelectForDashboard();
       await renderLessons();  // re-render avec la sélection
     }
-    setTimeout(() => {
+    setTimeout(async () => {
       $('loading').style.display = 'none';
+      // 🆕 Phase 2A : essayer d'abord la reconnexion auto (sessionStorage)
+      const reconnected = await tryAutoReconnectStudent();
+      if (reconnected) return;
       const prefilled = handleUrlPrefill();
       if (!prefilled) {
         goTo('screen-welcome');
