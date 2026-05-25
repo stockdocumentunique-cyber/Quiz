@@ -1432,6 +1432,20 @@
       </div>
     </div>
     
+    <!-- 🆕 Sessions d'aujourd'hui -->
+    <div id="today-sessions-section" class="card p-5 mb-6" style="background:white;border:1px solid #e6eeff;">
+      <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <h3 class="font-bold text-lg flex items-center gap-2" style="color:var(--copag-navy);">
+          📅 <span data-i18n="today_title">Sessions d'aujourd'hui</span>
+          <span class="badge" id="today-count-badge" style="background:var(--copag-cyan);color:white;">0</span>
+        </h3>
+        <button class="btn btn-ghost py-2 px-3 text-xs" onclick="loadTodaySessions()" data-i18n="today_refresh">🔄 Actualiser</button>
+      </div>
+      <div id="today-sessions-list">
+        <div class="text-gray-400 text-sm text-center py-4" data-i18n="today_loading">Chargement...</div>
+      </div>
+    </div>
+    
     <!-- 🆕 Phase 2C : Bannière session active -->
     <div id="active-session-banner" class="card p-5 mb-6 hidden" style="background: linear-gradient(135deg, #fef3c7, #fde68a); border: 2px solid #f59e0b;">
       <div class="flex items-center justify-between gap-4 flex-wrap">
@@ -1854,6 +1868,10 @@ const I18N = {
     kpi_accuracy: "Précision",
     kpi_top_theme: "Thème le + populaire",
     kpi_sessions_short: "sessions",
+    today_title: "Sessions d'aujourd'hui",
+    today_refresh: "🔄 Actualiser",
+    today_loading: "Chargement...",
+    today_empty: "Aucune session jouée aujourd'hui",
     sd_badge: "Apprenants",
     sd_title: "Liste des apprenants",
     sd_sub: "Gérez les apprenants enregistrés et consultez leurs performances",
@@ -2228,6 +2246,10 @@ const I18N = {
     kpi_accuracy: "الدقة",
     kpi_top_theme: "الموضوع الأكثر شعبية",
     kpi_sessions_short: "جلسات",
+    today_title: "جلسات اليوم",
+    today_refresh: "🔄 تحديث",
+    today_loading: "جاري التحميل...",
+    today_empty: "لا توجد جلسات اليوم",
     sd_badge: "المتدربين",
     sd_title: "قائمة المتدربين",
     sd_sub: "تدبير المتدربين المسجلين وعرض أدائهم",
@@ -4397,9 +4419,100 @@ function goToTeacher() {
     cleanupZombieSessions();
     // 🆕 Phase 3B : charger les KPIs globaux COPAG
     loadGlobalKPIs();
+    // 🆕 Sessions d'aujourd'hui
+    loadTodaySessions();
   } else {
     showAuthModal();
   }
+}
+
+// 🆕 Charger et afficher les sessions terminées aujourd'hui
+async function loadTodaySessions() {
+  const listEl = $('today-sessions-list');
+  const badge = $('today-count-badge');
+  if (!listEl) return;
+  
+  const fb = window.fb;
+  if (!fb) return;
+  
+  try {
+    const snap = await fb.get(fb.ref(fb.db, 'history'));
+    const sessions = snap.exists() ? Object.entries(snap.val()).map(([id, s]) => ({ id, ...s })) : [];
+    
+    // Filtrer celles d'aujourd'hui (basé sur endedAt ou startedAt)
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const endOfDay = startOfDay + 24 * 60 * 60 * 1000 - 1;
+    
+    const todaySessions = sessions
+      .filter(s => {
+        const ts = s.endedAt || s.startedAt || 0;
+        return ts >= startOfDay && ts <= endOfDay;
+      })
+      .sort((a, b) => (b.endedAt || b.startedAt || 0) - (a.endedAt || a.startedAt || 0));
+    
+    if (badge) badge.textContent = todaySessions.length;
+    
+    if (todaySessions.length === 0) {
+      listEl.innerHTML = `<div class="text-gray-400 text-sm text-center py-6">
+        <div class="text-3xl mb-2">📭</div>
+        ${t('today_empty') || 'Aucune session jouée aujourd\'hui'}
+      </div>`;
+      return;
+    }
+    
+    let html = '';
+    todaySessions.forEach(s => {
+      const time = new Date(s.endedAt || s.startedAt);
+      const hh = String(time.getHours()).padStart(2,'0');
+      const mm = String(time.getMinutes()).padStart(2,'0');
+      const timeStr = hh + 'h' + mm;
+      
+      const groupName = s.groupName || (s.lessonNameFr || s.lesson || '—');
+      const themeName = LANG === 'ar' ? (s.lessonNameAr || s.lesson || '') : (s.lessonNameFr || s.lesson || '');
+      const quizName = s.quizName || '';
+      const players = (s.players || []).length;
+      const accuracy = typeof s.accuracy === 'number' ? s.accuracy : 0;
+      
+      // Couleur selon la précision
+      const accColor = accuracy >= 80 ? '#10b981' : accuracy >= 50 ? '#f59e0b' : '#ef4444';
+      const accBg = accuracy >= 80 ? '#d1fae5' : accuracy >= 50 ? '#fef3c7' : '#fecaca';
+      
+      html += `<div class="flex items-center gap-4 p-3 rounded-xl mb-2 cursor-pointer" 
+        style="background:#f9fafb;border:1px solid #e6eeff;transition:all 0.2s;"
+        onmouseover="this.style.background='#eef7fc';this.style.borderColor='#7dd3f7';"
+        onmouseout="this.style.background='#f9fafb';this.style.borderColor='#e6eeff';"
+        onclick="goToAnalysisAndShow('${s.id}')">
+        <div style="font-family:'Outfit',monospace;font-weight:800;font-size:14px;color:var(--copag-cyan);min-width:55px;">⏰ ${timeStr}</div>
+        <div class="flex-1" style="min-width:0;">
+          <div class="font-bold text-sm" style="color:var(--copag-navy);word-break:break-all;line-height:1.3;">${escapeHtml(groupName)}</div>
+          <div class="text-xs text-gray-500 mt-1">
+            ${escapeHtml(themeName)}${quizName ? ' • ' + escapeHtml(quizName) : ''}
+          </div>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <div style="background:#eef7fc;color:var(--copag-navy);padding:4px 10px;border-radius:8px;font-size:12px;font-weight:700;">
+            👥 ${players}
+          </div>
+          <div style="background:${accBg};color:${accColor};padding:4px 10px;border-radius:8px;font-size:12px;font-weight:800;">
+            🎯 ${accuracy}%
+          </div>
+        </div>
+      </div>`;
+    });
+    
+    listEl.innerHTML = html;
+  } catch(e) {
+    console.warn('loadTodaySessions failed:', e);
+    listEl.innerHTML = '<div class="text-red-500 text-sm text-center py-4">Erreur de chargement</div>';
+  }
+}
+
+// 🆕 Helper : aller à l'analyse et ouvrir le détail d'une session
+function goToAnalysisAndShow(sessionId) {
+  goToAnalysis().then(() => {
+    setTimeout(() => showAnSessionDetail(sessionId), 500);
+  });
 }
 
 // 🆕 Phase 3B : KPIs globaux COPAG (chargés depuis /history)
@@ -4633,10 +4746,11 @@ async function verifyAuth() {
       sessionStorage.setItem(AUTH_SESSION_KEY, 'yes');
       closeAuthModal();
       goTo('screen-teacher-dashboard');
-      // 🆕 Phase 2C/2D/3B : bannière + nettoyage + KPIs
+      // 🆕 Phase 2C/2D/3B : bannière + nettoyage + KPIs + sessions du jour
       refreshActiveSessionBanner();
       cleanupZombieSessions();
       loadGlobalKPIs();
+      loadTodaySessions();
     } else {
       showAuthError(t('err_wrong_pwd'));
       $('auth-pwd').value = '';
