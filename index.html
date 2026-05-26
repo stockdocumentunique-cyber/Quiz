@@ -22,7 +22,7 @@
   * { -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; background: var(--soft); color: var(--ink); font-family: 'Outfit', 'Cairo', system-ui, sans-serif; overflow-x: hidden; min-height: 100vh; }
   body[dir="rtl"] { font-family: 'Cairo', 'Outfit', sans-serif; }
-  .display-ar { font-family: 'Tajawal', sans-serif; font-weight: 900; letter-spacing: -0.02em; }
+  .display-ar { font-family: 'Tajawal', sans-serif; font-weight: 90A0; letter-spacing: -0.02em; }
   .display-fr { font-family: 'DM Serif Display', serif; letter-spacing: -0.01em; }
   .grid-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; background-image: linear-gradient(rgba(30,42,120,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(30,42,120,0.06) 1px, transparent 1px); background-size: 56px 56px; mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%); }
   .blob { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.5; z-index: 0; pointer-events: none; animation: float 18s ease-in-out infinite; }
@@ -55,32 +55,8 @@
   .timer-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
   .timer-ring circle { fill: none; stroke-width: 8; }
   .timer-ring .bg { stroke: rgba(255,255,255,0.2); }
-  .timer-ring .fg { stroke: white; stroke-linecap: round; transition: stroke-dashoffset 1s linear, stroke 0.3s; }
-  .timer-num { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 36px; color: white; z-index: 1; transition: color 0.3s, transform 0.2s; }
-  
-  /* 🆕 Animation PANIC : timer dans les dernières secondes */
-  @keyframes timerPanicPulse {
-    0%, 100% { transform: scale(1); }
-    50% { transform: scale(1.15); }
-  }
-  @keyframes timerNumPulse {
-    0%, 100% { transform: scale(1); color: #fef3c7; }
-    50% { transform: scale(1.25); color: #fff; }
-  }
-  .timer-num.panic {
-    animation: timerNumPulse 0.5s ease-in-out infinite;
-    color: #fff;
-    text-shadow: 0 0 8px rgba(255, 100, 100, 0.8);
-  }
-  #timer-circle.panic {
-    stroke: #ef4444 !important;
-    filter: drop-shadow(0 0 6px rgba(239, 68, 68, 0.7));
-    animation: timerPanicPulse 0.5s ease-in-out infinite;
-    transform-origin: center;
-  }
-  .timer-ring:has(#timer-circle.panic) {
-    animation: timerPanicPulse 0.5s ease-in-out infinite;
-  }
+  .timer-ring .fg { stroke: white; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
+  .timer-num { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 36px; color: white; z-index: 1; }
   .chip { background: linear-gradient(135deg, var(--blue-500), var(--blue-700)); color: white; padding: 8px 16px; border-radius: 999px; font-weight: 700; font-size: 14px; animation: pop 0.4s cubic-bezier(.4,2,.6,1); display: inline-flex; align-items: center; gap: 6px; }
   @keyframes pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   .podium-bar { background: linear-gradient(180deg, var(--blue-500), var(--blue-700)); border-radius: 16px 16px 0 0; width: 100%; display: flex; align-items: flex-start; justify-content: center; padding-top: 16px; color: white; font-weight: 900; font-family: 'Outfit', sans-serif; font-size: 32px; position: relative; transition: height 0.8s cubic-bezier(.4,.2,.2,1); height: 0; }
@@ -778,27 +754,12 @@
     <p class="text-gray-500 mb-6" data-i18n="qe_sub">Ajouter, modifier ou supprimer les questions des leçons</p>
 
     <div class="card p-5 mb-5" style="background: linear-gradient(135deg, var(--blue-50), white);">
-      <div class="grid md:grid-cols-2 gap-4 mb-4">
-        <div>
-          <label class="block text-sm font-bold mb-2" data-i18n="qe_choose_theme">📚 Choisir un thème :</label>
-          <select id="qe-lesson-select" onchange="onQeLessonChange()" style="width:100%; padding: 12px 16px; border-radius: 12px; border: 2px solid #e5e7eb; font-size: 15px; font-family: inherit; background: white;"></select>
-        </div>
-        <div>
-          <label class="block text-sm font-bold mb-2" data-i18n="qe_choose_quiz">📝 Choisir un quiz :</label>
-          <select id="qe-quiz-select" onchange="onQeQuizChange()" style="width:100%; padding: 12px 16px; border-radius: 12px; border: 2px solid #e5e7eb; font-size: 15px; font-family: inherit; background: white;"></select>
-        </div>
-      </div>
+      <label class="block text-sm font-bold mb-2" data-i18n="qe_choose_lesson">Choisir une leçon :</label>
       <div class="flex flex-wrap items-center gap-3">
+        <select id="qe-lesson-select" onchange="onQeLessonChange()" style="flex:1; min-width: 200px; padding: 12px 16px; border-radius: 12px; border: 2px solid #e5e7eb; font-size: 15px; font-family: inherit; background: white;"></select>
         <span class="badge"><span id="qe-question-count">0</span> <span data-i18n="qe_questions">questions</span></span>
-        <button class="btn btn-accent py-2 px-3 text-sm" onclick="openQuestionEditModal(null)" data-i18n="qe_add_btn">+ Question</button>
-        <button class="btn btn-ghost py-2 px-3 text-sm" onclick="openQuizEditModal(null)" style="color:#1ea8e0;border-color:#bae6fd;" data-i18n="qe_add_quiz">+ Quiz</button>
-        <button class="btn btn-ghost py-2 px-3 text-sm" onclick="openQuizEditModal(_qeCurrentQuiz)" data-i18n="qe_edit_quiz" id="qe-edit-quiz-btn">✏️ Éditer ce quiz</button>
-        <button class="btn btn-ghost py-2 px-3 text-sm" onclick="askDeleteQuiz()" style="color:#dc2626;border-color:#fecaca;" data-i18n="qe_del_quiz" id="qe-del-quiz-btn">🗑️ Supprimer ce quiz</button>
-        <button class="btn btn-ghost py-2 px-3 text-sm" onclick="askResetLesson()" style="color:#92400e;border-color:#fcd34d;" data-i18n="qe_reset_btn">🔄 Réinitialiser</button>
-        <span style="border-left: 1px solid #e5e7eb; height: 24px;"></span>
-        <button class="btn btn-ghost py-2 px-3 text-sm" onclick="downloadImportTemplate()" style="color:#7c3aed;border-color:#ddd6fe;" data-i18n="qe_template">📋 Template Excel</button>
-        <button class="btn btn-ghost py-2 px-3 text-sm" onclick="$('qe-import-file').click()" style="color:#16a34a;border-color:#bbf7d0;" data-i18n="qe_import">📥 Importer Excel</button>
-        <input type="file" id="qe-import-file" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleExcelImport(event)">
+        <button class="btn btn-accent py-2 px-4 text-sm" onclick="openQuestionEditModal(null)" data-i18n="qe_add_btn">+ Ajouter une question</button>
+        <button class="btn btn-ghost py-2 px-4 text-sm" onclick="askResetLesson()" style="color:#92400e;border-color:#fcd34d;" data-i18n="qe_reset_btn">🔄 Réinitialiser</button>
       </div>
     </div>
 
@@ -810,140 +771,6 @@
     </div>
   </div>
 </section>
-
-<!-- IMPORT EXCEL — APERÇU MODAL -->
-<div id="import-preview-modal" class="session-detail-modal hidden" onclick="if(event.target===this)closeImportModal()">
-  <div class="session-detail-content" style="max-width: 900px; max-height: 90vh;">
-    <div class="detail-header">
-      <h3 class="display-fr text-2xl">📥 Aperçu de l'import</h3>
-      <button class="detail-close" onclick="closeImportModal()">✕</button>
-    </div>
-    <div style="padding: 0 4px;">
-      <div id="import-summary" class="card p-4 mb-4" style="background: linear-gradient(135deg, #f0fdf4, white); border-left: 4px solid #16a34a;"></div>
-      <div id="import-errors" class="hidden card p-4 mb-4" style="background: #fef2f2; border-left: 4px solid #dc2626;"></div>
-      <div id="import-preview-list" style="max-height: 400px; overflow-y: auto;"></div>
-      <div class="flex gap-3 mt-5 justify-end">
-        <button class="btn btn-ghost" onclick="closeImportModal()" data-i18n="cancel">Annuler</button>
-        <button class="btn btn-primary" id="import-confirm-btn" onclick="confirmImport()" data-i18n="qe_import_confirm">✅ Importer maintenant</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-
-<!-- THEME EDIT MODAL -->
-<div id="theme-edit-modal" class="session-detail-modal hidden" onclick="if(event.target===this)closeThemeEditModal()">
-  <div class="session-detail-content" style="max-width: 560px;">
-    <div class="detail-header">
-      <h3 class="display-fr text-2xl" id="theme-edit-title">📚 Thème</h3>
-      <button class="detail-close" onclick="closeThemeEditModal()">✕</button>
-    </div>
-    <div style="padding: 0 4px;">
-      <div class="mb-3">
-        <label class="block text-sm font-bold mb-2" data-i18n="theme_name_fr">Nom (FR) <span style="color:#dc2626">*</span></label>
-        <input id="theme-name-fr" type="text" placeholder="Ex: Sécurité incendie" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-size:14px; font-family:inherit;">
-      </div>
-      <div class="mb-3">
-        <label class="block text-sm font-bold mb-2" data-i18n="theme_name_ar">Nom (AR)</label>
-        <input id="theme-name-ar" type="text" dir="rtl" placeholder="مثال: السلامة من الحرائق" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-size:14px; font-family:inherit;">
-      </div>
-      <div class="mb-3">
-        <label class="block text-sm font-bold mb-2" data-i18n="theme_icon">Icône (emoji)</label>
-        <input id="theme-icon" type="text" maxlength="4" placeholder="🔥" style="width:80px; padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-size:24px; text-align:center; font-family:inherit;">
-        <span class="text-xs text-gray-500 ml-3">Ex: 🥛 🧪 🔥 🧬 🎓 ❄️</span>
-      </div>
-      <div class="mb-3">
-        <label class="block text-sm font-bold mb-2" data-i18n="theme_desc_fr">Description (FR)</label>
-        <input id="theme-desc-fr" type="text" placeholder="Bases et concepts essentiels" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-size:14px; font-family:inherit;">
-      </div>
-      <div class="mb-3">
-        <label class="block text-sm font-bold mb-2" data-i18n="theme_desc_ar">Description (AR)</label>
-        <input id="theme-desc-ar" type="text" dir="rtl" placeholder="الأساسيات والمفاهيم" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-size:14px; font-family:inherit;">
-      </div>
-      <p id="theme-edit-err" class="text-red-600 text-sm mt-2 hidden"></p>
-      <div class="flex gap-3 mt-5 justify-end">
-        <button class="btn btn-ghost" onclick="closeThemeEditModal()" data-i18n="cancel">Annuler</button>
-        <button class="btn btn-primary" onclick="saveTheme()" data-i18n="qe_save">✅ Enregistrer</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- THEME DELETE CONFIRM -->
-<div id="theme-delete-modal" class="auth-overlay hidden" onclick="if(event.target===this)closeThemeDeleteModal()">
-  <div class="auth-modal" style="max-width: 440px;">
-    <div class="text-center mb-4">
-      <div class="text-5xl mb-3">⚠️</div>
-      <h3 class="display-fr text-2xl mb-2" data-i18n="theme_del_title">Supprimer ce thème ?</h3>
-      <p class="text-gray-600 text-sm" data-i18n="theme_del_sub">Tous les quiz et questions de ce thème seront aussi supprimés.</p>
-      <p class="text-sm mt-3" style="background:#fef3c7; color:#92400e; padding:12px; border-radius:10px;">⚠️ <span data-i18n="theme_del_warn">Cette action est irréversible.</span></p>
-      <p class="text-sm mt-2 font-bold" id="theme-del-name">—</p>
-    </div>
-    <div class="flex gap-3 mt-4">
-      <button class="btn btn-ghost flex-1" onclick="closeThemeDeleteModal()" data-i18n="cancel">Annuler</button>
-      <button class="btn flex-1" style="background:#dc2626; color:white;" onclick="confirmDeleteTheme()" data-i18n="qe_del_confirm">🗑️ Supprimer</button>
-    </div>
-  </div>
-</div>
-
-<!-- QUIZ EDIT MODAL -->
-<div id="quiz-edit-modal" class="session-detail-modal hidden" onclick="if(event.target===this)closeQuizEditModal()">
-  <div class="session-detail-content" style="max-width: 560px;">
-    <div class="detail-header">
-      <h3 class="display-fr text-2xl" id="quiz-edit-title">📝 Quiz</h3>
-      <button class="detail-close" onclick="closeQuizEditModal()">✕</button>
-    </div>
-    <div style="padding: 0 4px;">
-      <p class="text-sm text-gray-500 mb-3">Thème : <strong id="quiz-edit-theme-label">—</strong></p>
-      <div class="mb-3">
-        <label class="block text-sm font-bold mb-2" data-i18n="quiz_name">Nom du quiz <span style="color:#dc2626">*</span></label>
-        <input id="quiz-name" type="text" placeholder="Ex: Quiz 2 — HTST avancé" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-size:14px; font-family:inherit;">
-      </div>
-      <div class="mb-3">
-        <label class="block text-sm font-bold mb-2" data-i18n="quiz_desc_fr">Description (FR)</label>
-        <input id="quiz-desc-fr" type="text" placeholder="Pour niveau intermédiaire" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-size:14px; font-family:inherit;">
-      </div>
-      <div class="mb-3">
-        <label class="block text-sm font-bold mb-2" data-i18n="quiz_desc_ar">Description (AR)</label>
-        <input id="quiz-desc-ar" type="text" dir="rtl" placeholder="للمستوى المتوسط" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-size:14px; font-family:inherit;">
-      </div>
-      <div class="mb-3">
-        <label class="block text-sm font-bold mb-2" data-i18n="quiz_time">⏱️ Temps par question (secondes)</label>
-        <select id="quiz-time" style="padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-size:14px; font-family:inherit; background:white;">
-          <option value="15">15 secondes (rapide)</option>
-          <option value="20">20 secondes</option>
-          <option value="30" selected>30 secondes (standard)</option>
-          <option value="45">45 secondes</option>
-          <option value="60">60 secondes (réflexion)</option>
-          <option value="90">90 secondes</option>
-          <option value="120">120 secondes</option>
-        </select>
-      </div>
-      <p id="quiz-edit-err" class="text-red-600 text-sm mt-2 hidden"></p>
-      <div class="flex gap-3 mt-5 justify-end">
-        <button class="btn btn-ghost" onclick="closeQuizEditModal()" data-i18n="cancel">Annuler</button>
-        <button class="btn btn-primary" onclick="saveQuiz()" data-i18n="qe_save">✅ Enregistrer</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- QUIZ DELETE CONFIRM -->
-<div id="quiz-delete-modal" class="auth-overlay hidden" onclick="if(event.target===this)closeQuizDeleteModal()">
-  <div class="auth-modal" style="max-width: 440px;">
-    <div class="text-center mb-4">
-      <div class="text-5xl mb-3">🗑️</div>
-      <h3 class="display-fr text-2xl mb-2" data-i18n="quiz_del_title">Supprimer ce quiz ?</h3>
-      <p class="text-gray-600 text-sm" data-i18n="quiz_del_sub">Toutes les questions de ce quiz seront supprimées.</p>
-      <p class="text-sm mt-2 font-bold" id="quiz-del-name">—</p>
-    </div>
-    <div class="flex gap-3 mt-4">
-      <button class="btn btn-ghost flex-1" onclick="closeQuizDeleteModal()" data-i18n="cancel">Annuler</button>
-      <button class="btn flex-1" style="background:#dc2626; color:white;" onclick="confirmDeleteQuiz()" data-i18n="qe_del_confirm">🗑️ Supprimer</button>
-    </div>
-  </div>
-</div>
-
 
 <!-- QUESTION EDIT MODAL -->
 <div id="question-edit-modal" class="session-detail-modal hidden" onclick="if(event.target===this)closeQuestionEditModal()">
@@ -1462,29 +1289,18 @@
       <button class="btn btn-ghost py-2 px-4 text-sm" onclick="goToHistory()" data-i18n="td_view_history">📋 Historique</button>
       <button class="btn btn-ghost py-2 px-4 text-sm" onclick="openSettingsModal()" data-i18n="td_settings">🔧 Paramètres</button>
     </div>
-    <h3 class="font-bold text-xl mb-4 flex items-center justify-between flex-wrap gap-2">
-      <span data-i18n="td_lessons">📚 Thèmes disponibles</span>
-      <button class="btn btn-ghost py-1 px-3 text-xs" onclick="openThemeEditModal(null)" data-i18n="td_add_theme">+ Nouveau thème</button>
-    </h3>
+    <h3 class="font-bold text-xl mb-4" data-i18n="td_lessons">📚 Leçons disponibles</h3>
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8" id="lessons-grid"></div>
-    <div class="card p-6 mb-4" style="background: linear-gradient(135deg, var(--blue-700), var(--blue-900)); color: white;">
-      <div class="mb-4">
-        <div class="text-sm opacity-80 mb-1" data-i18n="td_selected">Thème sélectionné</div>
+    <div class="card p-6 flex items-center justify-between flex-wrap gap-4" style="background: linear-gradient(135deg, var(--blue-700), var(--blue-900)); color: white;">
+      <div>
+        <div class="text-sm opacity-80 mb-1" data-i18n="td_selected">Leçon sélectionnée</div>
         <div class="font-bold text-2xl" id="selected-lesson-name">—</div>
-      </div>
-      <div class="mb-4">
-        <label class="text-sm opacity-80 mb-1 block" data-i18n="td_quiz_select">📝 Choisir un quiz :</label>
-        <select id="td-quiz-select" onchange="onQuizSelectChange()" style="width:100%; padding: 10px 14px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; font-size: 14px; font-family: inherit;">
-          <option value="">—</option>
-        </select>
-      </div>
-      <div class="flex items-center justify-between flex-wrap gap-4">
-        <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; opacity:0.9;">
+        <label style="display:inline-flex; align-items:center; gap:8px; margin-top:10px; cursor:pointer; font-size:13px; opacity:0.9;">
           <input type="checkbox" id="td-shuffle-toggle" onchange="toggleShuffleMode()" style="width:18px; height:18px; accent-color: var(--copag-cyan); cursor:pointer;">
           <span data-i18n="td_shuffle">🎲 Mélanger questions & réponses</span>
         </label>
-        <button class="btn btn-accent text-lg" onclick="createGame()" data-i18n="td_start">▶ Créer une partie</button>
       </div>
+      <button class="btn btn-accent text-lg" onclick="createGame()" data-i18n="td_start">▶ Créer une partie</button>
     </div>
   </div>
 </section>
@@ -1869,32 +1685,6 @@ const I18N = {
     td_view_analysis: "📊 Analyse",
     rejoin_success: "👋 Reconnexion réussie ! Tu reprends ta session.",
     absent_marker: "Absent",
-    td_lessons: "📚 Thèmes disponibles",
-    td_selected: "Thème sélectionné",
-    td_add_theme: "+ Nouveau thème",
-    td_quiz_select: "📝 Choisir un quiz :",
-    qe_choose_theme: "📚 Choisir un thème :",
-    qe_choose_quiz: "📝 Choisir un quiz :",
-    qe_add_quiz: "+ Quiz",
-    qe_edit_quiz: "✏️ Éditer ce quiz",
-    qe_del_quiz: "🗑️ Supprimer ce quiz",
-    theme_name_fr: "Nom (FR)",
-    theme_name_ar: "Nom (AR)",
-    theme_icon: "Icône (emoji)",
-    theme_desc_fr: "Description (FR)",
-    theme_desc_ar: "Description (AR)",
-    theme_del_title: "Supprimer ce thème ?",
-    theme_del_sub: "Tous les quiz et questions de ce thème seront aussi supprimés.",
-    theme_del_warn: "Cette action est irréversible.",
-    quiz_name: "Nom du quiz",
-    quiz_desc_fr: "Description (FR)",
-    quiz_desc_ar: "Description (AR)",
-    quiz_time: "⏱️ Temps par question (secondes)",
-    quiz_del_title: "Supprimer ce quiz ?",
-    quiz_del_sub: "Toutes les questions de ce quiz seront supprimées.",
-    qe_template: "📋 Template Excel",
-    qe_import: "📥 Importer Excel",
-    qe_import_confirm: "✅ Importer maintenant",
     an_title: "📊 Évaluation des acquis",
     an_sub: "Analyse complète par apprenant, par session et par question",
     an_lesson: "📚 Thème (leçon)",
@@ -2199,32 +1989,6 @@ const I18N = {
     td_view_analysis: "📊 التحليل",
     rejoin_success: "👋 تم إعادة الاتصال ! ستستأنف جلستك.",
     absent_marker: "غائب",
-    td_lessons: "📚 المواضيع المتاحة",
-    td_selected: "الموضوع المختار",
-    td_add_theme: "+ موضوع جديد",
-    td_quiz_select: "📝 اختر اختباراً :",
-    qe_choose_theme: "📚 اختر موضوعاً :",
-    qe_choose_quiz: "📝 اختر اختباراً :",
-    qe_add_quiz: "+ اختبار",
-    qe_edit_quiz: "✏️ تعديل هذا الاختبار",
-    qe_del_quiz: "🗑️ حذف هذا الاختبار",
-    theme_name_fr: "الاسم (فرنسية)",
-    theme_name_ar: "الاسم (عربية)",
-    theme_icon: "الأيقونة (إيموجي)",
-    theme_desc_fr: "الوصف (فرنسية)",
-    theme_desc_ar: "الوصف (عربية)",
-    theme_del_title: "حذف هذا الموضوع ؟",
-    theme_del_sub: "سيتم حذف جميع الاختبارات والأسئلة من هذا الموضوع.",
-    theme_del_warn: "هذا الإجراء لا يمكن التراجع عنه.",
-    quiz_name: "اسم الاختبار",
-    quiz_desc_fr: "الوصف (فرنسية)",
-    quiz_desc_ar: "الوصف (عربية)",
-    quiz_time: "⏱️ الوقت لكل سؤال (ثواني)",
-    quiz_del_title: "حذف هذا الاختبار ؟",
-    quiz_del_sub: "سيتم حذف جميع أسئلة هذا الاختبار.",
-    qe_template: "📋 قالب Excel",
-    qe_import: "📥 استيراد من Excel",
-    qe_import_confirm: "✅ استيراد الآن",
     an_title: "📊 تقييم المكتسبات",
     an_sub: "تحليل شامل حسب المتدرب، الجلسة والسؤال",
     an_lesson: "📚 الموضوع",
@@ -2597,148 +2361,6 @@ async function setQuestionsForLesson(lessonId) {
   }
 }
 
-// =====================================
-// SYSTÈME THÈMES + QUIZ HIÉRARCHIQUE (v2)
-// =====================================
-// LESSONS reste utilisé comme défaut, mais on peut désormais lire dynamiquement
-// les thèmes depuis Firebase (themes/) et choisir un quiz précis (theme_quizzes/{themeId}/{quizId}).
-
-// Cache mémoire
-let _themesCache = null;        // [{id, name, icon, descFr, descAr, isDefault, order}, ...]
-let _quizzesCache = {};         // themeId -> [{id, name, descFr, descAr, timePerQuestion, isDefault, order}, ...]
-let _selectedQuizId = null;     // quiz choisi par le formateur pour la prochaine partie
-
-// Charger les thèmes (Firebase OU defaults)
-async function loadThemes(forceRefresh = false) {
-  if (_themesCache && !forceRefresh) return _themesCache;
-  const fb = window.fb;
-  
-  // Defaults issus de LESSONS
-  const defaults = LESSONS.map((l, idx) => ({
-    id: l.id,
-    name: l.fr?.title || l.id,
-    nameAr: l.ar?.title || l.fr?.title || l.id,
-    icon: l.icon,
-    descFr: l.fr?.desc || '',
-    descAr: l.ar?.desc || '',
-    isDefault: true,
-    order: idx
-  }));
-  
-  if (!fb) {
-    _themesCache = defaults;
-    return _themesCache;
-  }
-  
-  try {
-    const snap = await fb.get(fb.ref(fb.db, 'themes'));
-    if (!snap.exists()) {
-      // Première fois : on migre les défauts vers Firebase
-      const updates = {};
-      defaults.forEach(t => { updates[t.id] = { ...t }; });
-      await fb.update(fb.ref(fb.db, 'themes'), updates);
-      _themesCache = defaults;
-    } else {
-      const obj = snap.val();
-      _themesCache = Object.entries(obj).map(([id, v]) => ({ id, ...v }));
-      _themesCache.sort((a, b) => (a.order || 0) - (b.order || 0));
-    }
-  } catch(e) {
-    console.warn('Could not load themes, using defaults:', e);
-    _themesCache = defaults;
-  }
-  return _themesCache;
-}
-
-// Charger les quizzes d'un thème
-async function loadQuizzesForTheme(themeId, forceRefresh = false) {
-  if (_quizzesCache[themeId] && !forceRefresh) return _quizzesCache[themeId];
-  const fb = window.fb;
-  if (!fb) { _quizzesCache[themeId] = []; return []; }
-  
-  try {
-    const snap = await fb.get(fb.ref(fb.db, 'theme_quizzes/' + themeId));
-    let quizzes;
-    if (!snap.exists()) {
-      // Première fois : créer un "Quiz 1 par défaut" qui pointe vers les questions existantes
-      const defaultQuiz = {
-        id: 'default',
-        name: 'Quiz 1 — Par défaut',
-        descFr: 'Quiz par défaut avec les 10 questions originales',
-        descAr: 'الاختبار الافتراضي مع الأسئلة العشرة الأصلية',
-        timePerQuestion: 30,
-        isDefault: true,
-        order: 0,
-        createdAt: Date.now()
-      };
-      await fb.set(fb.ref(fb.db, 'theme_quizzes/' + themeId + '/default'), defaultQuiz);
-      quizzes = [defaultQuiz];
-    } else {
-      const obj = snap.val();
-      quizzes = Object.entries(obj).map(([id, v]) => ({ id, ...v }));
-      quizzes.sort((a, b) => (a.order || 0) - (b.order || 0));
-    }
-    _quizzesCache[themeId] = quizzes;
-    return quizzes;
-  } catch(e) {
-    console.warn('Could not load quizzes:', e);
-    _quizzesCache[themeId] = [];
-    return [];
-  }
-}
-
-// Charger les questions d'un quiz précis
-async function setQuestionsForQuiz(themeId, quizId) {
-  const fb = window.fb;
-  const defaultQs = QUESTIONS_BY_LESSON[themeId] || QUESTIONS_BY_LESSON.fundamentals;
-  
-  if (!fb) { QUESTIONS = defaultQs; return; }
-  
-  try {
-    // Pour le "default" quiz : lire depuis lesson_questions/ (rétrocompatible)
-    let snap;
-    if (quizId === 'default') {
-      snap = await fb.get(fb.ref(fb.db, 'lesson_questions/' + themeId));
-    } else {
-      snap = await fb.get(fb.ref(fb.db, 'quiz_questions/' + themeId + '_' + quizId));
-    }
-    
-    if (snap.exists()) {
-      const obj = snap.val();
-      const list = Object.entries(obj).map(([id, q]) => ({ ...q, _id: id }));
-      list.sort((a, b) => {
-        const oa = a.order != null ? a.order : 999999;
-        const ob = b.order != null ? b.order : 999999;
-        if (oa !== ob) return oa - ob;
-        return (a.createdAt || 0) - (b.createdAt || 0);
-      });
-      QUESTIONS = list.map(q => ({
-        fr: {
-          q: q.qFr || '',
-          options: q.optionsFr || ['', '', '', ''],
-          correct: q.correctIdx != null ? q.correctIdx : 0,
-          explanation: q.explanationFr || ''
-        },
-        ar: {
-          q: q.qAr || q.qFr || '',
-          options: q.optionsAr || q.optionsFr || ['', '', '', ''],
-          correct: q.correctIdx != null ? q.correctIdx : 0,
-          explanation: q.explanationAr || q.explanationFr || ''
-        }
-      }));
-      if (QUESTIONS.length === 0 && quizId === 'default') QUESTIONS = defaultQs;
-    } else if (quizId === 'default') {
-      QUESTIONS = defaultQs;
-    } else {
-      QUESTIONS = [];  // Quiz custom sans questions
-    }
-  } catch(e) {
-    console.warn('Could not load quiz questions:', e);
-    QUESTIONS = quizId === 'default' ? defaultQs : [];
-  }
-}
-
-
 // État randomisation (mémorisé dans localStorage pour persister entre sessions navigateur)
 let _shuffleEnabled = false;
 try {
@@ -2856,86 +2478,33 @@ document.addEventListener('click', (e) => {
   }
 });
 
-async function renderLessons() {
+function renderLessons() {
   const grid = $('lessons-grid');
   if (!grid) return;
-  
-  // Charger les thèmes (Firebase + defaults)
-  const themes = await loadThemes(true);
-  
   grid.innerHTML = '';
-  themes.forEach(theme => {
-    const name = LANG === 'ar' ? (theme.nameAr || theme.name) : theme.name;
-    const desc = LANG === 'ar' ? (theme.descAr || theme.descFr || '') : (theme.descFr || '');
+  LESSONS.forEach(lesson => {
     const card = document.createElement('div');
-    card.className = 'lesson-card' + (selectedLessonId === theme.id ? ' active' : '');
-    card.onclick = async (e) => {
-      // Ne pas changer de sélection si on a cliqué sur les boutons d'actions
-      if (e.target.closest('button')) return;
-      selectedLessonId = theme.id;
-      $('selected-lesson-name').textContent = name;
-      await refreshQuizSelectForDashboard();
+    card.className = 'lesson-card' + (selectedLessonId === lesson.id ? ' active' : '');
+    card.onclick = () => {
+      selectedLessonId = lesson.id;
+      $('selected-lesson-name').textContent = lesson[LANG].title;
       renderLessons();
     };
     card.innerHTML = `
-      <div class="flex items-start gap-3">
-        <div class="text-4xl">${escapeHtml(theme.icon || '🎓')}</div>
-        <div class="flex-1 min-w-0">
-          <h4 class="font-bold text-lg mb-1">${escapeHtml(name)}</h4>
-          <p class="text-sm text-gray-500 mb-3">${escapeHtml(desc)}</p>
+      <div class="flex items-start gap-4">
+        <div class="text-4xl">${lesson.icon}</div>
+        <div class="flex-1">
+          <h4 class="font-bold text-lg mb-1">${lesson[LANG].title}</h4>
+          <p class="text-sm text-gray-500 mb-3">${lesson[LANG].desc}</p>
           <div class="flex gap-2 flex-wrap">
-            ${theme.isDefault ? '<span class="badge text-xs">🔒 Par défaut</span>' : '<span class="badge text-xs" style="background:#cffafe;color:#0e7490;">✨ Personnalisé</span>'}
+            <span class="badge text-xs">⏱ ${lesson.duration} min</span>
+            <span class="badge text-xs">❓ ${lesson.qcount}</span>
+            <span class="badge text-xs">📊 ${lesson[LANG].level}</span>
           </div>
-        </div>
-        <div class="flex flex-col gap-1" onclick="event.stopPropagation()">
-          <button class="qe-action-btn" data-theme-edit="${escapeAttr(theme.id)}" title="Modifier">✏️</button>
-          <button class="qe-action-btn del" data-theme-del="${escapeAttr(theme.id)}" title="Supprimer">🗑️</button>
         </div>
       </div>`;
     grid.appendChild(card);
-    
-    // Bind actions
-    const editBtn = card.querySelector('button[data-theme-edit]');
-    const delBtn = card.querySelector('button[data-theme-del]');
-    if (editBtn) editBtn.onclick = (e) => { e.stopPropagation(); openThemeEditModal(theme.id); };
-    if (delBtn) delBtn.onclick = (e) => { e.stopPropagation(); askDeleteTheme(theme.id); };
   });
-  
-  // Si selectedLessonId n'est plus dans la liste (supprimé), en choisir un autre
-  if (!themes.find(t => t.id === selectedLessonId) && themes.length > 0) {
-    selectedLessonId = themes[0].id;
-    const firstName = LANG === 'ar' ? (themes[0].nameAr || themes[0].name) : themes[0].name;
-    $('selected-lesson-name').textContent = firstName;
-    await refreshQuizSelectForDashboard();
-  }
-}
-
-// Met à jour le menu déroulant des quiz dans le dashboard
-async function refreshQuizSelectForDashboard() {
-  const sel = $('td-quiz-select');
-  if (!sel || !selectedLessonId) return;
-  sel.innerHTML = '<option value="">⏳</option>';
-  
-  const quizzes = await loadQuizzesForTheme(selectedLessonId, true);
-  sel.innerHTML = '';
-  if (quizzes.length === 0) {
-    sel.innerHTML = '<option value="">—</option>';
-    _selectedQuizId = null;
-    return;
-  }
-  quizzes.forEach(q => {
-    const opt = document.createElement('option');
-    opt.value = q.id;
-    opt.textContent = q.name + (q.timePerQuestion ? ` (${q.timePerQuestion}s)` : '');
-    sel.appendChild(opt);
-  });
-  // Sélectionner le 1er par défaut
-  _selectedQuizId = quizzes[0].id;
-  sel.value = _selectedQuizId;
-}
-
-function onQuizSelectChange() {
-  _selectedQuizId = $('td-quiz-select').value;
 }
 
 function whenFbReady(cb) {
@@ -2955,27 +2524,17 @@ async function createGame() {
     attempts++;
   }
   currentPin = pin;
-  // 🆕 Charger les questions du QUIZ sélectionné (et non plus juste la leçon)
-  const quizId = _selectedQuizId || 'default';
-  await setQuestionsForQuiz(selectedLessonId, quizId);
+  // Set questions for the selected lesson (charge depuis Firebase si dispo)
+  await setQuestionsForLesson(selectedLessonId);
   
-  // Récupérer le temps par question depuis le quiz
-  const quizzes = await loadQuizzesForTheme(selectedLessonId);
-  const quizMeta = quizzes.find(q => q.id === quizId) || { timePerQuestion: 30 };
-  const timePerQ = quizMeta.timePerQuestion || 30;
-  
-  // Appliquer le shuffle si activé
+  // Appliquer le shuffle si activé (mélange questions + options)
   if (_shuffleEnabled) {
     QUESTIONS = shuffleQuestionsAndOptions(QUESTIONS);
   }
   
-  // Vérifier qu'on a au moins 1 question
-  if (!QUESTIONS || QUESTIONS.length === 0) {
-    toast('⚠️ Ce quiz n\'a aucune question. Ajoute-en d\'abord.');
-    return;
-  }
-  
-  // Stocker la séquence du quiz dans Firebase (pour les apprenants)
+  // ⚡ IMPORTANT : Stocker la séquence du quiz dans Firebase
+  // Pour que tous les apprenants voient EXACTEMENT le même ordre que le formateur,
+  // on partage la séquence finale via games/{pin}/quizData
   const quizDataArr = QUESTIONS.map(q => ({
     qFr: q.fr.q,
     qAr: q.ar.q,
@@ -2988,10 +2547,8 @@ async function createGame() {
   
   await fb.set(fb.ref(fb.db, 'games/' + pin), {
     info: {
-      pin, lesson: selectedLessonId, quizId: quizId, quizName: quizMeta.name || '',
-      state: 'lobby',
+      pin, lesson: selectedLessonId, state: 'lobby',
       currentQuestion: 0, totalQuestions: QUESTIONS.length,
-      timePerQuestion: timePerQ,
       lang: LANG, createdAt: Date.now(),
       shuffled: _shuffleEnabled
     },
@@ -3099,18 +2656,12 @@ function showTeacherQuestion(info) {
   $('answers-received').textContent = '0';
 
   goTo('screen-quiz-teacher');
-  startTeacherTimer(info.questionStartTime, info.timePerQuestion || 30);
+  startTeacherTimer(info.questionStartTime);
 }
 
-function startTeacherTimer(startTs, total) {
-  total = total || 30;
+function startTeacherTimer(startTs) {
   clearInterval(timerInterval);
-  
-  // 🆕 Seuil "panique" : 1/3 du temps total
-  // Ex : 30s → panique à 10s | 60s → panique à 20s | 15s → panique à 5s
-  const panicThreshold = Math.max(3, Math.floor(total / 3));
-  let lastTickSecond = -1;
-  
+  const total = 30;
   const update = () => {
     const elapsed = (Date.now() - startTs) / 1000;
     const left = Math.max(0, Math.ceil(total - elapsed));
@@ -3118,77 +2669,10 @@ function startTeacherTimer(startTs, total) {
     $('time-left-teacher').textContent = left;
     const dash = 282.7 * (1 - left / total);
     $('timer-circle').style.strokeDashoffset = dash;
-    
-    // 🆕 Animation visuelle + son TIC dans la zone "panique"
-    const timerCircleEl = document.getElementById('timer-circle');
-    const timerNumEl = document.getElementById('timer-num-teacher');
-    if (left <= panicThreshold && left > 0) {
-      // Ajouter la classe d'animation
-      if (timerCircleEl && !timerCircleEl.classList.contains('panic')) {
-        timerCircleEl.classList.add('panic');
-      }
-      if (timerNumEl && !timerNumEl.classList.contains('panic')) {
-        timerNumEl.classList.add('panic');
-      }
-      // Jouer le son TIC une fois par seconde
-      if (left !== lastTickSecond) {
-        lastTickSecond = left;
-        // Pitch augmente quand le temps diminue (effet d'accélération sonore)
-        const ratio = left / panicThreshold; // 1.0 au début, 0.0 à la fin
-        const pitch = 800 + (1 - ratio) * 400;  // 800Hz → 1200Hz
-        playTickSound(pitch);
-      }
-    } else {
-      // Réinitialiser les animations
-      if (timerCircleEl) timerCircleEl.classList.remove('panic');
-      if (timerNumEl) timerNumEl.classList.remove('panic');
-    }
-    
-    if (left <= 0) {
-      clearInterval(timerInterval);
-      // 🆕 Son final "BIP" plus grave + plus long pour signaler la fin
-      playTickSound(400, 400);
-      // Retirer les animations
-      if (timerCircleEl) timerCircleEl.classList.remove('panic');
-      if (timerNumEl) timerNumEl.classList.remove('panic');
-      revealAnswer();
-    }
+    if (left <= 0) { clearInterval(timerInterval); revealAnswer(); }
   };
   update();
   timerInterval = setInterval(update, 250);
-}
-
-// 🆕 Générateur de son TIC via Web Audio API (pas besoin de fichier audio)
-let _audioCtx = null;
-function playTickSound(frequency, duration) {
-  frequency = frequency || 800;
-  duration = duration || 60;
-  try {
-    if (!_audioCtx) {
-      const AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return;
-      _audioCtx = new AC();
-    }
-    // Reprendre le contexte si suspendu (politique mobile)
-    if (_audioCtx.state === 'suspended') _audioCtx.resume();
-    
-    const osc = _audioCtx.createOscillator();
-    const gain = _audioCtx.createGain();
-    osc.type = 'square';  // Son sec, percussif (TIC)
-    osc.frequency.value = frequency;
-    // Enveloppe : attaque rapide, descente rapide
-    // Volume max augmenté à 0.5 (3x plus fort qu'avant)
-    const now = _audioCtx.currentTime;
-    gain.gain.setValueAtTime(0, now);
-    gain.gain.linearRampToValueAtTime(0.5, now + 0.005);  // attaque 5ms, volume max
-    gain.gain.exponentialRampToValueAtTime(0.001, now + duration / 1000);
-    osc.connect(gain);
-    gain.connect(_audioCtx.destination);
-    osc.start(now);
-    osc.stop(now + duration / 1000);
-  } catch(e) {
-    // Audio non supporté : ignorer silencieusement
-  }
 }
 
 async function revealAnswer() {
@@ -3872,10 +3356,9 @@ function showStudentQuestion(info) {
   });
 
   const startTs = info.questionStartTime;
-  const total = info.timePerQuestion || 30;
   clearInterval(timerInterval);
   const update = () => {
-    const left = Math.max(0, Math.ceil(total - (Date.now() - startTs) / 1000));
+    const left = Math.max(0, Math.ceil(30 - (Date.now() - startTs) / 1000));
     $('student-time-left').textContent = left;
     if (left <= 0) clearInterval(timerInterval);
   };
@@ -5830,103 +5313,58 @@ async function confirmDeleteStudent() {
 // =====================================
 // QUESTION EDITOR (formateur)
 // =====================================
-let _qeCurrentLesson = null;        // lesson/theme id en cours d'édition
-let _qeCurrentQuiz = 'default';     // quiz id en cours d'édition
-let _qeQuestions = [];              // questions du quiz en cours
-let _qeEditingId = null;
-let _qeDeleteId = null;
+let _qeCurrentLesson = null;        // lesson id en cours d'édition
+let _qeQuestions = [];              // questions de la leçon en cours (depuis Firebase)
+let _qeEditingId = null;            // id de la question en cours d'édition (null = nouvelle)
+let _qeDeleteId = null;             // id question à supprimer (popup confirm)
 
 async function goToQuestionEditor() {
-  // Charger les thèmes (depuis Firebase)
-  const themes = await loadThemes(true);
+  // Peupler le select des leçons (la 1ère fois ou si vide)
   const sel = $('qe-lesson-select');
-  sel.innerHTML = '';
-  themes.forEach(t => {
-    const opt = document.createElement('option');
-    opt.value = t.id;
-    const tname = LANG === 'ar' ? (t.nameAr || t.name) : t.name;
-    opt.textContent = (t.icon || '') + ' ' + tname;
-    sel.appendChild(opt);
-  });
-  if (!_qeCurrentLesson || !themes.find(t => t.id === _qeCurrentLesson)) {
-    _qeCurrentLesson = themes[0]?.id || 'fundamentals';
+  if (sel.options.length === 0 || sel.options.length !== LESSONS.length) {
+    sel.innerHTML = '';
+    LESSONS.forEach(l => {
+      const opt = document.createElement('option');
+      opt.value = l.id;
+      const lname = LANG === 'ar' ? (l.ar?.title || l.id) : (l.fr?.title || l.id);
+      opt.textContent = (l.icon || '') + ' ' + lname;
+      sel.appendChild(opt);
+    });
   }
+  if (!_qeCurrentLesson) _qeCurrentLesson = LESSONS[0].id;
   sel.value = _qeCurrentLesson;
   goTo('screen-question-editor');
-  await refreshQuizSelectForEditor();
-  await loadQuestionsForEditor(_qeCurrentLesson, _qeCurrentQuiz);
+  await loadQuestionsForEditor(_qeCurrentLesson);
 }
 
 async function onQeLessonChange() {
   _qeCurrentLesson = $('qe-lesson-select').value;
-  _qeCurrentQuiz = 'default';  // Reset to default quiz
-  await refreshQuizSelectForEditor();
-  await loadQuestionsForEditor(_qeCurrentLesson, _qeCurrentQuiz);
+  await loadQuestionsForEditor(_qeCurrentLesson);
 }
 
-async function refreshQuizSelectForEditor() {
-  const sel = $('qe-quiz-select');
-  sel.innerHTML = '<option value="">⏳</option>';
-  
-  const quizzes = await loadQuizzesForTheme(_qeCurrentLesson, true);
-  sel.innerHTML = '';
-  if (quizzes.length === 0) {
-    sel.innerHTML = '<option value="">—</option>';
-    return;
-  }
-  quizzes.forEach(q => {
-    const opt = document.createElement('option');
-    opt.value = q.id;
-    opt.textContent = q.name + (q.timePerQuestion ? ` (${q.timePerQuestion}s)` : '');
-    if (q.isDefault) opt.textContent += ' 🔒';
-    sel.appendChild(opt);
-  });
-  // Sélectionner _qeCurrentQuiz s'il existe, sinon le 1er
-  if (!quizzes.find(q => q.id === _qeCurrentQuiz)) {
-    _qeCurrentQuiz = quizzes[0].id;
-  }
-  sel.value = _qeCurrentQuiz;
-}
-
-async function onQeQuizChange() {
-  _qeCurrentQuiz = $('qe-quiz-select').value;
-  await loadQuestionsForEditor(_qeCurrentLesson, _qeCurrentQuiz);
-}
-
-// Charge les questions d'un quiz précis.
-async function loadQuestionsForEditor(themeId, quizId) {
+// Charge les questions d'une leçon dans l'éditeur.
+// Migration : si Firebase ne contient pas encore les questions par défaut, on les y pousse.
+async function loadQuestionsForEditor(lessonId) {
   const fb = window.fb;
   const container = $('qe-list-container');
   container.innerHTML = '<div class="history-empty"><div class="icon">⏳</div><p>' + t('hist_loading') + '</p></div>';
   
   try {
-    let snap;
-    // Pour le quiz "default" : on lit lesson_questions/{themeId} (rétrocompatible)
-    if (quizId === 'default') {
-      snap = await fb.get(fb.ref(fb.db, 'lesson_questions/' + themeId));
-      if (!snap.exists()) {
-        // 1ère fois : migration des questions par défaut
-        await migrateDefaultsToFirebase(themeId);
-        snap = await fb.get(fb.ref(fb.db, 'lesson_questions/' + themeId));
-      }
+    const snap = await fb.get(fb.ref(fb.db, 'lesson_questions/' + lessonId));
+    if (!snap.exists()) {
+      // Première fois pour cette leçon : on migre les questions par défaut vers Firebase
+      await migrateDefaultsToFirebase(lessonId);
+      // On recharge
+      const snap2 = await fb.get(fb.ref(fb.db, 'lesson_questions/' + lessonId));
+      _qeQuestions = snap2.exists() ? entriesToSortedList(snap2.val()) : [];
     } else {
-      // Quiz custom : on lit quiz_questions/{themeId}_{quizId}
-      snap = await fb.get(fb.ref(fb.db, 'quiz_questions/' + themeId + '_' + quizId));
+      _qeQuestions = entriesToSortedList(snap.val());
     }
-    _qeQuestions = snap && snap.exists() ? entriesToSortedList(snap.val()) : [];
     renderQuestionsList();
   } catch(e) {
     console.error('Load questions failed:', e);
     container.innerHTML = '<div class="history-empty"><div class="icon">❌</div><p>' + t('qe_loading_err') + '</p></div>';
   }
-}
-
-// Retourne le chemin Firebase actuel pour les questions du quiz en cours
-function getCurrentQuestionsPath() {
-  if (_qeCurrentQuiz === 'default') {
-    return 'lesson_questions/' + _qeCurrentLesson;
-  }
-  return 'quiz_questions/' + _qeCurrentLesson + '_' + _qeCurrentQuiz;
 }
 
 function entriesToSortedList(obj) {
@@ -6104,7 +5542,7 @@ async function saveQuestion() {
   // Le radio FR et AR doivent rester synchronisés. On force le sync au moment du save.
   
   const fb = window.fb;
-  const basePath = getCurrentQuestionsPath();
+  const lessonId = _qeCurrentLesson;
   
   try {
     if (_qeEditingId) {
@@ -6118,7 +5556,7 @@ async function saveQuestion() {
         updatedAt: Date.now()
       };
       delete payload._id;
-      await fb.set(fb.ref(fb.db, basePath + '/' + _qeEditingId), payload);
+      await fb.set(fb.ref(fb.db, 'lesson_questions/' + lessonId + '/' + _qeEditingId), payload);
     } else {
       // Création : nouvel id, order = à la fin
       const newId = 'custom_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
@@ -6131,11 +5569,11 @@ async function saveQuestion() {
         order: maxOrder + 1,
         createdAt: Date.now()
       };
-      await fb.set(fb.ref(fb.db, basePath + '/' + newId), payload);
+      await fb.set(fb.ref(fb.db, 'lesson_questions/' + lessonId + '/' + newId), payload);
     }
     toast(t('qe_saved'));
     closeQuestionEditModal();
-    await loadQuestionsForEditor(_qeCurrentLesson, _qeCurrentQuiz);
+    await loadQuestionsForEditor(lessonId);
   } catch(e) {
     console.error('Save question failed:', e);
     errEl.textContent = 'Erreur: ' + e.message;
@@ -6174,10 +5612,10 @@ async function confirmDeleteQuestion() {
   if (!_qeDeleteId) return;
   const fb = window.fb;
   try {
-    await fb.remove(fb.ref(fb.db, getCurrentQuestionsPath() + '/' + _qeDeleteId));
+    await fb.remove(fb.ref(fb.db, 'lesson_questions/' + _qeCurrentLesson + '/' + _qeDeleteId));
     toast(t('qe_deleted'));
     closeQeDeleteModal();
-    await loadQuestionsForEditor(_qeCurrentLesson, _qeCurrentQuiz);
+    await loadQuestionsForEditor(_qeCurrentLesson);
   } catch(e) {
     console.error('Delete question failed:', e);
     toast('Erreur: ' + e.message);
@@ -6195,312 +5633,15 @@ function closeQeResetModal() {
 async function confirmResetLesson() {
   const fb = window.fb;
   const lessonId = _qeCurrentLesson;
-  const quizId = _qeCurrentQuiz;
   try {
-    if (quizId === 'default') {
-      // Reset du quiz par défaut : supprime tout dans lesson_questions/ et remigre
-      await fb.remove(fb.ref(fb.db, 'lesson_questions/' + lessonId));
-      await migrateDefaultsToFirebase(lessonId);
-    } else {
-      // Reset d'un quiz custom : supprime juste ses questions
-      await fb.remove(fb.ref(fb.db, 'quiz_questions/' + lessonId + '_' + quizId));
-    }
+    // Tout supprimer puis remigrer
+    await fb.remove(fb.ref(fb.db, 'lesson_questions/' + lessonId));
+    await migrateDefaultsToFirebase(lessonId);
     toast(t('qe_reset_done'));
     closeQeResetModal();
-    await loadQuestionsForEditor(lessonId, quizId);
+    await loadQuestionsForEditor(lessonId);
   } catch(e) {
     console.error('Reset lesson failed:', e);
-    toast('Erreur: ' + e.message);
-  }
-}
-
-// =====================================
-// GESTION DES THÈMES (ajouter/modifier/supprimer)
-// =====================================
-let _themeEditingId = null;
-let _themeDeletingId = null;
-
-function openThemeEditModal(themeId) {
-  _themeEditingId = themeId;
-  const themes = _themesCache || [];
-  const t = themes.find(x => x.id === themeId);
-  
-  if (t) {
-    $('theme-edit-title').textContent = '✏️ Modifier le thème';
-    $('theme-name-fr').value = t.name || '';
-    $('theme-name-ar').value = t.nameAr || '';
-    $('theme-icon').value = t.icon || '';
-    $('theme-desc-fr').value = t.descFr || '';
-    $('theme-desc-ar').value = t.descAr || '';
-  } else {
-    $('theme-edit-title').textContent = '✨ Nouveau thème';
-    $('theme-name-fr').value = '';
-    $('theme-name-ar').value = '';
-    $('theme-icon').value = '🎓';
-    $('theme-desc-fr').value = '';
-    $('theme-desc-ar').value = '';
-  }
-  $('theme-edit-err').classList.add('hidden');
-  $('theme-edit-modal').classList.remove('hidden');
-  setTimeout(() => $('theme-name-fr').focus(), 100);
-}
-
-function closeThemeEditModal() {
-  $('theme-edit-modal').classList.add('hidden');
-  _themeEditingId = null;
-}
-
-async function saveTheme() {
-  const nameFr = $('theme-name-fr').value.trim();
-  const nameAr = $('theme-name-ar').value.trim();
-  const icon = $('theme-icon').value.trim() || '🎓';
-  const descFr = $('theme-desc-fr').value.trim();
-  const descAr = $('theme-desc-ar').value.trim();
-  const errEl = $('theme-edit-err');
-  
-  if (!nameFr) {
-    errEl.textContent = 'Le nom (FR) est requis';
-    errEl.classList.remove('hidden');
-    return;
-  }
-  
-  const fb = window.fb;
-  try {
-    if (_themeEditingId) {
-      // Modification
-      const existing = (_themesCache || []).find(x => x.id === _themeEditingId);
-      const payload = {
-        ...(existing || {}),
-        name: nameFr,
-        nameAr: nameAr || nameFr,
-        icon,
-        descFr,
-        descAr,
-        updatedAt: Date.now()
-      };
-      delete payload.id;
-      await fb.set(fb.ref(fb.db, 'themes/' + _themeEditingId), payload);
-    } else {
-      // Création
-      const newId = 'custom_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-      const themes = _themesCache || [];
-      const maxOrder = themes.reduce((m, x) => Math.max(m, x.order || 0), -1);
-      await fb.set(fb.ref(fb.db, 'themes/' + newId), {
-        name: nameFr,
-        nameAr: nameAr || nameFr,
-        icon,
-        descFr,
-        descAr,
-        isDefault: false,
-        order: maxOrder + 1,
-        createdAt: Date.now()
-      });
-      // Créer aussi un Quiz 1 par défaut pour ce thème
-      await fb.set(fb.ref(fb.db, 'theme_quizzes/' + newId + '/default'), {
-        name: 'Quiz 1',
-        descFr: '',
-        descAr: '',
-        timePerQuestion: 30,
-        isDefault: true,
-        order: 0,
-        createdAt: Date.now()
-      });
-    }
-    toast(_themeEditingId ? '✅ Thème modifié' : '✅ Thème créé');
-    closeThemeEditModal();
-    _themesCache = null;  // Force reload
-    await renderLessons();
-    await refreshQuizSelectForDashboard();
-  } catch(e) {
-    console.error('Save theme failed:', e);
-    errEl.textContent = 'Erreur: ' + e.message;
-    errEl.classList.remove('hidden');
-  }
-}
-
-function askDeleteTheme(themeId) {
-  const themes = _themesCache || [];
-  const t = themes.find(x => x.id === themeId);
-  if (!t) return;
-  if (t.isDefault) {
-    toast('⚠️ Les thèmes par défaut ne peuvent pas être supprimés');
-    return;
-  }
-  _themeDeletingId = themeId;
-  $('theme-del-name').textContent = (t.icon || '') + ' ' + t.name;
-  $('theme-delete-modal').classList.remove('hidden');
-}
-
-function closeThemeDeleteModal() {
-  _themeDeletingId = null;
-  $('theme-delete-modal').classList.add('hidden');
-}
-
-async function confirmDeleteTheme() {
-  if (!_themeDeletingId) return;
-  const fb = window.fb;
-  try {
-    // Supprimer le thème + tous ses quiz + toutes ses questions
-    await Promise.all([
-      fb.remove(fb.ref(fb.db, 'themes/' + _themeDeletingId)),
-      fb.remove(fb.ref(fb.db, 'theme_quizzes/' + _themeDeletingId)),
-      fb.remove(fb.ref(fb.db, 'lesson_questions/' + _themeDeletingId))
-    ]);
-    // Supprimer aussi les quiz_questions correspondants (best-effort)
-    try {
-      const snap = await fb.get(fb.ref(fb.db, 'quiz_questions'));
-      if (snap.exists()) {
-        const updates = {};
-        Object.keys(snap.val()).forEach(k => {
-          if (k.startsWith(_themeDeletingId + '_')) updates[k] = null;
-        });
-        if (Object.keys(updates).length > 0) {
-          await fb.update(fb.ref(fb.db, 'quiz_questions'), updates);
-        }
-      }
-    } catch(e) { /* ignore */ }
-    
-    toast('🗑️ Thème supprimé');
-    closeThemeDeleteModal();
-    _themesCache = null;
-    _quizzesCache = {};
-    await renderLessons();
-    await refreshQuizSelectForDashboard();
-  } catch(e) {
-    console.error('Delete theme failed:', e);
-    toast('Erreur: ' + e.message);
-  }
-}
-
-// =====================================
-// GESTION DES QUIZ (ajouter/modifier/supprimer)
-// =====================================
-let _quizEditingId = null;
-let _quizDeletingId = null;
-
-async function openQuizEditModal(quizId) {
-  _quizEditingId = quizId;
-  // Affichage du thème
-  const themes = await loadThemes();
-  const theme = themes.find(t => t.id === _qeCurrentLesson);
-  $('quiz-edit-theme-label').textContent = theme ? ((theme.icon || '') + ' ' + theme.name) : _qeCurrentLesson;
-  
-  if (quizId) {
-    const quizzes = await loadQuizzesForTheme(_qeCurrentLesson);
-    const q = quizzes.find(x => x.id === quizId);
-    if (!q) return;
-    $('quiz-edit-title').textContent = '✏️ Modifier le quiz';
-    $('quiz-name').value = q.name || '';
-    $('quiz-desc-fr').value = q.descFr || '';
-    $('quiz-desc-ar').value = q.descAr || '';
-    $('quiz-time').value = String(q.timePerQuestion || 30);
-  } else {
-    $('quiz-edit-title').textContent = '✨ Nouveau quiz';
-    const quizzes = await loadQuizzesForTheme(_qeCurrentLesson);
-    $('quiz-name').value = 'Quiz ' + (quizzes.length + 1);
-    $('quiz-desc-fr').value = '';
-    $('quiz-desc-ar').value = '';
-    $('quiz-time').value = '30';
-  }
-  $('quiz-edit-err').classList.add('hidden');
-  $('quiz-edit-modal').classList.remove('hidden');
-  setTimeout(() => $('quiz-name').focus(), 100);
-}
-
-function closeQuizEditModal() {
-  $('quiz-edit-modal').classList.add('hidden');
-  _quizEditingId = null;
-}
-
-async function saveQuiz() {
-  const name = $('quiz-name').value.trim();
-  const descFr = $('quiz-desc-fr').value.trim();
-  const descAr = $('quiz-desc-ar').value.trim();
-  const timePerQuestion = parseInt($('quiz-time').value) || 30;
-  const errEl = $('quiz-edit-err');
-  
-  if (!name) {
-    errEl.textContent = 'Le nom du quiz est requis';
-    errEl.classList.remove('hidden');
-    return;
-  }
-  
-  const fb = window.fb;
-  const themeId = _qeCurrentLesson;
-  
-  try {
-    if (_quizEditingId) {
-      const quizzes = await loadQuizzesForTheme(themeId);
-      const existing = quizzes.find(x => x.id === _quizEditingId);
-      const payload = {
-        ...(existing || {}),
-        name, descFr, descAr, timePerQuestion,
-        updatedAt: Date.now()
-      };
-      delete payload.id;
-      await fb.set(fb.ref(fb.db, 'theme_quizzes/' + themeId + '/' + _quizEditingId), payload);
-    } else {
-      const newId = 'quiz_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-      const quizzes = await loadQuizzesForTheme(themeId);
-      const maxOrder = quizzes.reduce((m, x) => Math.max(m, x.order || 0), -1);
-      await fb.set(fb.ref(fb.db, 'theme_quizzes/' + themeId + '/' + newId), {
-        name, descFr, descAr, timePerQuestion,
-        isDefault: false,
-        order: maxOrder + 1,
-        createdAt: Date.now()
-      });
-      _quizEditingId = newId;  // pour basculer dessus après
-    }
-    toast('✅ Quiz enregistré');
-    closeQuizEditModal();
-    delete _quizzesCache[themeId];
-    _qeCurrentQuiz = _quizEditingId || _qeCurrentQuiz;
-    await refreshQuizSelectForEditor();
-    await refreshQuizSelectForDashboard();
-    await loadQuestionsForEditor(_qeCurrentLesson, _qeCurrentQuiz);
-  } catch(e) {
-    console.error('Save quiz failed:', e);
-    errEl.textContent = 'Erreur: ' + e.message;
-    errEl.classList.remove('hidden');
-  }
-}
-
-async function askDeleteQuiz() {
-  if (_qeCurrentQuiz === 'default') {
-    toast('⚠️ Le Quiz 1 par défaut ne peut pas être supprimé. Utilise "🔄 Réinitialiser" à la place.');
-    return;
-  }
-  const quizzes = await loadQuizzesForTheme(_qeCurrentLesson);
-  const q = quizzes.find(x => x.id === _qeCurrentQuiz);
-  if (!q) return;
-  _quizDeletingId = _qeCurrentQuiz;
-  $('quiz-del-name').textContent = q.name;
-  $('quiz-delete-modal').classList.remove('hidden');
-}
-
-function closeQuizDeleteModal() {
-  _quizDeletingId = null;
-  $('quiz-delete-modal').classList.add('hidden');
-}
-
-async function confirmDeleteQuiz() {
-  if (!_quizDeletingId) return;
-  const fb = window.fb;
-  const themeId = _qeCurrentLesson;
-  try {
-    await Promise.all([
-      fb.remove(fb.ref(fb.db, 'theme_quizzes/' + themeId + '/' + _quizDeletingId)),
-      fb.remove(fb.ref(fb.db, 'quiz_questions/' + themeId + '_' + _quizDeletingId))
-    ]);
-    toast('🗑️ Quiz supprimé');
-    closeQuizDeleteModal();
-    delete _quizzesCache[themeId];
-    _qeCurrentQuiz = 'default';  // Revenir au quiz par défaut
-    await refreshQuizSelectForEditor();
-    await refreshQuizSelectForDashboard();
-    await loadQuestionsForEditor(_qeCurrentLesson, _qeCurrentQuiz);
-  } catch(e) {
-    console.error('Delete quiz failed:', e);
     toast('Erreur: ' + e.message);
   }
 }
@@ -6517,402 +5658,6 @@ window.askResetLesson = askResetLesson;
 window.closeQeResetModal = closeQeResetModal;
 window.confirmResetLesson = confirmResetLesson;
 window.toggleShuffleMode = toggleShuffleMode;
-
-// 🆕 Thèmes
-window.openThemeEditModal = openThemeEditModal;
-window.closeThemeEditModal = closeThemeEditModal;
-window.saveTheme = saveTheme;
-window.askDeleteTheme = askDeleteTheme;
-window.closeThemeDeleteModal = closeThemeDeleteModal;
-window.confirmDeleteTheme = confirmDeleteTheme;
-
-// 🆕 Quiz
-window.openQuizEditModal = openQuizEditModal;
-window.closeQuizEditModal = closeQuizEditModal;
-window.saveQuiz = saveQuiz;
-window.askDeleteQuiz = askDeleteQuiz;
-window.closeQuizDeleteModal = closeQuizDeleteModal;
-window.confirmDeleteQuiz = confirmDeleteQuiz;
-
-// =====================================
-// IMPORT / EXPORT EXCEL QUESTIONS
-// =====================================
-// Données prêtes à être importées (peuplées par handleExcelImport, puis utilisées par confirmImport)
-let _importData = null;
-
-// Télécharge un template Excel vide pour aider le formateur à remplir ses questions
-function downloadImportTemplate() {
-  const headers = [
-    'Theme_FR', 'Theme_AR', 'Theme_Icon',
-    'Quiz_Name', 'Quiz_Time',
-    'Question_FR', 'A_FR', 'B_FR', 'C_FR', 'D_FR',
-    'Question_AR', 'A_AR', 'B_AR', 'C_AR', 'D_AR',
-    'Correct'
-  ];
-  const example = [
-    'Pasteurisation', 'البسترة', '🧪',
-    'Quiz 1 - Bases', '30',
-    'Quelle est la température HTST ?', '50°C', '65°C', '72°C', '95°C',
-    'ما هي درجة حرارة البسترة HTST ؟', '50°C', '65°C', '72°C', '95°C',
-    'C'
-  ];
-  const note = [
-    '⚠️ INSTRUCTIONS', '', '', '', '',
-    'Une ligne par question. Correct = A, B, C ou D.', '', '', '', '',
-    'Si pas de version arabe, laisse les colonnes _AR vides.', '', '', '', '',
-    'Quiz_Time en secondes (15-120). Theme_Icon = emoji.'
-  ];
-  
-  const data = [headers, note, example];
-  const ws = XLSX.utils.aoa_to_sheet(data);
-  
-  // Largeurs colonnes
-  ws['!cols'] = headers.map((h, i) => ({ wch: i < 5 ? 18 : 35 }));
-  
-  // Style header (ligne 0)
-  for (let c = 0; c < headers.length; c++) {
-    const addr = XLSX.utils.encode_cell({ r: 0, c });
-    if (ws[addr]) {
-      ws[addr].s = {
-        font: { bold: true, color: { rgb: 'FFFFFF' }, sz: 11 },
-        fill: { fgColor: { rgb: '1E2A78' }, patternType: 'solid' },
-        alignment: { horizontal: 'center', vertical: 'center' }
-      };
-    }
-  }
-  // Style ligne note (ligne 1)
-  for (let c = 0; c < headers.length; c++) {
-    const addr = XLSX.utils.encode_cell({ r: 1, c });
-    if (ws[addr]) {
-      ws[addr].s = {
-        font: { italic: true, color: { rgb: '92400E' }, sz: 10 },
-        fill: { fgColor: { rgb: 'FEF3C7' }, patternType: 'solid' }
-      };
-    }
-  }
-  
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'Questions');
-  XLSX.writeFile(wb, 'COPAG_Academy_Template_Import.xlsx');
-  toast('📋 Template téléchargé !');
-}
-
-// Quand l'utilisateur sélectionne un fichier Excel
-async function handleExcelImport(event) {
-  const file = event.target.files[0];
-  if (!file) return;
-  
-  try {
-    const buf = await file.arrayBuffer();
-    const wb = XLSX.read(buf, { type: 'array' });
-    const ws = wb.Sheets[wb.SheetNames[0]];
-    if (!ws) {
-      toast('❌ Fichier vide ou format invalide');
-      return;
-    }
-    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
-    
-    // Parser les lignes
-    if (rows.length < 2) {
-      toast('❌ Fichier vide ou pas de données');
-      return;
-    }
-    
-    // Détecter la ligne d'en-tête (peut être 0 ou 1 selon présence note)
-    let headerRowIdx = 0;
-    for (let i = 0; i < Math.min(rows.length, 3); i++) {
-      const row = rows[i].map(c => String(c).toLowerCase().trim());
-      if (row.includes('theme_fr') || row.includes('question_fr')) {
-        headerRowIdx = i;
-        break;
-      }
-    }
-    
-    const headers = rows[headerRowIdx].map(c => String(c).trim());
-    const dataRows = rows.slice(headerRowIdx + 1).filter(r => {
-      // Garder uniquement les lignes qui ont au moins un Question_FR
-      const qIdx = headers.findIndex(h => h.toLowerCase() === 'question_fr');
-      return qIdx >= 0 && String(r[qIdx] || '').trim().length > 0;
-    });
-    
-    // Helper : index de colonne
-    const col = (name) => headers.findIndex(h => h.toLowerCase() === name.toLowerCase());
-    
-    const themeFrCol = col('Theme_FR');
-    const themeArCol = col('Theme_AR');
-    const themeIconCol = col('Theme_Icon');
-    const quizNameCol = col('Quiz_Name');
-    const quizTimeCol = col('Quiz_Time');
-    const qFrCol = col('Question_FR');
-    const aFrCol = col('A_FR');
-    const bFrCol = col('B_FR');
-    const cFrCol = col('C_FR');
-    const dFrCol = col('D_FR');
-    const qArCol = col('Question_AR');
-    const aArCol = col('A_AR');
-    const bArCol = col('B_AR');
-    const cArCol = col('C_AR');
-    const dArCol = col('D_AR');
-    const correctCol = col('Correct');
-    
-    if (themeFrCol < 0 || qFrCol < 0 || correctCol < 0) {
-      toast('❌ Colonnes manquantes (Theme_FR, Question_FR ou Correct)');
-      return;
-    }
-    
-    // Organiser : Map<theme_id, { themeData, quizzes: Map<quiz_name, [questions]> }>
-    const themesMap = new Map();
-    const errors = [];
-    
-    dataRows.forEach((row, rowIdx) => {
-      const themeFr = String(row[themeFrCol] || '').trim();
-      const themeAr = String(row[themeArCol] || '').trim() || themeFr;
-      const themeIcon = String(row[themeIconCol] || '').trim() || '🎓';
-      const quizName = String(row[quizNameCol] || '').trim() || 'Quiz 1';
-      const quizTime = parseInt(row[quizTimeCol]) || 30;
-      const qFr = String(row[qFrCol] || '').trim();
-      const aFr = String(row[aFrCol] || '').trim();
-      const bFr = String(row[bFrCol] || '').trim();
-      const cFr = String(row[cFrCol] || '').trim();
-      const dFr = String(row[dFrCol] || '').trim();
-      const qAr = String(row[qArCol] || '').trim();
-      const aAr = String(row[aArCol] || '').trim();
-      const bAr = String(row[bArCol] || '').trim();
-      const cAr = String(row[cArCol] || '').trim();
-      const dAr = String(row[dArCol] || '').trim();
-      const correct = String(row[correctCol] || '').trim().toUpperCase();
-      
-      // Validation
-      if (!themeFr) { errors.push(`Ligne ${rowIdx + headerRowIdx + 2} : Theme_FR vide`); return; }
-      if (!qFr) { errors.push(`Ligne ${rowIdx + headerRowIdx + 2} : Question_FR vide`); return; }
-      if (!aFr || !bFr || !cFr || !dFr) { errors.push(`Ligne ${rowIdx + headerRowIdx + 2} : Une ou plusieurs options FR sont vides`); return; }
-      if (!['A', 'B', 'C', 'D'].includes(correct)) {
-        errors.push(`Ligne ${rowIdx + headerRowIdx + 2} : Correct doit être A, B, C ou D (reçu: "${correct}")`);
-        return;
-      }
-      
-      const correctIdx = correct.charCodeAt(0) - 65;  // A=0, B=1, C=2, D=3
-      
-      // Identifier le thème
-      const themeId = slugify(themeFr);
-      if (!themesMap.has(themeId)) {
-        themesMap.set(themeId, {
-          themeId,
-          name: themeFr,
-          nameAr: themeAr,
-          icon: themeIcon,
-          descFr: '',
-          descAr: '',
-          quizzes: new Map()
-        });
-      }
-      const theme = themesMap.get(themeId);
-      
-      // Identifier le quiz
-      const quizId = slugify(quizName);
-      if (!theme.quizzes.has(quizId)) {
-        theme.quizzes.set(quizId, {
-          quizId,
-          name: quizName,
-          timePerQuestion: quizTime,
-          questions: []
-        });
-      }
-      const quiz = theme.quizzes.get(quizId);
-      
-      // Ajouter la question
-      quiz.questions.push({
-        qFr,
-        qAr: qAr || qFr,
-        optionsFr: [aFr, bFr, cFr, dFr],
-        optionsAr: [aAr || aFr, bAr || bFr, cAr || cFr, dAr || dFr],
-        correctIdx
-      });
-    });
-    
-    // Compter
-    let totalThemes = themesMap.size;
-    let totalQuizzes = 0;
-    let totalQuestions = 0;
-    themesMap.forEach(t => {
-      totalQuizzes += t.quizzes.size;
-      t.quizzes.forEach(q => totalQuestions += q.questions.length);
-    });
-    
-    _importData = { themesMap, errors };
-    showImportPreview(totalThemes, totalQuizzes, totalQuestions, errors);
-    
-  } catch(e) {
-    console.error('Import Excel error:', e);
-    toast('❌ Erreur de lecture : ' + e.message);
-  } finally {
-    event.target.value = '';  // Reset input
-  }
-}
-
-// Transforme "Mon Thème ! ÉPIC" → "mon_theme_epic"
-function slugify(str) {
-  return String(str || '')
-    .toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // retire accents
-    .replace(/[^a-z0-9]+/g, '_')
-    .replace(/^_+|_+$/g, '')
-    .slice(0, 50) || 'theme_' + Date.now();
-}
-
-// Affiche le modal de prévisualisation
-function showImportPreview(nThemes, nQuizzes, nQuestions, errors) {
-  $('import-summary').innerHTML = `
-    <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:center;">
-      <div><strong style="font-size:24px; color:#16a34a;">${nThemes}</strong><br><span style="font-size:12px;">thème(s)</span></div>
-      <div><strong style="font-size:24px; color:#16a34a;">${nQuizzes}</strong><br><span style="font-size:12px;">quiz</span></div>
-      <div><strong style="font-size:24px; color:#16a34a;">${nQuestions}</strong><br><span style="font-size:12px;">question(s)</span></div>
-    </div>
-    <p class="text-sm mt-3" style="color:#065f46;">✅ Prêt à importer dans Firebase.</p>
-  `;
-  
-  const errEl = $('import-errors');
-  if (errors.length > 0) {
-    errEl.classList.remove('hidden');
-    errEl.innerHTML = '<p class="font-bold text-red-700 mb-2">⚠️ ' + errors.length + ' erreur(s) — ces lignes seront ignorées :</p>';
-    errEl.innerHTML += '<ul style="list-style:disc; padding-left:20px; font-size:12px;">' +
-      errors.slice(0, 10).map(e => '<li>' + escapeHtml(e) + '</li>').join('') +
-      (errors.length > 10 ? '<li>... et ' + (errors.length - 10) + ' autres</li>' : '') +
-      '</ul>';
-  } else {
-    errEl.classList.add('hidden');
-  }
-  
-  // Liste des thèmes/quiz détectés
-  let html = '<h4 class="font-bold mb-2 text-sm" style="color: var(--copag-navy);">📚 Détails par thème :</h4>';
-  _importData.themesMap.forEach(t => {
-    html += `<div style="background:#f9fafb; border-radius:10px; padding:12px; margin-bottom:8px;">
-      <div style="font-weight:700; font-size:14px;">${escapeHtml(t.icon)} ${escapeHtml(t.name)}</div>
-      <div style="margin-top:6px; font-size:12px; color:#6b7280;">`;
-    t.quizzes.forEach(q => {
-      html += `<div>📝 ${escapeHtml(q.name)} — <strong>${q.questions.length}</strong> Q (${q.timePerQuestion}s)</div>`;
-    });
-    html += `</div></div>`;
-  });
-  $('import-preview-list').innerHTML = html;
-  
-  $('import-confirm-btn').disabled = (nQuestions === 0);
-  $('import-preview-modal').classList.remove('hidden');
-}
-
-function closeImportModal() {
-  $('import-preview-modal').classList.add('hidden');
-  _importData = null;
-}
-
-// Effectue l'import dans Firebase
-async function confirmImport() {
-  if (!_importData) return;
-  const fb = window.fb;
-  const btn = $('import-confirm-btn');
-  btn.disabled = true;
-  btn.textContent = '⏳ Import en cours...';
-  
-  try {
-    // Pour chaque thème → créer/mettre à jour
-    const themesMap = _importData.themesMap;
-    let nbImported = 0;
-    
-    for (const t of themesMap.values()) {
-      // Vérifier si le thème existe (sinon le créer)
-      const themeSnap = await fb.get(fb.ref(fb.db, 'themes/' + t.themeId));
-      if (!themeSnap.exists()) {
-        const allThemes = await loadThemes(true);
-        const maxOrder = allThemes.reduce((m, x) => Math.max(m, x.order || 0), -1);
-        await fb.set(fb.ref(fb.db, 'themes/' + t.themeId), {
-          name: t.name,
-          nameAr: t.nameAr,
-          icon: t.icon,
-          descFr: t.descFr || '',
-          descAr: t.descAr || '',
-          isDefault: false,
-          order: maxOrder + 1,
-          createdAt: Date.now()
-        });
-      }
-      
-      // Pour chaque quiz → créer/mettre à jour
-      for (const q of t.quizzes.values()) {
-        const quizSnap = await fb.get(fb.ref(fb.db, 'theme_quizzes/' + t.themeId + '/' + q.quizId));
-        if (!quizSnap.exists()) {
-          await fb.set(fb.ref(fb.db, 'theme_quizzes/' + t.themeId + '/' + q.quizId), {
-            name: q.name,
-            descFr: '', descAr: '',
-            timePerQuestion: q.timePerQuestion,
-            isDefault: false,
-            order: 0,
-            createdAt: Date.now()
-          });
-        }
-        
-        // Path des questions : quiz "default" ou autre
-        const qPath = (q.quizId === 'default')
-          ? 'lesson_questions/' + t.themeId
-          : 'quiz_questions/' + t.themeId + '_' + q.quizId;
-        
-        // Ajouter les questions (sans écraser les existantes)
-        // On lit d'abord pour connaître l'ordre max
-        const existSnap = await fb.get(fb.ref(fb.db, qPath));
-        let maxOrder = -1;
-        if (existSnap.exists()) {
-          Object.values(existSnap.val()).forEach(eq => {
-            if (eq.order != null && eq.order > maxOrder) maxOrder = eq.order;
-          });
-        }
-        
-        // Batch update
-        const updates = {};
-        q.questions.forEach((qData, idx) => {
-          const newId = 'import_' + Date.now() + '_' + idx + '_' + Math.floor(Math.random() * 1000);
-          updates[newId] = {
-            qFr: qData.qFr,
-            qAr: qData.qAr,
-            optionsFr: qData.optionsFr,
-            optionsAr: qData.optionsAr,
-            correctIdx: qData.correctIdx,
-            isDefault: false,
-            order: maxOrder + 1 + idx,
-            createdAt: Date.now()
-          };
-          nbImported++;
-        });
-        await fb.update(fb.ref(fb.db, qPath), updates);
-      }
-    }
-    
-    toast('✅ ' + nbImported + ' question(s) importée(s) !');
-    closeImportModal();
-    
-    // Refresh
-    _themesCache = null;
-    _quizzesCache = {};
-    await renderLessons();
-    await refreshQuizSelectForDashboard();
-    if ($('screen-question-editor') && !$('screen-question-editor').classList.contains('hidden')) {
-      await goToQuestionEditor();
-    }
-    
-  } catch(e) {
-    console.error('Import failed:', e);
-    toast('❌ Erreur d\'import : ' + e.message);
-    btn.disabled = false;
-    btn.textContent = '✅ Importer maintenant';
-  }
-}
-
-window.downloadImportTemplate = downloadImportTemplate;
-window.handleExcelImport = handleExcelImport;
-window.closeImportModal = closeImportModal;
-window.confirmImport = confirmImport;
-
-window.onQeQuizChange = onQeQuizChange;
-window.onQuizSelectChange = onQuizSelectChange;
-window.refreshQuizSelectForDashboard = refreshQuizSelectForDashboard;
 
 
 // =====================================
@@ -7996,23 +6741,15 @@ function handleUrlPrefill() {
 
 function init() {
   applyLang();
+  renderLessons();
   selectedLessonId = LESSONS[0].id;
   $('selected-lesson-name').textContent = LESSONS[0][LANG].title;
   setupMatriculeListener();
-  whenFbReady(async () => {
-    // Charger les thèmes depuis Firebase + afficher
-    await renderLessons();
-    // Définir le 1er thème comme sélectionné par défaut + charger ses quiz
-    const themes = _themesCache || [];
-    if (themes.length > 0) {
-      selectedLessonId = themes[0].id;
-      const nm = LANG === 'ar' ? (themes[0].nameAr || themes[0].name) : themes[0].name;
-      $('selected-lesson-name').textContent = nm;
-      await refreshQuizSelectForDashboard();
-      await renderLessons();  // re-render avec la sélection
-    }
+  whenFbReady(() => {
     setTimeout(() => {
       $('loading').style.display = 'none';
+      // Si l'URL contient des params (depuis l'app pointage), aller direct sur Rejoindre.
+      // Sinon, comportement normal : page d'accueil.
       const prefilled = handleUrlPrefill();
       if (!prefilled) {
         goTo('screen-welcome');
