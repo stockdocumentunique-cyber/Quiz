@@ -22,7 +22,7 @@
   * { -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; background: var(--soft); color: var(--ink); font-family: 'Outfit', 'Cairo', system-ui, sans-serif; overflow-x: hidden; min-height: 100vh; }
   body[dir="rtl"] { font-family: 'Cairo', 'Outfit', sans-serif; }
-  .display-ar { font-family: 'Tajawal', sans-serif; font-weight: 90A0; letter-spacing: -0.02em; }
+  .display-ar { font-family: 'Tajawal', sans-serif; font-weight: 900; letter-spacing: -0.02em; }
   .display-fr { font-family: 'DM Serif Display', serif; letter-spacing: -0.01em; }
   .grid-bg { position: fixed; inset: 0; z-index: 0; pointer-events: none; background-image: linear-gradient(rgba(30,42,120,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(30,42,120,0.06) 1px, transparent 1px); background-size: 56px 56px; mask-image: radial-gradient(ellipse at center, #000 30%, transparent 80%); }
   .blob { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.5; z-index: 0; pointer-events: none; animation: float 18s ease-in-out infinite; }
@@ -754,12 +754,23 @@
     <p class="text-gray-500 mb-6" data-i18n="qe_sub">Ajouter, modifier ou supprimer les questions des leçons</p>
 
     <div class="card p-5 mb-5" style="background: linear-gradient(135deg, var(--blue-50), white);">
-      <label class="block text-sm font-bold mb-2" data-i18n="qe_choose_lesson">Choisir une leçon :</label>
+      <div class="grid md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="block text-sm font-bold mb-2" data-i18n="qe_choose_theme">📚 Choisir un thème :</label>
+          <select id="qe-lesson-select" onchange="onQeLessonChange()" style="width:100%; padding: 12px 16px; border-radius: 12px; border: 2px solid #e5e7eb; font-size: 15px; font-family: inherit; background: white;"></select>
+        </div>
+        <div>
+          <label class="block text-sm font-bold mb-2" data-i18n="qe_choose_quiz">📝 Choisir un quiz :</label>
+          <select id="qe-quiz-select" onchange="onQeQuizChange()" style="width:100%; padding: 12px 16px; border-radius: 12px; border: 2px solid #e5e7eb; font-size: 15px; font-family: inherit; background: white;"></select>
+        </div>
+      </div>
       <div class="flex flex-wrap items-center gap-3">
-        <select id="qe-lesson-select" onchange="onQeLessonChange()" style="flex:1; min-width: 200px; padding: 12px 16px; border-radius: 12px; border: 2px solid #e5e7eb; font-size: 15px; font-family: inherit; background: white;"></select>
         <span class="badge"><span id="qe-question-count">0</span> <span data-i18n="qe_questions">questions</span></span>
-        <button class="btn btn-accent py-2 px-4 text-sm" onclick="openQuestionEditModal(null)" data-i18n="qe_add_btn">+ Ajouter une question</button>
-        <button class="btn btn-ghost py-2 px-4 text-sm" onclick="askResetLesson()" style="color:#92400e;border-color:#fcd34d;" data-i18n="qe_reset_btn">🔄 Réinitialiser</button>
+        <button class="btn btn-accent py-2 px-3 text-sm" onclick="openQuestionEditModal(null)" data-i18n="qe_add_btn">+ Question</button>
+        <button class="btn btn-ghost py-2 px-3 text-sm" onclick="openQuizEditModal(null)" style="color:#1ea8e0;border-color:#bae6fd;" data-i18n="qe_add_quiz">+ Quiz</button>
+        <button class="btn btn-ghost py-2 px-3 text-sm" onclick="openQuizEditModal(_qeCurrentQuiz)" data-i18n="qe_edit_quiz" id="qe-edit-quiz-btn">✏️ Éditer ce quiz</button>
+        <button class="btn btn-ghost py-2 px-3 text-sm" onclick="askDeleteQuiz()" style="color:#dc2626;border-color:#fecaca;" data-i18n="qe_del_quiz" id="qe-del-quiz-btn">🗑️ Supprimer ce quiz</button>
+        <button class="btn btn-ghost py-2 px-3 text-sm" onclick="askResetLesson()" style="color:#92400e;border-color:#fcd34d;" data-i18n="qe_reset_btn">🔄 Réinitialiser</button>
       </div>
     </div>
 
@@ -771,6 +782,126 @@
     </div>
   </div>
 </section>
+
+<!-- THEME EDIT MODAL -->
+<div id="theme-edit-modal" class="session-detail-modal hidden" onclick="if(event.target===this)closeThemeEditModal()">
+  <div class="session-detail-content" style="max-width: 560px;">
+    <div class="detail-header">
+      <h3 class="display-fr text-2xl" id="theme-edit-title">📚 Thème</h3>
+      <button class="detail-close" onclick="closeThemeEditModal()">✕</button>
+    </div>
+    <div style="padding: 0 4px;">
+      <div class="mb-3">
+        <label class="block text-sm font-bold mb-2" data-i18n="theme_name_fr">Nom (FR) <span style="color:#dc2626">*</span></label>
+        <input id="theme-name-fr" type="text" placeholder="Ex: Sécurité incendie" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-size:14px; font-family:inherit;">
+      </div>
+      <div class="mb-3">
+        <label class="block text-sm font-bold mb-2" data-i18n="theme_name_ar">Nom (AR)</label>
+        <input id="theme-name-ar" type="text" dir="rtl" placeholder="مثال: السلامة من الحرائق" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-size:14px; font-family:inherit;">
+      </div>
+      <div class="mb-3">
+        <label class="block text-sm font-bold mb-2" data-i18n="theme_icon">Icône (emoji)</label>
+        <input id="theme-icon" type="text" maxlength="4" placeholder="🔥" style="width:80px; padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-size:24px; text-align:center; font-family:inherit;">
+        <span class="text-xs text-gray-500 ml-3">Ex: 🥛 🧪 🔥 🧬 🎓 ❄️</span>
+      </div>
+      <div class="mb-3">
+        <label class="block text-sm font-bold mb-2" data-i18n="theme_desc_fr">Description (FR)</label>
+        <input id="theme-desc-fr" type="text" placeholder="Bases et concepts essentiels" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-size:14px; font-family:inherit;">
+      </div>
+      <div class="mb-3">
+        <label class="block text-sm font-bold mb-2" data-i18n="theme_desc_ar">Description (AR)</label>
+        <input id="theme-desc-ar" type="text" dir="rtl" placeholder="الأساسيات والمفاهيم" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-size:14px; font-family:inherit;">
+      </div>
+      <p id="theme-edit-err" class="text-red-600 text-sm mt-2 hidden"></p>
+      <div class="flex gap-3 mt-5 justify-end">
+        <button class="btn btn-ghost" onclick="closeThemeEditModal()" data-i18n="cancel">Annuler</button>
+        <button class="btn btn-primary" onclick="saveTheme()" data-i18n="qe_save">✅ Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- THEME DELETE CONFIRM -->
+<div id="theme-delete-modal" class="auth-overlay hidden" onclick="if(event.target===this)closeThemeDeleteModal()">
+  <div class="auth-modal" style="max-width: 440px;">
+    <div class="text-center mb-4">
+      <div class="text-5xl mb-3">⚠️</div>
+      <h3 class="display-fr text-2xl mb-2" data-i18n="theme_del_title">Supprimer ce thème ?</h3>
+      <p class="text-gray-600 text-sm" data-i18n="theme_del_sub">Tous les quiz et questions de ce thème seront aussi supprimés.</p>
+      <p class="text-sm mt-3" style="background:#fef3c7; color:#92400e; padding:12px; border-radius:10px;">⚠️ <span data-i18n="theme_del_warn">Cette action est irréversible.</span></p>
+      <p class="text-sm mt-2 font-bold" id="theme-del-name">—</p>
+    </div>
+    <div class="flex gap-3 mt-4">
+      <button class="btn btn-ghost flex-1" onclick="closeThemeDeleteModal()" data-i18n="cancel">Annuler</button>
+      <button class="btn flex-1" style="background:#dc2626; color:white;" onclick="confirmDeleteTheme()" data-i18n="qe_del_confirm">🗑️ Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ EDIT MODAL -->
+<div id="quiz-edit-modal" class="session-detail-modal hidden" onclick="if(event.target===this)closeQuizEditModal()">
+  <div class="session-detail-content" style="max-width: 560px;">
+    <div class="detail-header">
+      <h3 class="display-fr text-2xl" id="quiz-edit-title">📝 Quiz</h3>
+      <button class="detail-close" onclick="closeQuizEditModal()">✕</button>
+    </div>
+    <div style="padding: 0 4px;">
+      <p class="text-sm text-gray-500 mb-3">Thème : <strong id="quiz-edit-theme-label">—</strong></p>
+      <div class="mb-3">
+        <label class="block text-sm font-bold mb-2" data-i18n="quiz_name">Nom du quiz <span style="color:#dc2626">*</span></label>
+        <input id="quiz-name" type="text" placeholder="Ex: Quiz 2 — HTST avancé" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-size:14px; font-family:inherit;">
+      </div>
+      <div class="mb-3">
+        <label class="block text-sm font-bold mb-2" data-i18n="quiz_desc_fr">Description (FR)</label>
+        <input id="quiz-desc-fr" type="text" placeholder="Pour niveau intermédiaire" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-size:14px; font-family:inherit;">
+      </div>
+      <div class="mb-3">
+        <label class="block text-sm font-bold mb-2" data-i18n="quiz_desc_ar">Description (AR)</label>
+        <input id="quiz-desc-ar" type="text" dir="rtl" placeholder="للمستوى المتوسط" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-size:14px; font-family:inherit;">
+      </div>
+      <div class="mb-3">
+        <label class="block text-sm font-bold mb-2" data-i18n="quiz_time">⏱️ Temps par question (secondes)</label>
+        <select id="quiz-time" style="padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-size:14px; font-family:inherit; background:white;">
+          <option value="15">15 secondes (rapide)</option>
+          <option value="20">20 secondes</option>
+          <option value="30" selected>30 secondes (standard)</option>
+          <option value="45">45 secondes</option>
+          <option value="60">60 secondes (réflexion)</option>
+          <option value="90">90 secondes</option>
+          <option value="120">120 secondes</option>
+        </select>
+      </div>
+      <!-- 🆕 Point 7 : nombre de questions à jouer -->
+      <div class="mb-3">
+        <label class="block text-sm font-bold mb-2" data-i18n="quiz_nb_q">🎯 Nombre de questions à jouer</label>
+        <input id="quiz-nb-questions" type="number" min="0" placeholder="0 = toutes" value="0" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-size:14px; font-family:inherit;">
+        <p class="text-xs text-gray-500 mt-1" data-i18n="quiz_nb_q_hint">Laissez 0 pour jouer toutes les questions du quiz. Sinon, indiquez combien jouer (ex: 10 sur 15). Les premières questions de votre liste seront utilisées — vous pouvez les réordonner dans "Gérer les questions".</p>
+      </div>
+      <p id="quiz-edit-err" class="text-red-600 text-sm mt-2 hidden"></p>
+      <div class="flex gap-3 mt-5 justify-end">
+        <button class="btn btn-ghost" onclick="closeQuizEditModal()" data-i18n="cancel">Annuler</button>
+        <button class="btn btn-primary" onclick="saveQuiz()" data-i18n="qe_save">✅ Enregistrer</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ DELETE CONFIRM -->
+<div id="quiz-delete-modal" class="auth-overlay hidden" onclick="if(event.target===this)closeQuizDeleteModal()">
+  <div class="auth-modal" style="max-width: 440px;">
+    <div class="text-center mb-4">
+      <div class="text-5xl mb-3">🗑️</div>
+      <h3 class="display-fr text-2xl mb-2" data-i18n="quiz_del_title">Supprimer ce quiz ?</h3>
+      <p class="text-gray-600 text-sm" data-i18n="quiz_del_sub">Toutes les questions de ce quiz seront supprimées.</p>
+      <p class="text-sm mt-2 font-bold" id="quiz-del-name">—</p>
+    </div>
+    <div class="flex gap-3 mt-4">
+      <button class="btn btn-ghost flex-1" onclick="closeQuizDeleteModal()" data-i18n="cancel">Annuler</button>
+      <button class="btn flex-1" style="background:#dc2626; color:white;" onclick="confirmDeleteQuiz()" data-i18n="qe_del_confirm">🗑️ Supprimer</button>
+    </div>
+  </div>
+</div>
+
 
 <!-- QUESTION EDIT MODAL -->
 <div id="question-edit-modal" class="session-detail-modal hidden" onclick="if(event.target===this)closeQuestionEditModal()">
@@ -949,6 +1080,7 @@
       <button class="filter-tab active" data-antab="table" onclick="setAnalysisTab('table')" data-i18n="an_tab_table">📋 Tableau</button>
       <button class="filter-tab" data-antab="questions" onclick="setAnalysisTab('questions')" data-i18n="an_tab_questions">❓ Par question</button>
       <button class="filter-tab" data-antab="sessions" onclick="setAnalysisTab('sessions')" data-i18n="an_tab_sessions">👥 Par session</button>
+      <button class="filter-tab" data-antab="quizzes" onclick="setAnalysisTab('quizzes')" data-i18n="an_tab_quizzes">📌 Par quiz</button>
     </div>
 
     <!-- CONTENU -->
@@ -1035,6 +1167,24 @@
       <button class="btn btn-ghost flex-1 py-2 text-sm" onclick="testPointageConnection()" data-i18n="settings_test">🧪 Tester la connexion</button>
     </div>
     <p id="settings-test-result" class="text-sm text-center hidden"></p>
+    
+    <!-- 🆕 Point 3 : libellés personnalisables du profil apprenant -->
+    <hr style="border:0;border-top:1px solid #e5e7eb;margin:20px 0;">
+    <h4 class="font-bold text-base mb-3" data-i18n="settings_profile_title">🎨 Libellés du profil apprenant</h4>
+    <p class="text-xs text-gray-500 mb-3" data-i18n="settings_profile_hint">Personnalisez les textes affichés sur la page de fin de quiz vue par les apprenants.</p>
+    
+    <div class="mb-3">
+      <label class="block text-xs font-bold mb-1 text-gray-700" data-i18n="settings_label_zone1">Zone bleue (haut) — Libellé</label>
+      <input id="settings-label-zone1" type="text" placeholder="Cette session" style="width:100%; padding:8px 12px; border-radius:8px; border:2px solid #e5e7eb; font-family:inherit; font-size:13px;">
+    </div>
+    <div class="mb-3">
+      <label class="block text-xs font-bold mb-1 text-gray-700" data-i18n="settings_label_zone2">Zone blanche (milieu) — Libellé</label>
+      <input id="settings-label-zone2" type="text" placeholder="TOTAL" style="width:100%; padding:8px 12px; border-radius:8px; border:2px solid #e5e7eb; font-family:inherit; font-size:13px;">
+    </div>
+    <div class="mb-3">
+      <label class="block text-xs font-bold mb-1 text-gray-700" data-i18n="settings_label_zone3">Zone jaune (bas) — Libellé "au classement…"</label>
+      <input id="settings-label-zone3" type="text" placeholder="au classement COPAG" style="width:100%; padding:8px 12px; border-radius:8px; border:2px solid #e5e7eb; font-family:inherit; font-size:13px;">
+    </div>
 
     <div class="flex gap-3 mt-5">
       <button class="btn btn-ghost flex-1" onclick="closeSettingsModal()" data-i18n="cancel">Annuler</button>
@@ -1148,18 +1298,33 @@
       <p class="text-gray-500" id="profile-matricule">Matricule: —</p>
     </div>
 
-    <!-- This session results -->
+    <!-- This session results (Zone 1 : libellé modifiable + stats détaillées du quiz) -->
     <div class="card p-6 mb-4" style="background: linear-gradient(135deg, var(--copag-navy), var(--copag-cyan)); color: white;">
-      <div class="text-sm opacity-80 mb-1" data-i18n="profile_this_session">Cette session</div>
-      <div class="flex items-baseline gap-3">
+      <div class="text-sm opacity-80 mb-3" id="profile-zone1-label" data-i18n="profile_this_session">Cette session</div>
+      <div class="flex items-baseline gap-3 mb-4">
         <span class="text-5xl font-black" id="profile-session-stars">+0</span>
         <span class="text-xl">⭐</span>
       </div>
+      <!-- 🆕 Point 3b : 3 sous-stats pour CE quiz -->
+      <div class="grid grid-cols-3 gap-3 pt-3" style="border-top: 1px solid rgba(255,255,255,0.2);">
+        <div class="text-center">
+          <div class="font-bold text-2xl" id="profile-quiz-accuracy">—%</div>
+          <div class="text-xs opacity-80" data-i18n="profile_quiz_accuracy">🎯 Précision</div>
+        </div>
+        <div class="text-center">
+          <div class="font-bold text-2xl"><span id="profile-quiz-speed">—</span>s</div>
+          <div class="text-xs opacity-80" data-i18n="profile_quiz_speed">⚡ Vitesse moy.</div>
+        </div>
+        <div class="text-center">
+          <div class="font-bold text-2xl" id="profile-quiz-rank">—</div>
+          <div class="text-xs opacity-80" data-i18n="profile_quiz_rank">🏆 Classement</div>
+        </div>
+      </div>
     </div>
 
-    <!-- Total stats -->
+    <!-- Total stats (Zone 2 : libellé modifiable) -->
     <div id="profile-cumulative" class="card p-6 mb-4">
-      <div class="text-sm text-gray-500 mb-3" data-i18n="profile_total_stars">TOTAL</div>
+      <div class="text-sm text-gray-500 mb-3" id="profile-zone2-label" data-i18n="profile_total_stars">TOTAL</div>
       <div class="flex items-baseline gap-2 mb-4">
         <span class="text-5xl font-black" style="color: var(--copag-navy);" id="profile-total-stars">0</span>
         <span class="text-2xl">⭐</span>
@@ -1181,9 +1346,9 @@
       </div>
     </div>
 
-    <!-- Rank -->
+    <!-- Rank (Zone 3 : libellé modifiable) -->
     <div id="profile-rank-card" class="card p-5 mb-6 text-center" style="background: linear-gradient(135deg, #fef3c7, white); display: none;">
-      <p><span data-i18n="profile_rank">Tu es</span> <span class="font-black text-2xl" style="color: var(--copag-navy);" id="profile-rank-position">—</span> <span data-i18n="profile_rank_in_lb">au classement COPAG</span></p>
+      <p><span id="profile-zone3-prefix" data-i18n="profile_rank">Tu es</span> <span class="font-black text-2xl" style="color: var(--copag-navy);" id="profile-rank-position">—</span> <span id="profile-zone3-label" data-i18n="profile_rank_in_lb">au classement COPAG</span></p>
     </div>
 
     <!-- Guest mode notice -->
@@ -1222,6 +1387,16 @@
       <button class="filter-tab" data-glb="speed" onclick="filterGeneralLB('speed')" data-i18n="lb_g_tab_speed">⚡ Par vitesse</button>
       <button class="filter-tab" data-glb="acc" onclick="filterGeneralLB('acc')" data-i18n="lb_g_tab_acc">🎯 Par précision</button>
     </div>
+    
+    <!-- 🆕 Point 4 : Filtre par thème (formateur uniquement) -->
+    <div class="card p-4 mb-5" style="background: linear-gradient(135deg, var(--blue-50), white);">
+      <div class="flex flex-wrap items-center gap-3">
+        <label class="text-sm font-bold text-gray-700" data-i18n="lb_g_filter_theme">📚 Filtrer par thème :</label>
+        <select id="glb-theme-filter" onchange="onGlbThemeChange()" style="padding: 8px 12px; border-radius: 10px; border: 2px solid #e5e7eb; background: white; font-size: 13px; font-family: inherit; flex: 1; min-width: 200px;">
+          <option value="">— Tous les thèmes —</option>
+        </select>
+      </div>
+    </div>
 
     <div id="general-lb-list">
       <div class="history-empty">
@@ -1250,7 +1425,7 @@
     <p class="italic text-base text-gray-500 mb-10" data-i18n="tagline" style="color: var(--copag-cyan); font-weight: 600;">Compétences d'aujourd'hui, Avenir assuré</p>
     <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
       <button class="btn btn-primary text-lg" onclick="goToTeacher()" data-i18n="enter_teacher">👨‍🏫 Espace formateur</button>
-      <button class="btn btn-ghost text-lg" onclick="goTo('screen-student-join')" data-i18n="enter_student">🎮 Rejoindre comme apprenant</button>
+      <button class="btn btn-ghost text-lg" onclick="openStudentJoin()" data-i18n="enter_student">🎮 Espace Apprenant</button>
     </div>
     <div class="flex items-center justify-center mb-16">
       <button class="btn btn-ghost text-sm py-2 px-4" onclick="goToGeneralLeaderboard()" data-i18n="lb_general_btn" style="border-color: var(--copag-cyan); color: var(--copag-cyan);">🏆 Classement général</button>
@@ -1281,6 +1456,68 @@
   <div class="max-w-6xl mx-auto px-6 py-10">
     <h2 class="display-fr text-4xl mb-1" data-i18n="td_title">Tableau de bord</h2>
     <p class="text-gray-500 mb-8" data-i18n="td_sub">Choisissez une leçon et lancez une session</p>
+    
+    <!-- 🆕 Phase 3B : Vue globale COPAG — KPIs -->
+    <div id="global-kpis" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+      <div class="card p-4" style="background:linear-gradient(135deg,#eef7fc,white);">
+        <div class="text-xs text-gray-500 mb-1" data-i18n="kpi_sessions">Sessions totales</div>
+        <div class="font-bold text-2xl" style="color:var(--copag-navy);font-family:'Outfit',sans-serif;" id="kpi-sessions">—</div>
+        <div class="text-xs mt-1" style="color:var(--copag-cyan);"><span id="kpi-sessions-week">0</span> <span data-i18n="kpi_week">cette semaine</span></div>
+      </div>
+      <div class="card p-4" style="background:linear-gradient(135deg,#d4ecfb,white);">
+        <div class="text-xs text-gray-500 mb-1" data-i18n="kpi_apprenants">Apprenants actifs</div>
+        <div class="font-bold text-2xl" style="color:var(--copag-navy);font-family:'Outfit',sans-serif;" id="kpi-apprenants">—</div>
+        <div class="text-xs mt-1" style="color:var(--copag-cyan);"><span id="kpi-apprenants-month">0</span> <span data-i18n="kpi_month">ce mois</span></div>
+      </div>
+      <div class="card p-4" style="background:linear-gradient(135deg,#d1fae5,white);">
+        <div class="text-xs text-gray-500 mb-1" data-i18n="kpi_avg_score">Score moyen global</div>
+        <div class="font-bold text-2xl" style="color:#065f46;font-family:'Outfit',sans-serif;" id="kpi-avg-score">—</div>
+        <div class="text-xs mt-1" style="color:#10b981;"><span data-i18n="kpi_accuracy">Précision</span>: <span id="kpi-accuracy">—</span></div>
+      </div>
+      <div class="card p-4" style="background:linear-gradient(135deg,#fef3c7,white);">
+        <div class="text-xs text-gray-500 mb-1" data-i18n="kpi_top_theme">Thème le + populaire</div>
+        <div class="font-bold text-base" style="color:#92400e;line-height:1.2;margin-top:4px;" id="kpi-top-theme">—</div>
+        <div class="text-xs mt-1" style="color:#f59e0b;"><span id="kpi-top-theme-count">0</span> <span data-i18n="kpi_sessions_short">sessions</span></div>
+      </div>
+    </div>
+    
+    <!-- 🆕 Sessions d'aujourd'hui -->
+    <div id="today-sessions-section" class="card p-5 mb-6" style="background:white;border:1px solid #e6eeff;">
+      <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
+        <h3 class="font-bold text-lg flex items-center gap-2" style="color:var(--copag-navy);">
+          📅 <span data-i18n="today_title">Sessions d'aujourd'hui</span>
+          <span class="badge" id="today-count-badge" style="background:var(--copag-cyan);color:white;">0</span>
+        </h3>
+        <button class="btn btn-ghost py-2 px-3 text-xs" onclick="loadTodaySessions()" data-i18n="today_refresh">🔄 Actualiser</button>
+      </div>
+      <div id="today-sessions-list">
+        <div class="text-gray-400 text-sm text-center py-4" data-i18n="today_loading">Chargement...</div>
+      </div>
+    </div>
+    
+    <!-- 🆕 Phase 2C : Bannière session active -->
+    <div id="active-session-banner" class="card p-5 mb-6 hidden" style="background: linear-gradient(135deg, #fef3c7, #fde68a); border: 2px solid #f59e0b;">
+      <div class="flex items-center justify-between gap-4 flex-wrap">
+        <div class="flex items-center gap-3">
+          <div class="text-3xl">⚠️</div>
+          <div>
+            <div class="font-bold text-lg" style="color: #92400e;" data-i18n="td_active_session_title">Session active en cours</div>
+            <div class="text-sm" style="color: #78350f;">
+              <span data-i18n="td_active_session_code">Code</span>: <span id="active-session-pin" style="font-weight:700;font-family:'Outfit',monospace;">—</span>
+              · <span id="active-session-group" style="font-weight:600;">—</span>
+            </div>
+            <div class="text-xs mt-1" style="color: #92400e;" data-i18n="td_active_session_warning">
+              Pour changer de thème, tu dois d'abord clôturer cette session.
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-2 flex-wrap">
+          <button class="btn btn-primary py-2 px-4 text-sm" onclick="resumeActiveSession()" data-i18n="td_resume_session">↩ Reprendre</button>
+          <button class="btn btn-ghost py-2 px-4 text-sm" onclick="closeActiveSession()" data-i18n="td_close_session" style="border-color:#f59e0b;color:#92400e;">🏁 Clôturer</button>
+        </div>
+      </div>
+    </div>
+    
     <div class="flex justify-end mb-4 gap-2 flex-wrap">
       <button class="btn btn-ghost py-2 px-4 text-sm" onclick="goToQuestionEditor()" data-i18n="td_edit_questions">📝 Gérer les questions</button>
       <button class="btn btn-ghost py-2 px-4 text-sm" onclick="goToGroups()" data-i18n="td_view_groups">🎓 Groupes</button>
@@ -1289,18 +1526,29 @@
       <button class="btn btn-ghost py-2 px-4 text-sm" onclick="goToHistory()" data-i18n="td_view_history">📋 Historique</button>
       <button class="btn btn-ghost py-2 px-4 text-sm" onclick="openSettingsModal()" data-i18n="td_settings">🔧 Paramètres</button>
     </div>
-    <h3 class="font-bold text-xl mb-4" data-i18n="td_lessons">📚 Leçons disponibles</h3>
+    <h3 class="font-bold text-xl mb-4 flex items-center justify-between flex-wrap gap-2">
+      <span data-i18n="td_lessons">📚 Thèmes disponibles</span>
+      <button class="btn btn-ghost py-1 px-3 text-xs" onclick="openThemeEditModal(null)" data-i18n="td_add_theme">+ Nouveau thème</button>
+    </h3>
     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8" id="lessons-grid"></div>
-    <div class="card p-6 flex items-center justify-between flex-wrap gap-4" style="background: linear-gradient(135deg, var(--blue-700), var(--blue-900)); color: white;">
-      <div>
-        <div class="text-sm opacity-80 mb-1" data-i18n="td_selected">Leçon sélectionnée</div>
+    <div class="card p-6 mb-4" style="background: linear-gradient(135deg, var(--blue-700), var(--blue-900)); color: white;">
+      <div class="mb-4">
+        <div class="text-sm opacity-80 mb-1" data-i18n="td_selected">Thème sélectionné</div>
         <div class="font-bold text-2xl" id="selected-lesson-name">—</div>
-        <label style="display:inline-flex; align-items:center; gap:8px; margin-top:10px; cursor:pointer; font-size:13px; opacity:0.9;">
+      </div>
+      <div class="mb-4">
+        <label class="text-sm opacity-80 mb-1 block" data-i18n="td_quiz_select">📝 Choisir un quiz :</label>
+        <select id="td-quiz-select" onchange="onQuizSelectChange()" style="width:100%; padding: 10px 14px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; font-size: 14px; font-family: inherit;">
+          <option value="">—</option>
+        </select>
+      </div>
+      <div class="flex items-center justify-between flex-wrap gap-4">
+        <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; opacity:0.9;">
           <input type="checkbox" id="td-shuffle-toggle" onchange="toggleShuffleMode()" style="width:18px; height:18px; accent-color: var(--copag-cyan); cursor:pointer;">
           <span data-i18n="td_shuffle">🎲 Mélanger questions & réponses</span>
         </label>
+        <button class="btn btn-accent text-lg" onclick="createGame()" data-i18n="td_start">▶ Créer une partie</button>
       </div>
-      <button class="btn btn-accent text-lg" onclick="createGame()" data-i18n="td_start">▶ Créer une partie</button>
     </div>
   </div>
 </section>
@@ -1319,6 +1567,11 @@
     <div class="font-bold text-2xl mb-3" style="color: var(--copag-cyan)" id="join-url">—</div>
     <p class="text-gray-500 mb-3 text-lg" data-i18n="lobby_pin_label">avec le code</p>
     <div class="pin-display mb-8" id="game-pin">------</div>
+    <!-- 🆕 Nom du groupe auto-généré -->
+    <div class="mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-full" style="background:#eef7fc;border:1px solid #d4ecfb;">
+      <span style="color:#1e2a78;font-weight:700;font-size:13px;" data-i18n="lobby_group_name">👥 Groupe</span>
+      <span id="lobby-group-name" style="color:#1ea8e0;font-weight:800;font-size:14px;font-family:'Outfit',monospace;">—</span>
+    </div>
     <div class="card p-6 mb-6">
       <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
         <div class="flex items-center gap-3">
@@ -1350,17 +1603,16 @@
     </div>
     <div class="card p-6 mb-4">
       <label class="block text-sm font-bold mb-2 text-gray-700" data-i18n="sj_pin">Code du jeu</label>
-      <input type="text" id="student-pin" maxlength="6" inputmode="numeric" placeholder="123456" class="w-full text-center text-3xl font-bold tracking-widest p-4 rounded-xl border-2 border-blue-100 focus:border-blue-500 outline-none" style="font-family: 'Outfit', sans-serif; letter-spacing: 8px;">
+      <input type="text" id="student-pin" maxlength="6" inputmode="numeric" autocomplete="off" placeholder="123456" class="w-full text-center text-3xl font-bold tracking-widest p-4 rounded-xl border-2 border-blue-100 focus:border-blue-500 outline-none" style="font-family: 'Outfit', sans-serif; letter-spacing: 8px;">
       
       <div class="flex items-center justify-between mt-5 mb-2">
-        <label class="block text-sm font-bold text-gray-700"><span data-i18n="sj_matricule">Matricule COPAG</span> <span class="text-xs font-normal text-gray-400" data-i18n="sj_optional">(optionnel)</span></label>
-        <button type="button" class="text-xs font-bold text-blue-600 underline" onclick="toggleMatriculeMode()" id="matricule-toggle-btn" data-i18n="sj_skip_matricule">Continuer sans matricule</button>
+        <label class="block text-sm font-bold text-gray-700"><span data-i18n="sj_matricule">Matricule COPAG</span> <span class="text-xs font-normal text-red-500" data-i18n="sj_required">(obligatoire)</span></label>
       </div>
-      <input type="text" id="student-matricule" maxlength="10" inputmode="numeric" pattern="[0-9]*" placeholder="500702" class="w-full text-center text-2xl font-bold p-3 rounded-xl border-2 border-blue-100 focus:border-blue-500 outline-none" style="font-family: 'Outfit', sans-serif; letter-spacing: 4px;">
+      <input type="text" id="student-matricule" maxlength="10" inputmode="numeric" pattern="[0-9]*" autocomplete="off" placeholder="500702" class="w-full text-center text-2xl font-bold p-3 rounded-xl border-2 border-blue-100 focus:border-blue-500 outline-none" style="font-family: 'Outfit', sans-serif; letter-spacing: 4px;">
       <div id="matricule-found" class="text-xs text-green-600 font-bold mt-1 hidden">✅ <span data-i18n="sj_matricule_found">Profil trouvé !</span></div>
       
-      <label class="block text-sm font-bold mb-2 mt-5 text-gray-700" data-i18n="sj_name">Votre nom</label>
-      <input type="text" id="student-name" maxlength="40" placeholder="..." class="w-full p-4 rounded-xl border-2 border-blue-100 focus:border-blue-500 outline-none text-lg font-bold">
+      <label class="block text-sm font-bold mb-2 mt-5 text-gray-700" data-i18n="sj_name">Nom et Prénom</label>
+      <input type="text" id="student-name" maxlength="60" autocomplete="off" placeholder="..." class="w-full p-4 rounded-xl border-2 border-blue-100 focus:border-blue-500 outline-none text-lg font-bold">
       
       <div id="join-error" class="text-red-500 text-sm mt-3 font-bold hidden"></div>
       <button class="btn btn-primary w-full mt-5 py-4 text-lg" id="join-btn" onclick="studentJoin()" data-i18n="sj_join">🚀 Rejoindre</button>
@@ -1512,9 +1764,34 @@
     </div>
     <h3 class="font-bold text-2xl mb-4" data-i18n="fin_all">📋 Classement complet</h3>
     <div id="final-list" class="mb-8 max-w-xl mx-auto"></div>
-    <button class="btn btn-primary" onclick="restartFromHome()" data-i18n="fin_restart">🔄 Nouvelle session</button>
+    <!-- 🆕 Phase 2A : Boutons d'action de fin de quiz -->
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 flex-wrap">
+      <button class="btn btn-primary text-lg" id="btn-next-quiz" onclick="openNextQuizModal()" data-i18n="fin_next_quiz">▶ Nouveau quiz (même thème)</button>
+      <button class="btn btn-ghost text-lg" onclick="restartFromHome()" data-i18n="fin_close_session">🏁 Clôturer la session</button>
+    </div>
+    <!-- Compteur de quiz joués dans la session -->
+    <p class="text-sm text-gray-400 mt-6" id="session-quiz-count" style="display:none;">
+      <span data-i18n="fin_session_quizes">Quiz joués dans cette session</span>: <span id="session-quiz-num" style="font-weight:700;">1</span>
+    </p>
   </div>
 </section>
+
+<!-- 🆕 Phase 2A : Modal "Nouveau quiz du même thème" -->
+<div id="next-quiz-modal" class="auth-overlay hidden" onclick="if(event.target===this)closeNextQuizModal()">
+  <div class="auth-modal" style="max-width: 540px;">
+    <div class="text-center mb-5">
+      <div class="text-5xl mb-2">▶</div>
+      <h3 class="display-fr text-2xl mb-1" data-i18n="nqm_title">Lancer un nouveau quiz</h3>
+      <p class="text-gray-500 text-sm"><span data-i18n="nqm_sub">Choisissez un quiz du même thème</span> : <span id="nqm-theme-name" style="color:var(--copag-cyan);font-weight:700;">—</span></p>
+    </div>
+    <div id="nqm-quiz-list" class="mb-5" style="max-height: 320px; overflow-y: auto;">
+      <p class="text-center text-gray-400 py-6" data-i18n="nqm_loading">Chargement...</p>
+    </div>
+    <div class="flex gap-2 justify-end">
+      <button class="btn btn-ghost py-2 px-4 text-sm" onclick="closeNextQuizModal()" data-i18n="cancel">Annuler</button>
+    </div>
+  </div>
+</div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -1543,7 +1820,7 @@ const I18N = {
     hero_title: 'Plateforme interactive<br><span style="color: var(--copag-cyan)">pour l\'industrie laitière</span>',
     hero_sub: "Apprenez en jouant. Le formateur lance le quiz, les apprenants rejoignent depuis leurs téléphones.",
     tagline: "Compétences d'aujourd'hui, Avenir assuré",
-    enter_teacher: "👨‍🏫 Espace formateur", enter_student: "🎮 Rejoindre comme apprenant",
+    enter_teacher: "👨‍🏫 Espace Formateur", enter_student: "🎮 Espace Apprenant",
     f1_t: "Temps réel", f1_d: "Sync instantanée Firebase",
     f2_t: "Compétition", f2_d: "Classement vivant",
     f3_t: "Mobile-first", f3_d: "Sur tous les appareils",
@@ -1554,15 +1831,19 @@ const I18N = {
     lobby_waiting: "En attente des apprenants...", lobby_instruct: "Rejoignez sur",
     lobby_pin_label: "avec le code", lobby_joined: "Connectés", lobby_begin: "Démarrer le quiz",
     lobby_empty: "Les apprenants apparaîtront ici",
+    lobby_group_name: "👥 Groupe",
     sj_title: "Rejoindre le jeu", sj_sub: "Entrez le code affiché par le formateur",
-    sj_pin: "Code du jeu", sj_name: "Votre nom", sj_join: "🚀 Rejoindre",
+    sj_pin: "Code du jeu", sj_name: "Nom et Prénom", sj_join: "🚀 Rejoindre",
     sj_matricule: "Matricule COPAG",
     sj_optional: "(optionnel)",
+    sj_required: "(obligatoire)",
     sj_skip_matricule: "Continuer sans matricule",
     sj_use_matricule: "Utiliser un matricule",
     sj_matricule_found: "Profil trouvé !",
     sj_matricule_invalid: "Le matricule doit contenir uniquement des chiffres",
     sj_guest_mode: "Mode invité (sans matricule)",
+    err_no_matricule: "Le matricule est obligatoire",
+    err_no_name_from_matricule: "Matricule introuvable — contactez votre formateur",
     sw_hello: "Bienvenue", sw_sub: "En attente du formateur...",
     sw_connected: "Connecté", sw_players_in: "Apprenants connectés",
     q_question: "Question", q_remaining: "Restant", q_label: "Question", q_skip: "⏭️ Révéler la réponse",
@@ -1576,6 +1857,21 @@ const I18N = {
     fin_title: "Jeu terminé !", fin_sub: "Voici les résultats finaux",
     fin_pts: "pts", fin_all: "📋 Classement complet",
     fin_restart: "🔄 Nouvelle session", finish: "🏁 Terminer",
+    fin_next_quiz: "▶ Nouveau quiz (même thème)",
+    fin_close_session: "🏁 Clôturer la session",
+    fin_session_quizes: "Quiz joués dans cette session",
+    fin_session_total: "Total session",
+    fin_session_ranking: "Classement de la session",
+    fin_quizzes: "quiz",
+    nqm_title: "Lancer un nouveau quiz",
+    nqm_sub: "Choisissez un quiz du même thème",
+    nqm_loading: "Chargement...",
+    nqm_empty: "Aucun quiz disponible",
+    nqm_launch: "Lancer",
+    nqm_launching: "Préparation du nouveau quiz...",
+    nqm_ready: "Quiz prêt — les apprenants reviennent au lobby",
+    new_quiz_started: "Nouveau quiz lancé par le formateur !",
+    rejoin_success: "Reconnexion réussie !",
     err_invalid_pin: "Code invalide (6 chiffres)", err_no_name: "Veuillez entrer votre nom",
     err_game_started: "Cette partie a déjà démarré", err_game_not_found: "Aucune partie avec ce code",
     err_name_taken: "Ce nom est déjà pris",
@@ -1593,6 +1889,58 @@ const I18N = {
     logout_done: "Déconnexion réussie",
     td_view_history: "📊 Voir l'historique",
     td_view_students: "👥 Apprenants",
+    td_active_session_title: "Session active en cours",
+    td_active_session_code: "Code",
+    td_active_session_warning: "Pour changer de thème, tu dois d'abord clôturer cette session.",
+    td_resume_session: "↩ Reprendre",
+    td_close_session: "🏁 Clôturer",
+    td_session_active_warn: "Une session est déjà active. Tu dois la clôturer avant d'en créer une nouvelle. Clôturer maintenant ?",
+    td_confirm_close: "Clôturer définitivement la session ? Les apprenants seront déconnectés.",
+    td_session_closed: "Session clôturée",
+    td_resume_warning: "Session reprise — vérifiez l'état du quiz",
+    // 🆕 Phase 3A — Par Quiz
+    an_tab_quizzes: "📌 Par quiz",
+    an_byquiz_explain: "📊 Identifiez les quiz à retravailler. Les quiz avec le plus bas taux de réussite sont en haut.",
+    an_byquiz_theme: "Thème",
+    an_byquiz_success: "Taux de réussite",
+    an_byquiz_sessions: "Sessions jouées",
+    an_byquiz_total_players: "Apprenants",
+    an_byquiz_total_answers: "Réponses totales",
+    an_byquiz_correct: "Bonnes réponses",
+    an_byquiz_worst_q: "Question la plus ratée",
+    // 🆕 Phase 3B — KPIs Vue Globale
+    kpi_sessions: "Sessions totales",
+    kpi_week: "cette semaine",
+    kpi_apprenants: "Apprenants actifs",
+    kpi_month: "ce mois",
+    kpi_avg_score: "Score moyen global",
+    kpi_accuracy: "Précision",
+    kpi_top_theme: "Thème le + populaire",
+    kpi_sessions_short: "sessions",
+    today_title: "Sessions d'aujourd'hui",
+    today_refresh: "🔄 Actualiser",
+    today_loading: "Chargement...",
+    today_empty: "Aucune session jouée aujourd'hui",
+    // 🆕 Point 3 : libellés profil apprenant
+    profile_quiz_accuracy: "🎯 Précision",
+    profile_quiz_speed: "⚡ Vitesse moy.",
+    profile_quiz_rank: "🏆 Classement",
+    settings_profile_title: "🎨 Libellés du profil apprenant",
+    settings_profile_hint: "Personnalisez les textes affichés sur la page de fin de quiz vue par les apprenants.",
+    settings_label_zone1: "Zone bleue (haut) — Libellé",
+    settings_label_zone2: "Zone blanche (milieu) — Libellé",
+    settings_label_zone3: "Zone jaune (bas) — Libellé \"au classement…\"",
+    // 🆕 Point 4 : classement général
+    lb_g_locked: "Accès réservé au formateur",
+    lb_g_filter_theme: "📚 Filtrer par thème :",
+    lb_g_all_themes: "— Tous les thèmes —",
+    // 🆕 Point 6 : filtre difficulté
+    an_q_filter_hint: "👆 Cliquez sur une catégorie pour filtrer",
+    an_q_clear_filter: "Effacer le filtre",
+    an_q_no_match: "Aucune question dans cette catégorie",
+    // 🆕 Point 7 : nombre de questions
+    quiz_nb_q: "🎯 Nombre de questions à jouer",
+    quiz_nb_q_hint: "Laissez 0 pour jouer toutes les questions du quiz. Sinon, indiquez combien jouer (ex: 10 sur 15). Les premières questions de votre liste seront utilisées — vous pouvez les réordonner dans \"Gérer les questions\".",
     sd_badge: "Apprenants",
     sd_title: "Liste des apprenants",
     sd_sub: "Gérez les apprenants enregistrés et consultez leurs performances",
@@ -1685,6 +2033,29 @@ const I18N = {
     td_view_analysis: "📊 Analyse",
     rejoin_success: "👋 Reconnexion réussie ! Tu reprends ta session.",
     absent_marker: "Absent",
+    td_lessons: "📚 Thèmes disponibles",
+    td_selected: "Thème sélectionné",
+    td_add_theme: "+ Nouveau thème",
+    td_quiz_select: "📝 Choisir un quiz :",
+    qe_choose_theme: "📚 Choisir un thème :",
+    qe_choose_quiz: "📝 Choisir un quiz :",
+    qe_add_quiz: "+ Quiz",
+    qe_edit_quiz: "✏️ Éditer ce quiz",
+    qe_del_quiz: "🗑️ Supprimer ce quiz",
+    theme_name_fr: "Nom (FR)",
+    theme_name_ar: "Nom (AR)",
+    theme_icon: "Icône (emoji)",
+    theme_desc_fr: "Description (FR)",
+    theme_desc_ar: "Description (AR)",
+    theme_del_title: "Supprimer ce thème ?",
+    theme_del_sub: "Tous les quiz et questions de ce thème seront aussi supprimés.",
+    theme_del_warn: "Cette action est irréversible.",
+    quiz_name: "Nom du quiz",
+    quiz_desc_fr: "Description (FR)",
+    quiz_desc_ar: "Description (AR)",
+    quiz_time: "⏱️ Temps par question (secondes)",
+    quiz_del_title: "Supprimer ce quiz ?",
+    quiz_del_sub: "Toutes les questions de ce quiz seront supprimées.",
     an_title: "📊 Évaluation des acquis",
     an_sub: "Analyse complète par apprenant, par session et par question",
     an_lesson: "📚 Thème (leçon)",
@@ -1847,7 +2218,7 @@ const I18N = {
     hero_title: 'منصة تدريبية تفاعلية<br><span style="color: var(--copag-cyan)">لصناعة الحليب</span>',
     hero_sub: "تعلّم بطريقة ممتعة. المعلم يبدأ اللعبة، والمتدربون ينضمون من هواتفهم.",
     tagline: "كفاءات اليوم، مستقبل مضمون",
-    enter_teacher: "👨‍🏫 لوحة المعلم", enter_student: "🎮 انضم كمتدرب",
+    enter_teacher: "👨‍🏫 لوحة المعلم", enter_student: "🎮 فضاء المتدرب",
     f1_t: "وقت حقيقي", f1_d: "مزامنة فورية مع Firebase",
     f2_t: "منافسة", f2_d: "ترتيب حي",
     f3_t: "متوافق مع الجوال", f3_d: "على كل الأجهزة",
@@ -1858,15 +2229,19 @@ const I18N = {
     lobby_waiting: "في انتظار المتدربين...", lobby_instruct: "انضموا عبر",
     lobby_pin_label: "بالرمز", lobby_joined: "متصلون", lobby_begin: "ابدأ اللعبة",
     lobby_empty: "سيظهر المتدربون هنا",
+    lobby_group_name: "👥 المجموعة",
     sj_title: "انضم للعبة", sj_sub: "أدخل الرمز الذي يعرضه المعلم",
-    sj_pin: "رمز اللعبة", sj_name: "اسمك", sj_join: "🚀 انضم",
+    sj_pin: "رمز اللعبة", sj_name: "الاسم واللقب", sj_join: "🚀 انضم",
     sj_matricule: "رقم التسجيل COPAG",
     sj_optional: "(اختياري)",
+    sj_required: "(إلزامي)",
     sj_skip_matricule: "متابعة بدون رقم تسجيل",
     sj_use_matricule: "استخدام رقم تسجيل",
     sj_matricule_found: "تم العثور على الملف!",
     sj_matricule_invalid: "رقم التسجيل يجب أن يحتوي على أرقام فقط",
     sj_guest_mode: "وضع الضيف (بدون رقم تسجيل)",
+    err_no_matricule: "رقم التسجيل إلزامي",
+    err_no_name_from_matricule: "رقم التسجيل غير موجود — تواصل مع المعلم",
     sw_hello: "أهلاً", sw_sub: "في انتظار المعلم...",
     sw_connected: "متصل", sw_players_in: "المتدربون المتصلون",
     q_question: "سؤال", q_remaining: "المتبقي", q_label: "السؤال", q_skip: "⏭️ كشف الإجابة",
@@ -1880,6 +2255,21 @@ const I18N = {
     fin_title: "انتهت اللعبة!", fin_sub: "هذه هي النتائج النهائية",
     fin_pts: "نقطة", fin_all: "📋 الترتيب الكامل",
     fin_restart: "🔄 جلسة جديدة", finish: "🏁 إنهاء",
+    fin_next_quiz: "▶ كويز جديد (نفس الموضوع)",
+    fin_close_session: "🏁 إنهاء الجلسة",
+    fin_session_quizes: "عدد الكويزات في هذه الجلسة",
+    fin_session_total: "مجموع الجلسة",
+    fin_session_ranking: "ترتيب الجلسة",
+    fin_quizzes: "كويز",
+    nqm_title: "إطلاق كويز جديد",
+    nqm_sub: "اختر كويز من نفس الموضوع",
+    nqm_loading: "جاري التحميل...",
+    nqm_empty: "لا يوجد كويز متاح",
+    nqm_launch: "إطلاق",
+    nqm_launching: "تحضير الكويز الجديد...",
+    nqm_ready: "الكويز جاهز — يعود المتدربون إلى الانتظار",
+    new_quiz_started: "أطلق المعلم كويز جديد!",
+    rejoin_success: "تمت إعادة الاتصال بنجاح!",
     err_invalid_pin: "رمز غير صحيح (6 أرقام)", err_no_name: "الرجاء إدخال اسمك",
     err_game_started: "هذه اللعبة بدأت مسبقاً", err_game_not_found: "ما كاينش جلسة بهاد الرمز",
     err_name_taken: "هاد الاسم مستعمل",
@@ -1897,6 +2287,58 @@ const I18N = {
     logout_done: "تم تسجيل الخروج بنجاح",
     td_view_history: "📊 عرض السجل",
     td_view_students: "👥 المتدربين",
+    td_active_session_title: "جلسة نشطة جارية",
+    td_active_session_code: "الرمز",
+    td_active_session_warning: "لتغيير الموضوع، يجب إنهاء هذه الجلسة أولاً.",
+    td_resume_session: "↩ استئناف",
+    td_close_session: "🏁 إنهاء",
+    td_session_active_warn: "هناك جلسة نشطة بالفعل. يجب إنهاؤها قبل إنشاء جلسة جديدة. إنهاء الآن؟",
+    td_confirm_close: "إنهاء الجلسة نهائياً؟ سيتم قطع اتصال المتدربين.",
+    td_session_closed: "تم إنهاء الجلسة",
+    td_resume_warning: "تم استئناف الجلسة — تحقق من حالة الكويز",
+    // 🆕 Phase 3A — Par Quiz (AR)
+    an_tab_quizzes: "📌 حسب الكويز",
+    an_byquiz_explain: "📊 حدّد الكويزات التي تحتاج إلى مراجعة. الأقل نجاحاً في الأعلى.",
+    an_byquiz_theme: "الموضوع",
+    an_byquiz_success: "نسبة النجاح",
+    an_byquiz_sessions: "عدد الجلسات",
+    an_byquiz_total_players: "المتدربون",
+    an_byquiz_total_answers: "إجمالي الإجابات",
+    an_byquiz_correct: "إجابات صحيحة",
+    an_byquiz_worst_q: "السؤال الأكثر خطأً",
+    // 🆕 Phase 3B — KPIs (AR)
+    kpi_sessions: "إجمالي الجلسات",
+    kpi_week: "هذا الأسبوع",
+    kpi_apprenants: "المتدربون النشطون",
+    kpi_month: "هذا الشهر",
+    kpi_avg_score: "متوسط النقاط العامة",
+    kpi_accuracy: "الدقة",
+    kpi_top_theme: "الموضوع الأكثر شعبية",
+    kpi_sessions_short: "جلسات",
+    today_title: "جلسات اليوم",
+    today_refresh: "🔄 تحديث",
+    today_loading: "جاري التحميل...",
+    today_empty: "لا توجد جلسات اليوم",
+    // 🆕 Point 3 : libellés profil apprenant (AR)
+    profile_quiz_accuracy: "🎯 الدقة",
+    profile_quiz_speed: "⚡ متوسط السرعة",
+    profile_quiz_rank: "🏆 الترتيب",
+    settings_profile_title: "🎨 عناوين صفحة المتدرب",
+    settings_profile_hint: "خصص النصوص المعروضة على صفحة نهاية الكويز.",
+    settings_label_zone1: "المنطقة الزرقاء (أعلى) — العنوان",
+    settings_label_zone2: "المنطقة البيضاء (وسط) — العنوان",
+    settings_label_zone3: "المنطقة الصفراء (أسفل) — العنوان \"في الترتيب…\"",
+    // 🆕 Point 4 (AR)
+    lb_g_locked: "هذا القسم مخصص للمعلم فقط",
+    lb_g_filter_theme: "📚 تصفية حسب الموضوع:",
+    lb_g_all_themes: "— كل المواضيع —",
+    // 🆕 Point 6 (AR)
+    an_q_filter_hint: "👆 انقر فوق فئة للتصفية",
+    an_q_clear_filter: "مسح التصفية",
+    an_q_no_match: "لا توجد أسئلة في هذه الفئة",
+    // 🆕 Point 7 (AR)
+    quiz_nb_q: "🎯 عدد الأسئلة للعب",
+    quiz_nb_q_hint: "اترك 0 للعب كل أسئلة الكويز. وإلا، اذكر عدد الأسئلة (مثلاً: 10 من 15). سيتم استخدام الأسئلة الأولى من قائمتك — يمكنك إعادة ترتيبها في \"إدارة الأسئلة\".",
     sd_badge: "المتدربين",
     sd_title: "قائمة المتدربين",
     sd_sub: "تدبير المتدربين المسجلين وعرض أدائهم",
@@ -1989,6 +2431,29 @@ const I18N = {
     td_view_analysis: "📊 التحليل",
     rejoin_success: "👋 تم إعادة الاتصال ! ستستأنف جلستك.",
     absent_marker: "غائب",
+    td_lessons: "📚 المواضيع المتاحة",
+    td_selected: "الموضوع المختار",
+    td_add_theme: "+ موضوع جديد",
+    td_quiz_select: "📝 اختر اختباراً :",
+    qe_choose_theme: "📚 اختر موضوعاً :",
+    qe_choose_quiz: "📝 اختر اختباراً :",
+    qe_add_quiz: "+ اختبار",
+    qe_edit_quiz: "✏️ تعديل هذا الاختبار",
+    qe_del_quiz: "🗑️ حذف هذا الاختبار",
+    theme_name_fr: "الاسم (فرنسية)",
+    theme_name_ar: "الاسم (عربية)",
+    theme_icon: "الأيقونة (إيموجي)",
+    theme_desc_fr: "الوصف (فرنسية)",
+    theme_desc_ar: "الوصف (عربية)",
+    theme_del_title: "حذف هذا الموضوع ؟",
+    theme_del_sub: "سيتم حذف جميع الاختبارات والأسئلة من هذا الموضوع.",
+    theme_del_warn: "هذا الإجراء لا يمكن التراجع عنه.",
+    quiz_name: "اسم الاختبار",
+    quiz_desc_fr: "الوصف (فرنسية)",
+    quiz_desc_ar: "الوصف (عربية)",
+    quiz_time: "⏱️ الوقت لكل سؤال (ثواني)",
+    quiz_del_title: "حذف هذا الاختبار ؟",
+    quiz_del_sub: "سيتم حذف جميع أسئلة هذا الاختبار.",
     an_title: "📊 تقييم المكتسبات",
     an_sub: "تحليل شامل حسب المتدرب، الجلسة والسؤال",
     an_lesson: "📚 الموضوع",
@@ -2361,6 +2826,148 @@ async function setQuestionsForLesson(lessonId) {
   }
 }
 
+// =====================================
+// SYSTÈME THÈMES + QUIZ HIÉRARCHIQUE (v2)
+// =====================================
+// LESSONS reste utilisé comme défaut, mais on peut désormais lire dynamiquement
+// les thèmes depuis Firebase (themes/) et choisir un quiz précis (theme_quizzes/{themeId}/{quizId}).
+
+// Cache mémoire
+let _themesCache = null;        // [{id, name, icon, descFr, descAr, isDefault, order}, ...]
+let _quizzesCache = {};         // themeId -> [{id, name, descFr, descAr, timePerQuestion, isDefault, order}, ...]
+let _selectedQuizId = null;     // quiz choisi par le formateur pour la prochaine partie
+
+// Charger les thèmes (Firebase OU defaults)
+async function loadThemes(forceRefresh = false) {
+  if (_themesCache && !forceRefresh) return _themesCache;
+  const fb = window.fb;
+  
+  // Defaults issus de LESSONS
+  const defaults = LESSONS.map((l, idx) => ({
+    id: l.id,
+    name: l.fr?.title || l.id,
+    nameAr: l.ar?.title || l.fr?.title || l.id,
+    icon: l.icon,
+    descFr: l.fr?.desc || '',
+    descAr: l.ar?.desc || '',
+    isDefault: true,
+    order: idx
+  }));
+  
+  if (!fb) {
+    _themesCache = defaults;
+    return _themesCache;
+  }
+  
+  try {
+    const snap = await fb.get(fb.ref(fb.db, 'themes'));
+    if (!snap.exists()) {
+      // Première fois : on migre les défauts vers Firebase
+      const updates = {};
+      defaults.forEach(t => { updates[t.id] = { ...t }; });
+      await fb.update(fb.ref(fb.db, 'themes'), updates);
+      _themesCache = defaults;
+    } else {
+      const obj = snap.val();
+      _themesCache = Object.entries(obj).map(([id, v]) => ({ id, ...v }));
+      _themesCache.sort((a, b) => (a.order || 0) - (b.order || 0));
+    }
+  } catch(e) {
+    console.warn('Could not load themes, using defaults:', e);
+    _themesCache = defaults;
+  }
+  return _themesCache;
+}
+
+// Charger les quizzes d'un thème
+async function loadQuizzesForTheme(themeId, forceRefresh = false) {
+  if (_quizzesCache[themeId] && !forceRefresh) return _quizzesCache[themeId];
+  const fb = window.fb;
+  if (!fb) { _quizzesCache[themeId] = []; return []; }
+  
+  try {
+    const snap = await fb.get(fb.ref(fb.db, 'theme_quizzes/' + themeId));
+    let quizzes;
+    if (!snap.exists()) {
+      // Première fois : créer un "Quiz 1 par défaut" qui pointe vers les questions existantes
+      const defaultQuiz = {
+        id: 'default',
+        name: 'Quiz 1 — Par défaut',
+        descFr: 'Quiz par défaut avec les 10 questions originales',
+        descAr: 'الاختبار الافتراضي مع الأسئلة العشرة الأصلية',
+        timePerQuestion: 30,
+        isDefault: true,
+        order: 0,
+        createdAt: Date.now()
+      };
+      await fb.set(fb.ref(fb.db, 'theme_quizzes/' + themeId + '/default'), defaultQuiz);
+      quizzes = [defaultQuiz];
+    } else {
+      const obj = snap.val();
+      quizzes = Object.entries(obj).map(([id, v]) => ({ id, ...v }));
+      quizzes.sort((a, b) => (a.order || 0) - (b.order || 0));
+    }
+    _quizzesCache[themeId] = quizzes;
+    return quizzes;
+  } catch(e) {
+    console.warn('Could not load quizzes:', e);
+    _quizzesCache[themeId] = [];
+    return [];
+  }
+}
+
+// Charger les questions d'un quiz précis
+async function setQuestionsForQuiz(themeId, quizId) {
+  const fb = window.fb;
+  const defaultQs = QUESTIONS_BY_LESSON[themeId] || QUESTIONS_BY_LESSON.fundamentals;
+  
+  if (!fb) { QUESTIONS = defaultQs; return; }
+  
+  try {
+    // Pour le "default" quiz : lire depuis lesson_questions/ (rétrocompatible)
+    let snap;
+    if (quizId === 'default') {
+      snap = await fb.get(fb.ref(fb.db, 'lesson_questions/' + themeId));
+    } else {
+      snap = await fb.get(fb.ref(fb.db, 'quiz_questions/' + themeId + '_' + quizId));
+    }
+    
+    if (snap.exists()) {
+      const obj = snap.val();
+      const list = Object.entries(obj).map(([id, q]) => ({ ...q, _id: id }));
+      list.sort((a, b) => {
+        const oa = a.order != null ? a.order : 999999;
+        const ob = b.order != null ? b.order : 999999;
+        if (oa !== ob) return oa - ob;
+        return (a.createdAt || 0) - (b.createdAt || 0);
+      });
+      QUESTIONS = list.map(q => ({
+        fr: {
+          q: q.qFr || '',
+          options: q.optionsFr || ['', '', '', ''],
+          correct: q.correctIdx != null ? q.correctIdx : 0,
+          explanation: q.explanationFr || ''
+        },
+        ar: {
+          q: q.qAr || q.qFr || '',
+          options: q.optionsAr || q.optionsFr || ['', '', '', ''],
+          correct: q.correctIdx != null ? q.correctIdx : 0,
+          explanation: q.explanationAr || q.explanationFr || ''
+        }
+      }));
+      if (QUESTIONS.length === 0 && quizId === 'default') QUESTIONS = defaultQs;
+    } else if (quizId === 'default') {
+      QUESTIONS = defaultQs;
+    } else {
+      QUESTIONS = [];  // Quiz custom sans questions
+    }
+  } catch(e) {
+    console.warn('Could not load quiz questions:', e);
+    QUESTIONS = quizId === 'default' ? defaultQs : [];
+  }
+}
+
+
 // État randomisation (mémorisé dans localStorage pour persister entre sessions navigateur)
 let _shuffleEnabled = false;
 try {
@@ -2446,6 +3053,8 @@ function goTo(screenId) {
   if (screenId === 'screen-teacher-dashboard') {
     const cb = document.getElementById('td-shuffle-toggle');
     if (cb) cb.checked = _shuffleEnabled;
+    // 🆕 Phase 2C : rafraîchir la bannière session active à chaque entrée
+    if (typeof refreshActiveSessionBanner === 'function') refreshActiveSessionBanner();
   }
 }
 
@@ -2478,33 +3087,91 @@ document.addEventListener('click', (e) => {
   }
 });
 
-function renderLessons() {
+async function renderLessons() {
   const grid = $('lessons-grid');
   if (!grid) return;
+  
+  // Charger les thèmes (Firebase + defaults)
+  const themes = await loadThemes(true);
+  
   grid.innerHTML = '';
-  LESSONS.forEach(lesson => {
+  themes.forEach(theme => {
+    const name = LANG === 'ar' ? (theme.nameAr || theme.name) : theme.name;
+    const desc = LANG === 'ar' ? (theme.descAr || theme.descFr || '') : (theme.descFr || '');
     const card = document.createElement('div');
-    card.className = 'lesson-card' + (selectedLessonId === lesson.id ? ' active' : '');
-    card.onclick = () => {
-      selectedLessonId = lesson.id;
-      $('selected-lesson-name').textContent = lesson[LANG].title;
+    card.className = 'lesson-card' + (selectedLessonId === theme.id ? ' active' : '');
+    card.onclick = async (e) => {
+      // Ne pas changer de sélection si on a cliqué sur les boutons d'actions
+      if (e.target.closest('button')) return;
+      selectedLessonId = theme.id;
+      $('selected-lesson-name').textContent = name;
+      await refreshQuizSelectForDashboard();
       renderLessons();
     };
     card.innerHTML = `
-      <div class="flex items-start gap-4">
-        <div class="text-4xl">${lesson.icon}</div>
-        <div class="flex-1">
-          <h4 class="font-bold text-lg mb-1">${lesson[LANG].title}</h4>
-          <p class="text-sm text-gray-500 mb-3">${lesson[LANG].desc}</p>
+      <div class="flex items-start gap-3">
+        <div class="text-4xl">${escapeHtml(theme.icon || '🎓')}</div>
+        <div class="flex-1 min-w-0">
+          <h4 class="font-bold text-lg mb-1">${escapeHtml(name)}</h4>
+          <p class="text-sm text-gray-500 mb-3">${escapeHtml(desc)}</p>
           <div class="flex gap-2 flex-wrap">
-            <span class="badge text-xs">⏱ ${lesson.duration} min</span>
-            <span class="badge text-xs">❓ ${lesson.qcount}</span>
-            <span class="badge text-xs">📊 ${lesson[LANG].level}</span>
+            ${theme.isDefault ? '<span class="badge text-xs">🔒 Par défaut</span>' : '<span class="badge text-xs" style="background:#cffafe;color:#0e7490;">✨ Personnalisé</span>'}
           </div>
+        </div>
+        <div class="flex flex-col gap-1" onclick="event.stopPropagation()">
+          <button class="qe-action-btn" data-theme-edit="${escapeAttr(theme.id)}" title="Modifier">✏️</button>
+          <button class="qe-action-btn del" data-theme-del="${escapeAttr(theme.id)}" title="Supprimer">🗑️</button>
         </div>
       </div>`;
     grid.appendChild(card);
+    
+    // Bind actions
+    const editBtn = card.querySelector('button[data-theme-edit]');
+    const delBtn = card.querySelector('button[data-theme-del]');
+    if (editBtn) editBtn.onclick = (e) => { e.stopPropagation(); openThemeEditModal(theme.id); };
+    if (delBtn) delBtn.onclick = (e) => { e.stopPropagation(); askDeleteTheme(theme.id); };
   });
+  
+  // Si selectedLessonId n'est plus dans la liste (supprimé), en choisir un autre
+  if (!themes.find(t => t.id === selectedLessonId) && themes.length > 0) {
+    selectedLessonId = themes[0].id;
+    const firstName = LANG === 'ar' ? (themes[0].nameAr || themes[0].name) : themes[0].name;
+    $('selected-lesson-name').textContent = firstName;
+    await refreshQuizSelectForDashboard();
+  }
+}
+
+// Met à jour le menu déroulant des quiz dans le dashboard
+async function refreshQuizSelectForDashboard() {
+  const sel = $('td-quiz-select');
+  if (!sel || !selectedLessonId) return;
+  sel.innerHTML = '<option value="">⏳</option>';
+  
+  const quizzes = await loadQuizzesForTheme(selectedLessonId, true);
+  sel.innerHTML = '';
+  if (quizzes.length === 0) {
+    sel.innerHTML = '<option value="">—</option>';
+    _selectedQuizId = null;
+    return;
+  }
+  quizzes.forEach(q => {
+    const opt = document.createElement('option');
+    opt.value = q.id;
+    // 🆕 Point 7 : montrer nbQuestionsToPlay si défini
+    let suffix = '';
+    if (q.timePerQuestion) suffix += ' (' + q.timePerQuestion + 's';
+    if (q.nbQuestionsToPlay && q.nbQuestionsToPlay > 0) suffix += ' · ' + q.nbQuestionsToPlay + ' Q';
+    if (suffix) suffix += ')';
+    opt.textContent = q.name + suffix;
+    sel.appendChild(opt);
+  });
+  // Sélectionner le 1er par défaut
+  _selectedQuizId = quizzes[0].id;
+  sel.value = _selectedQuizId;
+}
+
+function onQuizSelectChange() {
+  _selectedQuizId = $('td-quiz-select').value;
 }
 
 function whenFbReady(cb) {
@@ -2515,6 +3182,18 @@ function whenFbReady(cb) {
 async function createGame() {
   const fb = window.fb;
   if (!fb) { toast('Firebase not ready'); return; }
+  // 🆕 Phase 2C : si une session est déjà active, bloquer + proposer de la clôturer
+  if (currentPin && role === 'teacher') {
+    const ok = confirm(t('td_session_active_warn') ||
+      'Une session est déjà active (code: ' + currentPin + '). Tu dois la clôturer avant d\'en créer une nouvelle. Clôturer maintenant ?');
+    if (ok) {
+      try { await fb.remove(fb.ref(fb.db, 'games/' + currentPin)); } catch(e) {}
+      unsubAll();
+      currentPin = null; _currentQ = -1; _lastQIdxShown = -1;
+    } else {
+      return;
+    }
+  }
   role = 'teacher';
   let pin, exists = true, attempts = 0;
   while (exists && attempts < 10) {
@@ -2524,17 +3203,44 @@ async function createGame() {
     attempts++;
   }
   currentPin = pin;
-  // Set questions for the selected lesson (charge depuis Firebase si dispo)
-  await setQuestionsForLesson(selectedLessonId);
+  // 🆕 Charger les questions du QUIZ sélectionné (et non plus juste la leçon)
+  const quizId = _selectedQuizId || 'default';
+  await setQuestionsForQuiz(selectedLessonId, quizId);
   
-  // Appliquer le shuffle si activé (mélange questions + options)
+  // Récupérer le temps par question depuis le quiz
+  const quizzes = await loadQuizzesForTheme(selectedLessonId);
+  const quizMeta = quizzes.find(q => q.id === quizId) || { timePerQuestion: 30 };
+  const timePerQ = quizMeta.timePerQuestion || 30;
+  
+  // 🆕 Générer le NOM DE GROUPE auto : Thème_NomQuiz_JJ-MM-AAAA_HHhMM
+  const themes = _themesCache || [];
+  const themeMeta = themes.find(th => th.id === selectedLessonId) || { name: selectedLessonId };
+  const themeName = (themeMeta.name || selectedLessonId).replace(/\s+/g, '');
+  const quizName  = (quizMeta.name || quizId).replace(/\s+/g, '');
+  const now = new Date();
+  const pad = n => String(n).padStart(2, '0');
+  const datePart = pad(now.getDate()) + '-' + pad(now.getMonth() + 1) + '-' + now.getFullYear();
+  const timePart = pad(now.getHours()) + 'h' + pad(now.getMinutes());
+  const groupName = themeName + '_' + quizName + '_' + datePart + '_' + timePart;
+  
+  // Appliquer le shuffle si activé
   if (_shuffleEnabled) {
     QUESTIONS = shuffleQuestionsAndOptions(QUESTIONS);
   }
   
-  // ⚡ IMPORTANT : Stocker la séquence du quiz dans Firebase
-  // Pour que tous les apprenants voient EXACTEMENT le même ordre que le formateur,
-  // on partage la séquence finale via games/{pin}/quizData
+  // 🆕 Point 7 : limiter au nombre demandé par le formateur (0 = toutes)
+  const nbToPlay = quizMeta.nbQuestionsToPlay || 0;
+  if (nbToPlay > 0 && QUESTIONS.length > nbToPlay) {
+    QUESTIONS = QUESTIONS.slice(0, nbToPlay);
+  }
+  
+  // Vérifier qu'on a au moins 1 question
+  if (!QUESTIONS || QUESTIONS.length === 0) {
+    toast('⚠️ Ce quiz n\'a aucune question. Ajoute-en d\'abord.');
+    return;
+  }
+  
+  // Stocker la séquence du quiz dans Firebase (pour les apprenants)
   const quizDataArr = QUESTIONS.map(q => ({
     qFr: q.fr.q,
     qAr: q.ar.q,
@@ -2547,8 +3253,12 @@ async function createGame() {
   
   await fb.set(fb.ref(fb.db, 'games/' + pin), {
     info: {
-      pin, lesson: selectedLessonId, state: 'lobby',
+      pin, lesson: selectedLessonId, quizId: quizId, quizName: quizMeta.name || '',
+      groupName: groupName,                // 🆕 Nom de groupe auto-généré (Thème_Quiz_Date_Heure)
+      themeName: themeMeta.name || '',     // 🆕 Nom lisible du thème
+      state: 'lobby',
       currentQuestion: 0, totalQuestions: QUESTIONS.length,
+      timePerQuestion: timePerQ,
       lang: LANG, createdAt: Date.now(),
       shuffled: _shuffleEnabled
     },
@@ -2556,6 +3266,9 @@ async function createGame() {
     players: {}, answers: {}
   });
   $('game-pin').textContent = pin;
+  // 🆕 Afficher le nom de groupe auto-généré dans le lobby
+  const lobbyGroupEl = $('lobby-group-name');
+  if (lobbyGroupEl) lobbyGroupEl.textContent = groupName;
   // 🔄 Construire l'URL dynamique de l'app (host + path, sans index.html)
   // Exemple : "stockdocumentunique-cyber.github.io/Quiz" ou "milk-learn.netlify.app"
   let joinUrl = window.location.host || '';
@@ -2656,12 +3369,12 @@ function showTeacherQuestion(info) {
   $('answers-received').textContent = '0';
 
   goTo('screen-quiz-teacher');
-  startTeacherTimer(info.questionStartTime);
+  startTeacherTimer(info.questionStartTime, info.timePerQuestion || 30);
 }
 
-function startTeacherTimer(startTs) {
+function startTeacherTimer(startTs, total) {
+  total = total || 30;
   clearInterval(timerInterval);
-  const total = 30;
   const update = () => {
     const elapsed = (Date.now() - startTs) / 1000;
     const left = Math.max(0, Math.ceil(total - elapsed));
@@ -2683,12 +3396,14 @@ async function revealAnswer() {
   const q = QUESTIONS[qIdx][LANG];
   const correctIdx = q.correct;
 
-  const [playersSnap, answersSnap] = await Promise.all([
+  const [playersSnap, answersSnap, infoSnap] = await Promise.all([
     fb.get(fb.ref(fb.db, 'games/' + currentPin + '/players')),
-    fb.get(fb.ref(fb.db, 'games/' + currentPin + '/answers/' + qIdx))
+    fb.get(fb.ref(fb.db, 'games/' + currentPin + '/answers/' + qIdx)),
+    fb.get(fb.ref(fb.db, 'games/' + currentPin + '/info'))
   ]);
   const players = playersSnap.val() || {};
   const answers = answersSnap.val() || {};
+  const info = infoSnap.val() || {};
 
   let correctCount = 0, wrongCount = 0;
   let fastest = null, fastestTime = Infinity;
@@ -2699,8 +3414,13 @@ async function revealAnswer() {
     if (!ans) {
       wrongCount++;
       updates['players/' + pid + '/streak'] = 0;
+      // 🆕 Point 1 : pas de réponse = pénalité de temps (temps max de la question)
+      const fullTime = (info.timePerQuestion || 30);
+      updates['players/' + pid + '/totalTimeSession'] = (players[pid].totalTimeSession || 0) + fullTime;
       return;
     }
+    // 🆕 Point 1 : cumul du temps de réponse pour départage à égalité de score
+    updates['players/' + pid + '/totalTimeSession'] = (players[pid].totalTimeSession || 0) + (ans.time || 0);
     if (ans.choice === correctIdx) {
       correctCount++;
       updates['players/' + pid + '/score'] = (players[pid].score || 0) + 1;
@@ -2747,8 +3467,13 @@ async function showLeaderboard() {
     id: pid, name: players[pid].name,
     score: players[pid].score || 0,
     streak: players[pid].streak || 0,
-    gained: answers[pid]?.pointsGained || 0
-  })).sort((a, b) => b.score - a.score);
+    gained: answers[pid]?.pointsGained || 0,
+    totalTime: players[pid].totalTimeSession || 0  // 🆕 Point 1
+  })).sort((a, b) => {
+    // 🆕 Point 1 : tri par score DESC, puis par vitesse ASC (plus rapide = mieux à score égal)
+    if (b.score !== a.score) return b.score - a.score;
+    return a.totalTime - b.totalTime;
+  });
 
   $('lb-after-num').textContent = _currentQ + 1;
   const list = $('leaderboard-list');
@@ -2794,7 +3519,11 @@ async function showFinal() {
   const players = playersSnap.val() || {};
   const info = infoSnap.val() || {};
   const answers = answersSnap.val() || {};
-  const sorted = Object.values(players).sort((a,b) => (b.score||0) - (a.score||0));
+  // 🆕 Point 1 : tri par score DESC, puis par vitesse ASC
+  const sorted = Object.values(players).sort((a, b) => {
+    if ((b.score || 0) !== (a.score || 0)) return (b.score || 0) - (a.score || 0);
+    return (a.totalTimeSession || 0) - (b.totalTimeSession || 0);
+  });
   
   // SAVE TO HISTORY (with detailed per-question per-player data)
   try {
@@ -2871,6 +3600,11 @@ async function showFinal() {
       lesson: info.lesson,
       lessonNameFr,
       lessonNameAr,
+      // 🆕 Phase 3A : sauvegarder quiz + groupe pour analyse par quiz
+      quizId: info.quizId || null,
+      quizName: info.quizName || null,
+      groupName: info.groupName || null,
+      themeName: info.themeName || null,
       startedAt: info.createdAt || Date.now(),
       endedAt: Date.now(),
       totalQuestions: actualQuestionsPlayed,
@@ -2978,6 +3712,10 @@ async function showFinal() {
     console.error('Failed to save history:', e);
   }
 
+  // 🆕 Phase 2B : détecter si on est en session multi-quiz (quizHistory existe)
+  const hasMultiQuiz = (info.quizHistory && info.quizHistory.length > 0);
+  const sessionQuizCount = (info.quizHistory ? info.quizHistory.length : 0) + 1;
+
   const slots = [
     { rank: 1, h: 220, k: 'podium-1' },
     { rank: 2, h: 160, k: 'podium-2' },
@@ -2991,17 +3729,78 @@ async function showFinal() {
   });
   setTimeout(() => { slots.forEach(s => { $(s.k + '-bar').style.height = s.h + 'px'; }); }, 300);
 
+  // 🆕 Phase 2B : afficher le compteur de quiz de la session si multi-quiz
+  const cntEl = $('session-quiz-count');
+  const cntNum = $('session-quiz-num');
+  if (cntEl && cntNum) {
+    if (hasMultiQuiz) {
+      cntEl.style.display = 'block';
+      cntNum.textContent = sessionQuizCount;
+    } else {
+      cntEl.style.display = 'none';
+    }
+  }
+
   const list = $('final-list');
   list.innerHTML = '';
   sorted.forEach((p, idx) => {
+    const quizScore = p.score || 0;
+    const totalPrev = p.totalScore || 0;
+    const sessionTotal = totalPrev + quizScore;
     const row = document.createElement('div');
     row.className = 'leader-row';
-    row.innerHTML = `
-      <div class="leader-rank">${idx + 1}</div>
-      <div class="leader-name">${p.name}</div>
-      <div class="leader-score">${p.score || 0} ${t('fin_pts')}</div>`;
+    // 🆕 Phase 2B : si multi-quiz, afficher aussi le total de session
+    if (hasMultiQuiz) {
+      row.innerHTML = `
+        <div class="leader-rank">${idx + 1}</div>
+        <div class="leader-name">${p.name}</div>
+        <div style="text-align:right;">
+          <div class="leader-score">${quizScore} ${t('fin_pts')}</div>
+          <div style="font-size:12px;color:#6b7280;margin-top:2px;">
+            <span style="font-weight:600;color:#1ea8e0;">${t('fin_session_total') || 'Total session'}</span>: 
+            <span style="font-weight:800;color:#1e2a78;">${sessionTotal} ${t('fin_pts')}</span>
+          </div>
+        </div>`;
+    } else {
+      row.innerHTML = `
+        <div class="leader-rank">${idx + 1}</div>
+        <div class="leader-name">${p.name}</div>
+        <div class="leader-score">${quizScore} ${t('fin_pts')}</div>`;
+    }
     list.appendChild(row);
   });
+
+  // 🆕 Phase 2B : si multi-quiz, ajouter un classement séparé par TOTAL DE SESSION
+  if (hasMultiQuiz) {
+    const sortedBySession = [...Object.values(players)].sort((a, b) => {
+      const ta = (a.totalScore || 0) + (a.score || 0);
+      const tb = (b.totalScore || 0) + (b.score || 0);
+      return tb - ta;
+    });
+    const sessionList = document.createElement('div');
+    sessionList.style.cssText = 'margin-top:32px;padding:20px;background:linear-gradient(135deg,#eef7fc,#d4ecfb);border-radius:18px;border:1px solid #d4ecfb;';
+    sessionList.innerHTML = `
+      <h3 style="font-family:'DM Serif Display',serif;font-size:22px;color:#1e2a78;margin-bottom:14px;text-align:center;">
+        🏆 ${t('fin_session_ranking') || 'Classement de la session'} 
+        <span style="font-size:14px;color:#6b7280;font-weight:400;">(${sessionQuizCount} ${t('fin_quizzes') || 'quiz'})</span>
+      </h3>`;
+    const sessionRows = document.createElement('div');
+    sortedBySession.slice(0, 10).forEach((p, idx) => {
+      const total = (p.totalScore || 0) + (p.score || 0);
+      const medal = idx === 0 ? '🥇' : idx === 1 ? '🥈' : idx === 2 ? '🥉' : '';
+      const r = document.createElement('div');
+      r.className = 'leader-row';
+      r.style.background = 'white';
+      r.innerHTML = `
+        <div class="leader-rank">${medal || (idx + 1)}</div>
+        <div class="leader-name">${p.name}</div>
+        <div class="leader-score" style="color:#1ea8e0;">${total} ${t('fin_pts')}</div>`;
+      sessionRows.appendChild(r);
+    });
+    sessionList.appendChild(sessionRows);
+    list.appendChild(sessionList);
+  }
+
   goTo('screen-final');
   launchConfetti();
 }
@@ -3026,8 +3825,176 @@ async function endGame() {
   const fb = window.fb;
   if (currentPin) { try { await fb.remove(fb.ref(fb.db, 'games/' + currentPin)); } catch(e) {} }
   unsubAll();
+  clearStudentSession();        // 🆕 Phase 2A : nettoie sessionStorage
   currentPin = null; role = null; _currentQ = -1; _lastQIdxShown = -1;
   goTo('screen-welcome');
+}
+
+// 🆕 Phase 2A : Ouvre le modal pour choisir un nouveau quiz du même thème
+async function openNextQuizModal() {
+  if (!currentPin || role !== 'teacher') return;
+  const fb = window.fb;
+  const infoSnap = await fb.get(fb.ref(fb.db, 'games/' + currentPin + '/info'));
+  if (!infoSnap.exists()) { toast('Session introuvable'); return; }
+  const info = infoSnap.val();
+  const themeId = info.lesson;
+  const themeName = info.themeName || themeId;
+  const playedQuizIds = (info.quizHistory || []).map(h => h.quizId);
+  // Ajouter aussi le quiz qui vient de se terminer
+  if (info.quizId) playedQuizIds.push(info.quizId);
+
+  $('nqm-theme-name').textContent = themeName;
+  const listEl = $('nqm-quiz-list');
+  listEl.innerHTML = '<p class="text-center text-gray-400 py-6">' + (t('nqm_loading') || 'Chargement...') + '</p>';
+  $('next-quiz-modal').classList.remove('hidden');
+
+  try {
+    const quizzes = await loadQuizzesForTheme(themeId, true);
+    if (!quizzes || quizzes.length === 0) {
+      listEl.innerHTML = '<p class="text-center text-gray-400 py-6">' + (t('nqm_empty') || 'Aucun quiz disponible') + '</p>';
+      return;
+    }
+    listEl.innerHTML = '';
+    quizzes.forEach(qz => {
+      const alreadyPlayed = playedQuizIds.includes(qz.id);
+      const card = document.createElement('div');
+      card.className = 'card p-4 mb-2 cursor-pointer transition-all';
+      card.style.cssText = 'border:1px solid #e6eeff;' + (alreadyPlayed ? 'opacity:0.55;' : 'cursor:pointer;');
+      card.innerHTML = `
+        <div class="flex items-center justify-between gap-3">
+          <div class="flex-1 text-left">
+            <div class="font-bold text-base">${qz.name || qz.id}</div>
+            <div class="text-xs text-gray-500 mt-1">
+              ${(qz.questionsCount || 0)} questions · ${qz.timePerQuestion || 30}s/question
+              ${alreadyPlayed ? ' · <span style="color:#f59e0b;font-weight:700;">⚠ Déjà joué dans cette session</span>' : ''}
+            </div>
+          </div>
+          <button class="btn ${alreadyPlayed ? 'btn-ghost' : 'btn-primary'} py-2 px-4 text-sm" onclick="launchNextQuiz('${qz.id}')">
+            ▶ <span data-i18n="nqm_launch">Lancer</span>
+          </button>
+        </div>`;
+      listEl.appendChild(card);
+    });
+  } catch(e) {
+    console.error('Could not load quizzes:', e);
+    listEl.innerHTML = '<p class="text-center text-red-500 py-6">Erreur de chargement</p>';
+  }
+}
+
+function closeNextQuizModal() {
+  $('next-quiz-modal').classList.add('hidden');
+}
+
+// 🆕 Phase 2A : Lance un nouveau quiz du même thème dans la SESSION EXISTANTE
+//    - Garde le même PIN
+//    - Garde tous les joueurs connectés (avec leur score cumulé)
+//    - Sauvegarde l'historique du quiz précédent
+//    - Reset l'état pour le nouveau quiz
+async function launchNextQuiz(newQuizId) {
+  if (!currentPin || role !== 'teacher') return;
+  const fb = window.fb;
+  closeNextQuizModal();
+  toast('⏳ ' + (t('nqm_launching') || 'Préparation du nouveau quiz...'));
+
+  try {
+    // 1) Récupérer infos actuelles
+    const [infoSnap, playersSnap, answersSnap] = await Promise.all([
+      fb.get(fb.ref(fb.db, 'games/' + currentPin + '/info')),
+      fb.get(fb.ref(fb.db, 'games/' + currentPin + '/players')),
+      fb.get(fb.ref(fb.db, 'games/' + currentPin + '/answers'))
+    ]);
+    const info = infoSnap.val() || {};
+    const players = playersSnap.val() || {};
+    const previousAnswers = answersSnap.val() || {};
+
+    // 2) Cumuler les scores du quiz qui vient de finir dans totalScore
+    //    Et archiver le détail du quiz précédent dans history/
+    const playerUpdates = {};
+    Object.entries(players).forEach(([pid, p]) => {
+      const prevTotal = p.totalScore || 0;
+      const quizScore = p.score || 0;
+      playerUpdates['players/' + pid + '/totalScore'] = prevTotal + quizScore;
+      playerUpdates['players/' + pid + '/lastQuizScore'] = quizScore;
+      // Reset pour le prochain quiz
+      playerUpdates['players/' + pid + '/score'] = 0;
+      playerUpdates['players/' + pid + '/streak'] = 0;
+    });
+
+    // Archiver le quiz précédent
+    const historyEntry = {
+      quizId: info.quizId || 'unknown',
+      quizName: info.quizName || '',
+      completedAt: Date.now(),
+      totalQuestions: info.totalQuestions || 0,
+      players: Object.fromEntries(Object.entries(players).map(([pid, p]) => [
+        pid, { name: p.name, matricule: p.matricule || null, score: p.score || 0 }
+      ])),
+      answers: previousAnswers
+    };
+    playerUpdates['history/' + (info.quizId || 'unknown') + '__' + Date.now()] = historyEntry;
+
+    // Ajouter à quizHistory dans info
+    const quizHistoryArr = info.quizHistory || [];
+    quizHistoryArr.push({ quizId: info.quizId, quizName: info.quizName, completedAt: Date.now() });
+
+    // 3) Charger le NOUVEAU quiz (questions)
+    await setQuestionsForQuiz(info.lesson, newQuizId);
+    const quizzes = await loadQuizzesForTheme(info.lesson);
+    const newQuizMeta = quizzes.find(q => q.id === newQuizId) || { timePerQuestion: 30, name: newQuizId };
+    if (_shuffleEnabled) {
+      QUESTIONS = shuffleQuestionsAndOptions(QUESTIONS);
+    }
+    // 🆕 Point 7 : limiter au nombre demandé par le formateur
+    const nbToPlay2 = newQuizMeta.nbQuestionsToPlay || 0;
+    if (nbToPlay2 > 0 && QUESTIONS.length > nbToPlay2) {
+      QUESTIONS = QUESTIONS.slice(0, nbToPlay2);
+    }
+    if (!QUESTIONS || QUESTIONS.length === 0) {
+      toast('⚠️ Ce quiz n\'a aucune question.');
+      return;
+    }
+    const newQuizDataArr = QUESTIONS.map(q => ({
+      qFr: q.fr.q, qAr: q.ar.q,
+      optionsFr: q.fr.options, optionsAr: q.ar.options,
+      correctIdx: q.fr.correct,
+      explanationFr: q.fr.explanation || '',
+      explanationAr: q.ar.explanation || ''
+    }));
+
+    // 4) Mettre à jour le nœud game (garde PIN, players, mais reset state + new quiz)
+    const updates = {
+      ...playerUpdates,
+      'quizData': newQuizDataArr,
+      'answers': {},   // vider les réponses
+      'info/quizId': newQuizId,
+      'info/quizName': newQuizMeta.name || newQuizId,
+      'info/quizHistory': quizHistoryArr,
+      'info/state': 'lobby',
+      'info/currentQuestion': 0,
+      'info/totalQuestions': QUESTIONS.length,
+      'info/timePerQuestion': newQuizMeta.timePerQuestion || 30,
+      'info/sessionQuizCount': quizHistoryArr.length + 1,
+    };
+    await fb.update(fb.ref(fb.db, 'games/' + currentPin), updates);
+
+    // 5) Mettre à jour les variables locales formateur
+    _selectedQuizId = newQuizId;
+    _currentQ = -1;
+    _lastQIdxShown = -1;
+
+    // 6) Mettre à jour l'affichage du lobby (compteur + nom de groupe inchangé)
+    $('game-pin').textContent = currentPin;
+    const cntEl = $('session-quiz-count');
+    if (cntEl) {
+      cntEl.style.display = 'block';
+      $('session-quiz-num').textContent = quizHistoryArr.length + 1;
+    }
+    goTo('screen-teacher-lobby');
+    toast('✅ ' + (t('nqm_ready') || 'Quiz prêt — les apprenants reviennent au lobby'));
+  } catch(e) {
+    console.error('launchNextQuiz failed:', e);
+    toast('❌ Erreur : ' + (e.message || 'inconnue'));
+  }
 }
 
 async function restartFromHome() {
@@ -3036,13 +4003,96 @@ async function restartFromHome() {
     try { await fb.remove(fb.ref(fb.db, 'games/' + currentPin)); } catch(e) {}
   }
   unsubAll();
+  clearStudentSession();        // 🆕 Phase 2A : nettoie sessionStorage
   currentPin = null; role = null; _currentQ = -1; _lastQIdxShown = -1;
   ['podium-1-bar','podium-2-bar','podium-3-bar'].forEach(id => { const el = $(id); if (el) el.style.height = '0'; });
   goTo('screen-welcome');
 }
 
 let currentMatricule = null;
+
+// 🆕 Phase 2A : Persistance de session apprenant (sessionStorage = par onglet)
+//    Permet à un apprenant qui rafraîchit la page de reprendre automatiquement
+const STUDENT_SESSION_KEY = 'copag_student_session';
+function saveStudentSession(data) {
+  try { sessionStorage.setItem(STUDENT_SESSION_KEY, JSON.stringify(data)); } catch(e) {}
+}
+function getStudentSession() {
+  try {
+    const raw = sessionStorage.getItem(STUDENT_SESSION_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch(e) { return null; }
+}
+function clearStudentSession() {
+  try { sessionStorage.removeItem(STUDENT_SESSION_KEY); } catch(e) {}
+}
+
+// Tente une reconnexion silencieuse à partir des infos sauvegardées
+async function tryAutoReconnectStudent() {
+  const saved = getStudentSession();
+  if (!saved || !saved.pin || !saved.playerId) return false;
+  try {
+    const fb = window.fb;
+    const gameSnap = await fb.get(fb.ref(fb.db, 'games/' + saved.pin));
+    if (!gameSnap.exists()) {
+      clearStudentSession();
+      return false;
+    }
+    const game = gameSnap.val();
+    const player = (game.players || {})[saved.playerId];
+    if (!player) {
+      // Le joueur n'existe plus dans la partie
+      clearStudentSession();
+      return false;
+    }
+    // Restaurer les variables globales
+    role = 'student';
+    currentPin = saved.pin;
+    currentPlayerId = saved.playerId;
+    currentPlayerName = player.name || saved.name || '';
+    currentMatricule = player.matricule || saved.matricule || null;
+
+    // Marquer la reconnexion
+    await fb.update(fb.ref(fb.db, 'games/' + saved.pin + '/players/' + saved.playerId), {
+      lastReconnect: Date.now()
+    });
+
+    // Aller à l'écran approprié
+    const state = game.info.state;
+    const displayEl = $('display-student-name');
+    if (displayEl) displayEl.textContent = currentPlayerName;
+    if (state === 'lobby')                                          goTo('screen-student-waiting');
+    else if (state === 'question' || state === 'reveal' || state === 'leaderboard') goTo('screen-student-question');
+    else if (state === 'final')                                     goTo('screen-student-question');
+    else                                                            goTo('screen-student-waiting');
+    watchGameAsStudent();
+    toast('👋 ' + (t('rejoin_success') || 'Reconnexion réussie !'));
+    return true;
+  } catch(e) {
+    console.warn('Auto-reconnect failed:', e);
+    clearStudentSession();
+    return false;
+  }
+}
+
 let _matriculeLookupTimeout = null;
+
+// 🆕 Nettoie le formulaire avant d'afficher l'écran apprenant
+// (évite que le navigateur pré-remplisse avec les valeurs d'un précédent apprenant)
+function openStudentJoin() {
+  const pinEl = $('student-pin');
+  const matrEl = $('student-matricule');
+  const nameEl = $('student-name');
+  const foundDiv = $('matricule-found');
+  const errEl = $('join-error');
+  if (pinEl)  pinEl.value = '';
+  if (matrEl) matrEl.value = '';
+  if (nameEl) nameEl.value = '';
+  if (foundDiv) foundDiv.classList.add('hidden');
+  if (errEl) errEl.classList.add('hidden');
+  goTo('screen-student-join');
+  setTimeout(() => { if (pinEl) pinEl.focus(); }, 200);
+}
 
 async function studentJoin() {
   const fb = window.fb;
@@ -3053,11 +4103,13 @@ async function studentJoin() {
   errEl.classList.add('hidden');
 
   if (!pin || pin.length !== 6) { errEl.textContent = t('err_invalid_pin'); errEl.classList.remove('hidden'); return; }
-  if (!name) { errEl.textContent = t('err_no_name'); errEl.classList.remove('hidden'); return; }
-  // Matricule validation - if provided, must be numeric
-  if (matricule && !/^[0-9]+$/.test(matricule)) {
+  // ⚠️ Matricule obligatoire (modif: plus de mode invité)
+  if (!matricule) { errEl.textContent = t('err_no_matricule') || 'Le matricule est obligatoire'; errEl.classList.remove('hidden'); return; }
+  if (!/^[0-9]+$/.test(matricule)) {
     errEl.textContent = t('sj_matricule_invalid'); errEl.classList.remove('hidden'); return;
   }
+  // Si pas trouvé dans la base, l'apprenant tape son nom manuellement
+  if (!name) { errEl.textContent = t('err_no_name'); errEl.classList.remove('hidden'); return; }
 
   $('join-btn').disabled = true;
   try {
@@ -3108,6 +4160,9 @@ async function studentJoin() {
         name,
         lastReconnect: Date.now()
       });
+      
+      // 🆕 Phase 2A : sauvegarder pour reconnexion auto au refresh
+      saveStudentSession({ pin, playerId: existingPlayerId, matricule: currentMatricule, name });
       
       $('display-student-name').textContent = name;
       $('join-btn').disabled = false;
@@ -3182,6 +4237,9 @@ async function studentJoin() {
     // 🆕 Tracker la dernière activité pour info formateur, mais sans supprimer
     fb.onDisconnect(fb.ref(fb.db, 'games/' + pin + '/players/' + currentPlayerId + '/lastDisconnect')).set(Date.now());
 
+    // 🆕 Phase 2A : sauvegarder pour reconnexion auto au refresh
+    saveStudentSession({ pin, playerId: currentPlayerId, matricule, name });
+
     $('display-student-name').textContent = name;
     $('join-btn').disabled = false;
     goTo('screen-student-waiting');
@@ -3241,35 +4299,25 @@ function setupMatriculeListener() {
 
 function watchGameAsStudent() {
   const fb = window.fb;
-  // Load the EXACT quiz sequence created by the teacher (with eventual shuffle).
-  // Stored at games/{pin}/quizData — falls back to the lesson default if absent (older games).
-  window.fb.get(window.fb.ref(window.fb.db, 'games/' + currentPin + '/quizData')).then(snap => {
-    if (snap.exists()) {
-      const arr = snap.val();
-      QUESTIONS = arr.map(q => ({
-        fr: {
-          q: q.qFr || '',
-          options: q.optionsFr || ['', '', '', ''],
-          correct: q.correctIdx != null ? q.correctIdx : 0,
-          explanation: q.explanationFr || ''
-        },
-        ar: {
-          q: q.qAr || q.qFr || '',
-          options: q.optionsAr || q.optionsFr || ['', '', '', ''],
-          correct: q.correctIdx != null ? q.correctIdx : 0,
-          explanation: q.explanationAr || q.explanationFr || ''
-        }
-      }));
-    } else {
-      // Fallback : ancien format (parties créées avant le shuffle) → charger la leçon
-      return window.fb.get(window.fb.ref(window.fb.db, 'games/' + currentPin + '/info')).then(s => {
-        if (s.exists()) {
-          const info = s.val();
-          if (info.lesson) return setQuestionsForLesson(info.lesson);
-        }
-      });
-    }
-  }).catch(e => console.warn('Could not load quizData:', e));
+  // Helper : recharger les questions du quiz courant
+  async function reloadQuizData() {
+    try {
+      const snap = await fb.get(fb.ref(fb.db, 'games/' + currentPin + '/quizData'));
+      if (snap.exists()) {
+        const arr = snap.val();
+        QUESTIONS = arr.map(q => ({
+          fr: { q: q.qFr || '', options: q.optionsFr || ['','','',''], correct: q.correctIdx != null ? q.correctIdx : 0, explanation: q.explanationFr || '' },
+          ar: { q: q.qAr || q.qFr || '', options: q.optionsAr || q.optionsFr || ['','','',''], correct: q.correctIdx != null ? q.correctIdx : 0, explanation: q.explanationAr || q.explanationFr || '' }
+        }));
+      } else {
+        const s = await fb.get(fb.ref(fb.db, 'games/' + currentPin + '/info'));
+        if (s.exists() && s.val().lesson) await setQuestionsForLesson(s.val().lesson);
+      }
+    } catch(e) { console.warn('reloadQuizData error:', e); }
+  }
+  // Chargement initial des questions
+  reloadQuizData();
+
   const playersRef = fb.ref(fb.db, 'games/' + currentPin + '/players');
   const u1 = fb.onValue(playersRef, (snap) => {
     const n = snap.exists() ? Object.keys(snap.val()).length : 0;
@@ -3277,14 +4325,25 @@ function watchGameAsStudent() {
   });
   gameListeners.push(u1);
 
+  // 🆕 Phase 2A : Détecter le changement de quizId (nouveau quiz dans la même session)
+  let _lastKnownQuizId = null;
   const infoRef = fb.ref(fb.db, 'games/' + currentPin + '/info');
-  const u2 = fb.onValue(infoRef, (snap) => {
+  const u2 = fb.onValue(infoRef, async (snap) => {
     if (!snap.exists()) {
       toast(t('game_ended'));
+      clearStudentSession();   // 🆕 nettoyer le sessionStorage
       setTimeout(() => { unsubAll(); goTo('screen-welcome'); }, 1500);
       return;
     }
-    handleStudentState(snap.val());
+    const info = snap.val();
+    // Si le quizId a changé → recharger les questions et reset l'état local
+    if (_lastKnownQuizId !== null && info.quizId && info.quizId !== _lastKnownQuizId) {
+      await reloadQuizData();
+      _lastStateShown = null;        // reset pour que la nouvelle question s'affiche
+      toast('▶ ' + (t('new_quiz_started') || 'Nouveau quiz lancé par le formateur !'));
+    }
+    if (info.quizId) _lastKnownQuizId = info.quizId;
+    handleStudentState(info);
   });
   gameListeners.push(u2);
 }
@@ -3356,9 +4415,10 @@ function showStudentQuestion(info) {
   });
 
   const startTs = info.questionStartTime;
+  const total = info.timePerQuestion || 30;
   clearInterval(timerInterval);
   const update = () => {
-    const left = Math.max(0, Math.ceil(30 - (Date.now() - startTs) / 1000));
+    const left = Math.max(0, Math.ceil(total - (Date.now() - startTs) / 1000));
     $('student-time-left').textContent = left;
     if (left <= 0) clearInterval(timerInterval);
   };
@@ -3425,7 +4485,11 @@ async function showStudentFinal() {
   const fb = window.fb;
   const snap = await fb.get(fb.ref(fb.db, 'games/' + currentPin + '/players'));
   const players = snap.val() || {};
-  const sorted = Object.values(players).sort((a,b) => (b.score||0) - (a.score||0));
+  // 🆕 Point 1 : tri par score DESC, puis par vitesse ASC
+  const sorted = Object.values(players).sort((a, b) => {
+    if ((b.score || 0) !== (a.score || 0)) return (b.score || 0) - (a.score || 0);
+    return (a.totalTimeSession || 0) - (b.totalTimeSession || 0);
+  });
 
   const slots = [
     { rank: 1, h: 220, k: 'podium-1' },
@@ -3474,9 +4538,285 @@ function isTeacherAuthed() {
 function goToTeacher() {
   if (isTeacherAuthed()) {
     goTo('screen-teacher-dashboard');
+    // 🆕 Phase 2C : afficher la bannière si session active
+    refreshActiveSessionBanner();
+    // 🆕 Phase 2D : nettoyer les sessions zombies (>12h)
+    cleanupZombieSessions();
+    // 🆕 Phase 3B : charger les KPIs globaux COPAG
+    loadGlobalKPIs();
+    // 🆕 Sessions d'aujourd'hui
+    loadTodaySessions();
   } else {
     showAuthModal();
   }
+}
+
+// 🆕 Charger et afficher les sessions terminées aujourd'hui
+async function loadTodaySessions() {
+  const listEl = $('today-sessions-list');
+  const badge = $('today-count-badge');
+  if (!listEl) return;
+  
+  const fb = window.fb;
+  if (!fb) return;
+  
+  try {
+    const snap = await fb.get(fb.ref(fb.db, 'history'));
+    const sessions = snap.exists() ? Object.entries(snap.val()).map(([id, s]) => ({ id, ...s })) : [];
+    
+    // Filtrer celles d'aujourd'hui (basé sur endedAt ou startedAt)
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const endOfDay = startOfDay + 24 * 60 * 60 * 1000 - 1;
+    
+    const todaySessions = sessions
+      .filter(s => {
+        const ts = s.endedAt || s.startedAt || 0;
+        return ts >= startOfDay && ts <= endOfDay;
+      })
+      .sort((a, b) => (b.endedAt || b.startedAt || 0) - (a.endedAt || a.startedAt || 0));
+    
+    if (badge) badge.textContent = todaySessions.length;
+    
+    if (todaySessions.length === 0) {
+      listEl.innerHTML = `<div class="text-gray-400 text-sm text-center py-6">
+        <div class="text-3xl mb-2">📭</div>
+        ${t('today_empty') || 'Aucune session jouée aujourd\'hui'}
+      </div>`;
+      return;
+    }
+    
+    let html = '';
+    todaySessions.forEach(s => {
+      const time = new Date(s.endedAt || s.startedAt);
+      const hh = String(time.getHours()).padStart(2,'0');
+      const mm = String(time.getMinutes()).padStart(2,'0');
+      const timeStr = hh + 'h' + mm;
+      
+      const groupName = s.groupName || (s.lessonNameFr || s.lesson || '—');
+      const themeName = LANG === 'ar' ? (s.lessonNameAr || s.lesson || '') : (s.lessonNameFr || s.lesson || '');
+      const quizName = s.quizName || '';
+      const players = (s.players || []).length;
+      const accuracy = typeof s.accuracy === 'number' ? s.accuracy : 0;
+      
+      // Couleur selon la précision
+      const accColor = accuracy >= 80 ? '#10b981' : accuracy >= 50 ? '#f59e0b' : '#ef4444';
+      const accBg = accuracy >= 80 ? '#d1fae5' : accuracy >= 50 ? '#fef3c7' : '#fecaca';
+      
+      html += `<div class="flex items-center gap-4 p-3 rounded-xl mb-2 cursor-pointer" 
+        style="background:#f9fafb;border:1px solid #e6eeff;transition:all 0.2s;"
+        onmouseover="this.style.background='#eef7fc';this.style.borderColor='#7dd3f7';"
+        onmouseout="this.style.background='#f9fafb';this.style.borderColor='#e6eeff';"
+        onclick="goToAnalysisAndShow('${s.id}')">
+        <div style="font-family:'Outfit',monospace;font-weight:800;font-size:14px;color:var(--copag-cyan);min-width:55px;">⏰ ${timeStr}</div>
+        <div class="flex-1" style="min-width:0;">
+          <div class="font-bold text-sm" style="color:var(--copag-navy);word-break:break-all;line-height:1.3;">${escapeHtml(groupName)}</div>
+          <div class="text-xs text-gray-500 mt-1">
+            ${escapeHtml(themeName)}${quizName ? ' • ' + escapeHtml(quizName) : ''}
+          </div>
+        </div>
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <div style="background:#eef7fc;color:var(--copag-navy);padding:4px 10px;border-radius:8px;font-size:12px;font-weight:700;">
+            👥 ${players}
+          </div>
+          <div style="background:${accBg};color:${accColor};padding:4px 10px;border-radius:8px;font-size:12px;font-weight:800;">
+            🎯 ${accuracy}%
+          </div>
+        </div>
+      </div>`;
+    });
+    
+    listEl.innerHTML = html;
+  } catch(e) {
+    console.warn('loadTodaySessions failed:', e);
+    listEl.innerHTML = '<div class="text-red-500 text-sm text-center py-4">Erreur de chargement</div>';
+  }
+}
+
+// 🆕 Helper : aller à l'analyse et ouvrir le détail d'une session
+function goToAnalysisAndShow(sessionId) {
+  goToAnalysis().then(() => {
+    setTimeout(() => showAnSessionDetail(sessionId), 500);
+  });
+}
+
+// 🆕 Phase 3B : KPIs globaux COPAG (chargés depuis /history)
+async function loadGlobalKPIs() {
+  const fb = window.fb;
+  if (!fb) return;
+  try {
+    const snap = await fb.get(fb.ref(fb.db, 'history'));
+    const sessions = snap.exists() ? Object.values(snap.val()) : [];
+    
+    const now = Date.now();
+    const ONE_WEEK = 7 * 24 * 60 * 60 * 1000;
+    const ONE_MONTH = 30 * 24 * 60 * 60 * 1000;
+    
+    // 1) Sessions totales + cette semaine
+    const totalSessions = sessions.length;
+    const sessionsThisWeek = sessions.filter(s => (s.endedAt || s.startedAt || 0) >= (now - ONE_WEEK)).length;
+    
+    // 2) Apprenants actifs (uniques) + ce mois
+    const allApprenants = new Set();
+    const monthApprenants = new Set();
+    sessions.forEach(s => {
+      const recent = (s.endedAt || s.startedAt || 0) >= (now - ONE_MONTH);
+      (s.players || []).forEach(p => {
+        const key = p.matricule ? String(p.matricule) : ('N:' + (p.name || '').toUpperCase());
+        allApprenants.add(key);
+        if (recent) monthApprenants.add(key);
+      });
+    });
+    
+    // 3) Score moyen + précision globale
+    let totalCorrect = 0, totalAnswers = 0, scoreSum = 0, scoreCount = 0;
+    sessions.forEach(s => {
+      (s.players || []).forEach(p => {
+        if (typeof p.score === 'number') {
+          scoreSum += p.score;
+          scoreCount++;
+        }
+        (p.perQuestion || []).forEach(pq => {
+          if (!pq || pq.played === false) return;
+          totalAnswers++;
+          if (pq.correct) totalCorrect++;
+        });
+      });
+    });
+    const avgScore = scoreCount > 0 ? Math.round(scoreSum / scoreCount) : 0;
+    const accuracy = totalAnswers > 0 ? Math.round((totalCorrect / totalAnswers) * 100) : 0;
+    
+    // 4) Thème le plus populaire
+    const themeCounts = new Map();
+    sessions.forEach(s => {
+      const themeName = (LANG === 'ar' ? s.lessonNameAr : s.lessonNameFr) || s.lesson || '—';
+      themeCounts.set(themeName, (themeCounts.get(themeName) || 0) + 1);
+    });
+    let topTheme = '—', topThemeCount = 0;
+    themeCounts.forEach((c, name) => {
+      if (c > topThemeCount) { topTheme = name; topThemeCount = c; }
+    });
+    
+    // Affichage
+    const set = (id, val) => { const el = $(id); if (el) el.textContent = val; };
+    set('kpi-sessions', totalSessions);
+    set('kpi-sessions-week', sessionsThisWeek);
+    set('kpi-apprenants', allApprenants.size);
+    set('kpi-apprenants-month', monthApprenants.size);
+    set('kpi-avg-score', avgScore);
+    set('kpi-accuracy', accuracy + '%');
+    set('kpi-top-theme', topTheme.length > 22 ? topTheme.slice(0, 22) + '…' : topTheme);
+    set('kpi-top-theme-count', topThemeCount);
+  } catch(e) {
+    console.warn('loadGlobalKPIs failed:', e);
+  }
+}
+
+// 🆕 Phase 2D : Nettoyer les sessions qui traînent depuis > 12h
+//    Fonctionne en arrière-plan, ne bloque pas l'UI
+async function cleanupZombieSessions() {
+  const fb = window.fb;
+  if (!fb) return;
+  try {
+    const allGamesSnap = await fb.get(fb.ref(fb.db, 'games'));
+    if (!allGamesSnap.exists()) return;
+    const games = allGamesSnap.val();
+    const now = Date.now();
+    const TWELVE_HOURS = 12 * 60 * 60 * 1000;
+    const toDelete = [];
+    Object.entries(games).forEach(([pin, game]) => {
+      const createdAt = (game.info && game.info.createdAt) || 0;
+      // Garde la session active courante intacte
+      if (pin === currentPin) return;
+      if (createdAt && (now - createdAt) > TWELVE_HOURS) {
+        toDelete.push(pin);
+      }
+    });
+    if (toDelete.length > 0) {
+      console.log('🧹 Nettoyage de', toDelete.length, 'session(s) zombie(s) (>12h)');
+      await Promise.all(toDelete.map(pin =>
+        fb.remove(fb.ref(fb.db, 'games/' + pin)).catch(()=>{})
+      ));
+    }
+  } catch(e) {
+    console.warn('cleanupZombieSessions failed:', e);
+  }
+}
+
+// 🆕 Phase 2C : Détecter et afficher une session active en cours
+function refreshActiveSessionBanner() {
+  const banner = $('active-session-banner');
+  if (!banner) return;
+  if (currentPin && role === 'teacher') {
+    // Une session est active en mémoire
+    banner.classList.remove('hidden');
+    $('active-session-pin').textContent = currentPin;
+    // Récupérer le nom de groupe depuis Firebase
+    const fb = window.fb;
+    if (fb) {
+      fb.get(fb.ref(fb.db, 'games/' + currentPin + '/info')).then(snap => {
+        if (snap.exists()) {
+          const info = snap.val();
+          $('active-session-group').textContent = info.groupName || (info.themeName || '') + ' / ' + (info.quizName || '');
+        } else {
+          // Session disparue (clôturée ailleurs) → masquer bannière
+          banner.classList.add('hidden');
+          currentPin = null;
+        }
+      }).catch(()=>{});
+    }
+  } else {
+    banner.classList.add('hidden');
+  }
+}
+
+// 🆕 Phase 2C : Reprendre la session active
+async function resumeActiveSession() {
+  if (!currentPin) { refreshActiveSessionBanner(); return; }
+  const fb = window.fb;
+  try {
+    const snap = await fb.get(fb.ref(fb.db, 'games/' + currentPin + '/info'));
+    if (!snap.exists()) {
+      toast('Session introuvable');
+      currentPin = null;
+      refreshActiveSessionBanner();
+      return;
+    }
+    const info = snap.val();
+    // Selon l'état, retourner à l'écran approprié
+    if (info.state === 'lobby') {
+      $('game-pin').textContent = currentPin;
+      const lobbyGroupEl = $('lobby-group-name');
+      if (lobbyGroupEl) lobbyGroupEl.textContent = info.groupName || '—';
+      goTo('screen-teacher-lobby');
+      watchLobbyAsTeacher();
+    } else if (info.state === 'final') {
+      // Reconstruire le podium final
+      await showFinal();
+    } else {
+      // En plein quiz : retour à l'écran quiz
+      goTo('screen-quiz-teacher');
+      // Note : pour reprendre en plein milieu, il faudrait restaurer beaucoup d'état → on simplifie
+      toast('⚠️ ' + (t('td_resume_warning') || 'Session reprise — vérifiez l\'état du quiz'));
+    }
+  } catch(e) {
+    console.error(e);
+    toast('Erreur : ' + e.message);
+  }
+}
+
+// 🆕 Phase 2C : Clôturer la session active depuis le dashboard
+async function closeActiveSession() {
+  if (!currentPin) { refreshActiveSessionBanner(); return; }
+  if (!confirm(t('td_confirm_close') || 'Clôturer définitivement la session ' + currentPin + ' ? Les apprenants seront déconnectés.')) return;
+  const fb = window.fb;
+  try {
+    await fb.remove(fb.ref(fb.db, 'games/' + currentPin));
+  } catch(e) {}
+  unsubAll();
+  currentPin = null; _currentQ = -1; _lastQIdxShown = -1;
+  refreshActiveSessionBanner();
+  toast('🏁 ' + (t('td_session_closed') || 'Session clôturée'));
 }
 
 function showAuthModal() {
@@ -3531,6 +4871,11 @@ async function verifyAuth() {
       sessionStorage.setItem(AUTH_SESSION_KEY, 'yes');
       closeAuthModal();
       goTo('screen-teacher-dashboard');
+      // 🆕 Phase 2C/2D/3B : bannière + nettoyage + KPIs + sessions du jour
+      refreshActiveSessionBanner();
+      cleanupZombieSessions();
+      loadGlobalKPIs();
+      loadTodaySessions();
     } else {
       showAuthError(t('err_wrong_pwd'));
       $('auth-pwd').value = '';
@@ -4694,17 +6039,74 @@ async function showStudentProfile() {
     return;
   }
   
-  // Get session stars (this session's score)
-  let sessionStars = 0;
+  // 🆕 Point 3 : charger les libellés personnalisés du formateur
   try {
-    const myPlayerSnap = await fb.get(fb.ref(fb.db, 'games/' + currentPin + '/players/' + currentPlayerId));
-    if (myPlayerSnap.exists()) {
-      sessionStars = myPlayerSnap.val().score || 0;
+    const labelsSnap = await fb.get(fb.ref(fb.db, 'settings/profileLabels'));
+    if (labelsSnap.exists()) {
+      const lbl = labelsSnap.val();
+      if (lbl.zone1 && $('profile-zone1-label')) $('profile-zone1-label').textContent = lbl.zone1;
+      if (lbl.zone2 && $('profile-zone2-label')) $('profile-zone2-label').textContent = lbl.zone2;
+      if (lbl.zone3 && $('profile-zone3-label')) $('profile-zone3-label').textContent = lbl.zone3;
     }
+  } catch(e) { /* ignore */ }
+  
+  // Récupérer les données du joueur courant + tous les joueurs de la session pour le classement
+  let sessionStars = 0;
+  let myTotalTime = 0;
+  let myAnswered = 0;
+  let myRankInQuiz = 0;
+  let totalPlayersInQuiz = 0;
+  let myAccuracyInQuiz = 0;
+  try {
+    const [myPlayerSnap, allPlayersSnap, infoSnap] = await Promise.all([
+      fb.get(fb.ref(fb.db, 'games/' + currentPin + '/players/' + currentPlayerId)),
+      fb.get(fb.ref(fb.db, 'games/' + currentPin + '/players')),
+      fb.get(fb.ref(fb.db, 'games/' + currentPin + '/info'))
+    ]);
+    if (myPlayerSnap.exists()) {
+      const me = myPlayerSnap.val();
+      sessionStars = me.score || 0;
+      myTotalTime = me.totalTimeSession || 0;
+    }
+    const info = infoSnap.val() || {};
+    const totalQ = info.totalQuestions || 1;
+    
+    // 🆕 Point 3b : calculer précision et classement DANS CE QUIZ
+    if (allPlayersSnap.exists()) {
+      const allPlayers = Object.entries(allPlayersSnap.val());
+      // Tri par score DESC puis temps ASC (cohérent avec point 1)
+      const sorted = allPlayers
+        .map(([pid, p]) => ({ pid, ...p }))
+        .sort((a, b) => {
+          if ((b.score || 0) !== (a.score || 0)) return (b.score || 0) - (a.score || 0);
+          return (a.totalTimeSession || 0) - (b.totalTimeSession || 0);
+        });
+      totalPlayersInQuiz = sorted.length;
+      myRankInQuiz = sorted.findIndex(p => p.pid === currentPlayerId) + 1;
+    }
+    
+    // Précision DANS CE QUIZ = correct / totalQ
+    myAccuracyInQuiz = totalQ > 0 ? Math.round((sessionStars / totalQ) * 100) : 0;
+    myAnswered = totalQ;
   } catch(e) { /* ignore */ }
   
   $('profile-name').textContent = currentPlayerName || '—';
   $('profile-session-stars').textContent = '+' + sessionStars;
+  
+  // 🆕 Point 3b : afficher les 3 nouvelles stats (zone 1)
+  if ($('profile-quiz-accuracy')) $('profile-quiz-accuracy').textContent = myAccuracyInQuiz + '%';
+  if ($('profile-quiz-speed')) {
+    const avgSpeed = myAnswered > 0 ? (myTotalTime / myAnswered).toFixed(1) : '—';
+    $('profile-quiz-speed').textContent = avgSpeed;
+  }
+  if ($('profile-quiz-rank')) {
+    if (myRankInQuiz > 0) {
+      const medal = myRankInQuiz === 1 ? '🥇' : myRankInQuiz === 2 ? '🥈' : myRankInQuiz === 3 ? '🥉' : '#' + myRankInQuiz;
+      $('profile-quiz-rank').textContent = medal + (totalPlayersInQuiz ? '/' + totalPlayersInQuiz : '');
+    } else {
+      $('profile-quiz-rank').textContent = '—';
+    }
+  }
   
   if (currentMatricule) {
     $('profile-matricule').textContent = 'Matricule: ' + currentMatricule;
@@ -4750,6 +6152,10 @@ async function showStudentProfile() {
     $('profile-rank-card').style.display = 'none';
   }
   
+  // 🆕 Point 4 : cacher le bouton "Classement général" côté apprenant
+  const lbBtn = document.querySelector('[onclick="goToGeneralLeaderboard()"]');
+  if (lbBtn) lbBtn.style.display = 'none';
+  
   goTo('screen-student-profile');
 }
 
@@ -4760,15 +6166,95 @@ let _glbFilter = 'stars';
 let _glbData = [];
 
 async function goToGeneralLeaderboard() {
-  // Si on a déjà un matricule en mémoire (session en cours ou récemment validé),
-  // accès direct au classement
-  if (currentMatricule) {
-    goTo('screen-general-leaderboard');
-    await loadGeneralLeaderboard();
+  // 🆕 Point 4 : accès SEULEMENT pour le formateur
+  if (!isTeacherAuthed()) {
+    toast('🔒 ' + (t('lb_g_locked') || 'Accès réservé au formateur'));
     return;
   }
-  // Sinon : modal pour demander le matricule
-  openLbMatriculeModal();
+  goTo('screen-general-leaderboard');
+  await loadGeneralLeaderboard();
+}
+
+// 🆕 Point 4 : variables pour filtre par thème
+let _glbSelectedTheme = '';
+let _glbAllHistory = [];
+
+function onGlbThemeChange() {
+  _glbSelectedTheme = $('glb-theme-filter').value || '';
+  recomputeGlbData();
+  renderGeneralLB();
+}
+
+// Reconstruit _glbData en agrégeant par apprenant POUR LE THÈME SÉLECTIONNÉ (ou tous)
+function recomputeGlbData() {
+  const aggMap = new Map();   // matr -> { matricule, name, totalStars, totalQuestions, totalCorrect, totalTime, totalSessions }
+  _glbAllHistory.forEach(s => {
+    if (_glbSelectedTheme && s.lesson !== _glbSelectedTheme) return;
+    (s.players || []).forEach(p => {
+      const key = p.matricule ? String(p.matricule) : ('N:' + (p.name || '').toUpperCase());
+      if (!aggMap.has(key)) {
+        aggMap.set(key, {
+          matricule: p.matricule ? String(p.matricule) : '',
+          name: p.name || '—',
+          totalStars: 0, totalQuestions: 0, totalCorrect: 0, totalTime: 0, totalSessions: 0
+        });
+      }
+      const e = aggMap.get(key);
+      const perQ = Array.isArray(p.perQuestion) ? p.perQuestion : [];
+      const played = perQ.filter(q => q && q.played !== false);
+      const correct = played.filter(q => q.correct).length;
+      e.totalStars += p.score || 0;
+      e.totalQuestions += played.length;
+      e.totalCorrect += correct;
+      e.totalTime += p.totalTimeSession || 0;
+      e.totalSessions += 1;
+      // Le nom le plus long est gardé (au cas où il y a une variation)
+      if (p.name && p.name.length > e.name.length) e.name = p.name;
+    });
+  });
+  _glbData = Array.from(aggMap.values());
+}
+
+async function loadGeneralLeaderboard() {
+  const fb = window.fb;
+  const container = $('general-lb-list');
+  container.innerHTML = '<div class="history-empty"><div class="icon">⏳</div><p>' + t('hist_loading') + '</p></div>';
+  
+  try {
+    const histSnap = await fb.get(fb.ref(fb.db, 'history'));
+    _glbAllHistory = histSnap.exists()
+      ? Object.values(histSnap.val())
+      : [];
+    
+    // Remplir le sélecteur de thèmes à partir de l'historique
+    const sel = $('glb-theme-filter');
+    if (sel) {
+      const themes = new Map();
+      _glbAllHistory.forEach(s => {
+        const lid = s.lesson || 'unknown';
+        if (themes.has(lid)) return;
+        const lname = LANG === 'ar' ? (s.lessonNameAr || lid) : (s.lessonNameFr || lid);
+        themes.set(lid, lname);
+      });
+      // Garder la sélection courante
+      const prevSel = sel.value;
+      sel.innerHTML = '<option value="">' + (t('lb_g_all_themes') || '— Tous les thèmes —') + '</option>';
+      themes.forEach((name, id) => {
+        const opt = document.createElement('option');
+        opt.value = id;
+        opt.textContent = name;
+        sel.appendChild(opt);
+      });
+      if (prevSel) sel.value = prevSel;
+      _glbSelectedTheme = sel.value || '';
+    }
+    
+    recomputeGlbData();
+    renderGeneralLB();
+  } catch(e) {
+    console.error('Load LB error:', e);
+    container.innerHTML = '<div class="history-empty"><div class="icon">❌</div><p>Erreur</p></div>';
+  }
 }
 
 function openLbMatriculeModal() {
@@ -4805,25 +6291,6 @@ async function submitLbMatricule() {
   closeLbMatriculeModal();
   goTo('screen-general-leaderboard');
   await loadGeneralLeaderboard();
-}
-
-async function loadGeneralLeaderboard() {
-  const fb = window.fb;
-  const container = $('general-lb-list');
-  container.innerHTML = '<div class="history-empty"><div class="icon">⏳</div><p>' + t('hist_loading') + '</p></div>';
-  
-  try {
-    const snap = await fb.get(fb.ref(fb.db, 'employees'));
-    if (!snap.exists()) {
-      _glbData = [];
-    } else {
-      _glbData = Object.values(snap.val());
-    }
-    renderGeneralLB();
-  } catch(e) {
-    console.error('Load LB error:', e);
-    container.innerHTML = '<div class="history-empty"><div class="icon">❌</div><p>Erreur</p></div>';
-  }
 }
 
 function filterGeneralLB(filter) {
@@ -5313,58 +6780,103 @@ async function confirmDeleteStudent() {
 // =====================================
 // QUESTION EDITOR (formateur)
 // =====================================
-let _qeCurrentLesson = null;        // lesson id en cours d'édition
-let _qeQuestions = [];              // questions de la leçon en cours (depuis Firebase)
-let _qeEditingId = null;            // id de la question en cours d'édition (null = nouvelle)
-let _qeDeleteId = null;             // id question à supprimer (popup confirm)
+let _qeCurrentLesson = null;        // lesson/theme id en cours d'édition
+let _qeCurrentQuiz = 'default';     // quiz id en cours d'édition
+let _qeQuestions = [];              // questions du quiz en cours
+let _qeEditingId = null;
+let _qeDeleteId = null;
 
 async function goToQuestionEditor() {
-  // Peupler le select des leçons (la 1ère fois ou si vide)
+  // Charger les thèmes (depuis Firebase)
+  const themes = await loadThemes(true);
   const sel = $('qe-lesson-select');
-  if (sel.options.length === 0 || sel.options.length !== LESSONS.length) {
-    sel.innerHTML = '';
-    LESSONS.forEach(l => {
-      const opt = document.createElement('option');
-      opt.value = l.id;
-      const lname = LANG === 'ar' ? (l.ar?.title || l.id) : (l.fr?.title || l.id);
-      opt.textContent = (l.icon || '') + ' ' + lname;
-      sel.appendChild(opt);
-    });
+  sel.innerHTML = '';
+  themes.forEach(t => {
+    const opt = document.createElement('option');
+    opt.value = t.id;
+    const tname = LANG === 'ar' ? (t.nameAr || t.name) : t.name;
+    opt.textContent = (t.icon || '') + ' ' + tname;
+    sel.appendChild(opt);
+  });
+  if (!_qeCurrentLesson || !themes.find(t => t.id === _qeCurrentLesson)) {
+    _qeCurrentLesson = themes[0]?.id || 'fundamentals';
   }
-  if (!_qeCurrentLesson) _qeCurrentLesson = LESSONS[0].id;
   sel.value = _qeCurrentLesson;
   goTo('screen-question-editor');
-  await loadQuestionsForEditor(_qeCurrentLesson);
+  await refreshQuizSelectForEditor();
+  await loadQuestionsForEditor(_qeCurrentLesson, _qeCurrentQuiz);
 }
 
 async function onQeLessonChange() {
   _qeCurrentLesson = $('qe-lesson-select').value;
-  await loadQuestionsForEditor(_qeCurrentLesson);
+  _qeCurrentQuiz = 'default';  // Reset to default quiz
+  await refreshQuizSelectForEditor();
+  await loadQuestionsForEditor(_qeCurrentLesson, _qeCurrentQuiz);
 }
 
-// Charge les questions d'une leçon dans l'éditeur.
-// Migration : si Firebase ne contient pas encore les questions par défaut, on les y pousse.
-async function loadQuestionsForEditor(lessonId) {
+async function refreshQuizSelectForEditor() {
+  const sel = $('qe-quiz-select');
+  sel.innerHTML = '<option value="">⏳</option>';
+  
+  const quizzes = await loadQuizzesForTheme(_qeCurrentLesson, true);
+  sel.innerHTML = '';
+  if (quizzes.length === 0) {
+    sel.innerHTML = '<option value="">—</option>';
+    return;
+  }
+  quizzes.forEach(q => {
+    const opt = document.createElement('option');
+    opt.value = q.id;
+    opt.textContent = q.name + (q.timePerQuestion ? ` (${q.timePerQuestion}s)` : '');
+    if (q.isDefault) opt.textContent += ' 🔒';
+    sel.appendChild(opt);
+  });
+  // Sélectionner _qeCurrentQuiz s'il existe, sinon le 1er
+  if (!quizzes.find(q => q.id === _qeCurrentQuiz)) {
+    _qeCurrentQuiz = quizzes[0].id;
+  }
+  sel.value = _qeCurrentQuiz;
+}
+
+async function onQeQuizChange() {
+  _qeCurrentQuiz = $('qe-quiz-select').value;
+  await loadQuestionsForEditor(_qeCurrentLesson, _qeCurrentQuiz);
+}
+
+// Charge les questions d'un quiz précis.
+async function loadQuestionsForEditor(themeId, quizId) {
   const fb = window.fb;
   const container = $('qe-list-container');
   container.innerHTML = '<div class="history-empty"><div class="icon">⏳</div><p>' + t('hist_loading') + '</p></div>';
   
   try {
-    const snap = await fb.get(fb.ref(fb.db, 'lesson_questions/' + lessonId));
-    if (!snap.exists()) {
-      // Première fois pour cette leçon : on migre les questions par défaut vers Firebase
-      await migrateDefaultsToFirebase(lessonId);
-      // On recharge
-      const snap2 = await fb.get(fb.ref(fb.db, 'lesson_questions/' + lessonId));
-      _qeQuestions = snap2.exists() ? entriesToSortedList(snap2.val()) : [];
+    let snap;
+    // Pour le quiz "default" : on lit lesson_questions/{themeId} (rétrocompatible)
+    if (quizId === 'default') {
+      snap = await fb.get(fb.ref(fb.db, 'lesson_questions/' + themeId));
+      if (!snap.exists()) {
+        // 1ère fois : migration des questions par défaut
+        await migrateDefaultsToFirebase(themeId);
+        snap = await fb.get(fb.ref(fb.db, 'lesson_questions/' + themeId));
+      }
     } else {
-      _qeQuestions = entriesToSortedList(snap.val());
+      // Quiz custom : on lit quiz_questions/{themeId}_{quizId}
+      snap = await fb.get(fb.ref(fb.db, 'quiz_questions/' + themeId + '_' + quizId));
     }
+    _qeQuestions = snap && snap.exists() ? entriesToSortedList(snap.val()) : [];
     renderQuestionsList();
   } catch(e) {
     console.error('Load questions failed:', e);
     container.innerHTML = '<div class="history-empty"><div class="icon">❌</div><p>' + t('qe_loading_err') + '</p></div>';
   }
+}
+
+// Retourne le chemin Firebase actuel pour les questions du quiz en cours
+function getCurrentQuestionsPath() {
+  if (_qeCurrentQuiz === 'default') {
+    return 'lesson_questions/' + _qeCurrentLesson;
+  }
+  return 'quiz_questions/' + _qeCurrentLesson + '_' + _qeCurrentQuiz;
 }
 
 function entriesToSortedList(obj) {
@@ -5542,7 +7054,7 @@ async function saveQuestion() {
   // Le radio FR et AR doivent rester synchronisés. On force le sync au moment du save.
   
   const fb = window.fb;
-  const lessonId = _qeCurrentLesson;
+  const basePath = getCurrentQuestionsPath();
   
   try {
     if (_qeEditingId) {
@@ -5556,7 +7068,7 @@ async function saveQuestion() {
         updatedAt: Date.now()
       };
       delete payload._id;
-      await fb.set(fb.ref(fb.db, 'lesson_questions/' + lessonId + '/' + _qeEditingId), payload);
+      await fb.set(fb.ref(fb.db, basePath + '/' + _qeEditingId), payload);
     } else {
       // Création : nouvel id, order = à la fin
       const newId = 'custom_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
@@ -5569,11 +7081,11 @@ async function saveQuestion() {
         order: maxOrder + 1,
         createdAt: Date.now()
       };
-      await fb.set(fb.ref(fb.db, 'lesson_questions/' + lessonId + '/' + newId), payload);
+      await fb.set(fb.ref(fb.db, basePath + '/' + newId), payload);
     }
     toast(t('qe_saved'));
     closeQuestionEditModal();
-    await loadQuestionsForEditor(lessonId);
+    await loadQuestionsForEditor(_qeCurrentLesson, _qeCurrentQuiz);
   } catch(e) {
     console.error('Save question failed:', e);
     errEl.textContent = 'Erreur: ' + e.message;
@@ -5612,10 +7124,10 @@ async function confirmDeleteQuestion() {
   if (!_qeDeleteId) return;
   const fb = window.fb;
   try {
-    await fb.remove(fb.ref(fb.db, 'lesson_questions/' + _qeCurrentLesson + '/' + _qeDeleteId));
+    await fb.remove(fb.ref(fb.db, getCurrentQuestionsPath() + '/' + _qeDeleteId));
     toast(t('qe_deleted'));
     closeQeDeleteModal();
-    await loadQuestionsForEditor(_qeCurrentLesson);
+    await loadQuestionsForEditor(_qeCurrentLesson, _qeCurrentQuiz);
   } catch(e) {
     console.error('Delete question failed:', e);
     toast('Erreur: ' + e.message);
@@ -5633,15 +7145,316 @@ function closeQeResetModal() {
 async function confirmResetLesson() {
   const fb = window.fb;
   const lessonId = _qeCurrentLesson;
+  const quizId = _qeCurrentQuiz;
   try {
-    // Tout supprimer puis remigrer
-    await fb.remove(fb.ref(fb.db, 'lesson_questions/' + lessonId));
-    await migrateDefaultsToFirebase(lessonId);
+    if (quizId === 'default') {
+      // Reset du quiz par défaut : supprime tout dans lesson_questions/ et remigre
+      await fb.remove(fb.ref(fb.db, 'lesson_questions/' + lessonId));
+      await migrateDefaultsToFirebase(lessonId);
+    } else {
+      // Reset d'un quiz custom : supprime juste ses questions
+      await fb.remove(fb.ref(fb.db, 'quiz_questions/' + lessonId + '_' + quizId));
+    }
     toast(t('qe_reset_done'));
     closeQeResetModal();
-    await loadQuestionsForEditor(lessonId);
+    await loadQuestionsForEditor(lessonId, quizId);
   } catch(e) {
     console.error('Reset lesson failed:', e);
+    toast('Erreur: ' + e.message);
+  }
+}
+
+// =====================================
+// GESTION DES THÈMES (ajouter/modifier/supprimer)
+// =====================================
+let _themeEditingId = null;
+let _themeDeletingId = null;
+
+function openThemeEditModal(themeId) {
+  _themeEditingId = themeId;
+  const themes = _themesCache || [];
+  const t = themes.find(x => x.id === themeId);
+  
+  if (t) {
+    $('theme-edit-title').textContent = '✏️ Modifier le thème';
+    $('theme-name-fr').value = t.name || '';
+    $('theme-name-ar').value = t.nameAr || '';
+    $('theme-icon').value = t.icon || '';
+    $('theme-desc-fr').value = t.descFr || '';
+    $('theme-desc-ar').value = t.descAr || '';
+  } else {
+    $('theme-edit-title').textContent = '✨ Nouveau thème';
+    $('theme-name-fr').value = '';
+    $('theme-name-ar').value = '';
+    $('theme-icon').value = '🎓';
+    $('theme-desc-fr').value = '';
+    $('theme-desc-ar').value = '';
+  }
+  $('theme-edit-err').classList.add('hidden');
+  $('theme-edit-modal').classList.remove('hidden');
+  setTimeout(() => $('theme-name-fr').focus(), 100);
+}
+
+function closeThemeEditModal() {
+  $('theme-edit-modal').classList.add('hidden');
+  _themeEditingId = null;
+}
+
+async function saveTheme() {
+  const nameFr = $('theme-name-fr').value.trim();
+  const nameAr = $('theme-name-ar').value.trim();
+  const icon = $('theme-icon').value.trim() || '🎓';
+  const descFr = $('theme-desc-fr').value.trim();
+  const descAr = $('theme-desc-ar').value.trim();
+  const errEl = $('theme-edit-err');
+  
+  if (!nameFr) {
+    errEl.textContent = 'Le nom (FR) est requis';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  
+  const fb = window.fb;
+  try {
+    if (_themeEditingId) {
+      // Modification
+      const existing = (_themesCache || []).find(x => x.id === _themeEditingId);
+      const payload = {
+        ...(existing || {}),
+        name: nameFr,
+        nameAr: nameAr || nameFr,
+        icon,
+        descFr,
+        descAr,
+        updatedAt: Date.now()
+      };
+      delete payload.id;
+      await fb.set(fb.ref(fb.db, 'themes/' + _themeEditingId), payload);
+    } else {
+      // Création
+      const newId = 'custom_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+      const themes = _themesCache || [];
+      const maxOrder = themes.reduce((m, x) => Math.max(m, x.order || 0), -1);
+      await fb.set(fb.ref(fb.db, 'themes/' + newId), {
+        name: nameFr,
+        nameAr: nameAr || nameFr,
+        icon,
+        descFr,
+        descAr,
+        isDefault: false,
+        order: maxOrder + 1,
+        createdAt: Date.now()
+      });
+      // Créer aussi un Quiz 1 par défaut pour ce thème
+      await fb.set(fb.ref(fb.db, 'theme_quizzes/' + newId + '/default'), {
+        name: 'Quiz 1',
+        descFr: '',
+        descAr: '',
+        timePerQuestion: 30,
+        isDefault: true,
+        order: 0,
+        createdAt: Date.now()
+      });
+    }
+    toast(_themeEditingId ? '✅ Thème modifié' : '✅ Thème créé');
+    closeThemeEditModal();
+    _themesCache = null;  // Force reload
+    await renderLessons();
+    await refreshQuizSelectForDashboard();
+  } catch(e) {
+    console.error('Save theme failed:', e);
+    errEl.textContent = 'Erreur: ' + e.message;
+    errEl.classList.remove('hidden');
+  }
+}
+
+function askDeleteTheme(themeId) {
+  const themes = _themesCache || [];
+  const t = themes.find(x => x.id === themeId);
+  if (!t) return;
+  if (t.isDefault) {
+    toast('⚠️ Les thèmes par défaut ne peuvent pas être supprimés');
+    return;
+  }
+  _themeDeletingId = themeId;
+  $('theme-del-name').textContent = (t.icon || '') + ' ' + t.name;
+  $('theme-delete-modal').classList.remove('hidden');
+}
+
+function closeThemeDeleteModal() {
+  _themeDeletingId = null;
+  $('theme-delete-modal').classList.add('hidden');
+}
+
+async function confirmDeleteTheme() {
+  if (!_themeDeletingId) return;
+  const fb = window.fb;
+  try {
+    // Supprimer le thème + tous ses quiz + toutes ses questions
+    await Promise.all([
+      fb.remove(fb.ref(fb.db, 'themes/' + _themeDeletingId)),
+      fb.remove(fb.ref(fb.db, 'theme_quizzes/' + _themeDeletingId)),
+      fb.remove(fb.ref(fb.db, 'lesson_questions/' + _themeDeletingId))
+    ]);
+    // Supprimer aussi les quiz_questions correspondants (best-effort)
+    try {
+      const snap = await fb.get(fb.ref(fb.db, 'quiz_questions'));
+      if (snap.exists()) {
+        const updates = {};
+        Object.keys(snap.val()).forEach(k => {
+          if (k.startsWith(_themeDeletingId + '_')) updates[k] = null;
+        });
+        if (Object.keys(updates).length > 0) {
+          await fb.update(fb.ref(fb.db, 'quiz_questions'), updates);
+        }
+      }
+    } catch(e) { /* ignore */ }
+    
+    toast('🗑️ Thème supprimé');
+    closeThemeDeleteModal();
+    _themesCache = null;
+    _quizzesCache = {};
+    await renderLessons();
+    await refreshQuizSelectForDashboard();
+  } catch(e) {
+    console.error('Delete theme failed:', e);
+    toast('Erreur: ' + e.message);
+  }
+}
+
+// =====================================
+// GESTION DES QUIZ (ajouter/modifier/supprimer)
+// =====================================
+let _quizEditingId = null;
+let _quizDeletingId = null;
+
+async function openQuizEditModal(quizId) {
+  _quizEditingId = quizId;
+  // Affichage du thème
+  const themes = await loadThemes();
+  const theme = themes.find(t => t.id === _qeCurrentLesson);
+  $('quiz-edit-theme-label').textContent = theme ? ((theme.icon || '') + ' ' + theme.name) : _qeCurrentLesson;
+  
+  if (quizId) {
+    const quizzes = await loadQuizzesForTheme(_qeCurrentLesson);
+    const q = quizzes.find(x => x.id === quizId);
+    if (!q) return;
+    $('quiz-edit-title').textContent = '✏️ Modifier le quiz';
+    $('quiz-name').value = q.name || '';
+    $('quiz-desc-fr').value = q.descFr || '';
+    $('quiz-desc-ar').value = q.descAr || '';
+    $('quiz-time').value = String(q.timePerQuestion || 30);
+    $('quiz-nb-questions').value = String(q.nbQuestionsToPlay || 0);
+  } else {
+    $('quiz-edit-title').textContent = '✨ Nouveau quiz';
+    const quizzes = await loadQuizzesForTheme(_qeCurrentLesson);
+    $('quiz-name').value = 'Quiz ' + (quizzes.length + 1);
+    $('quiz-desc-fr').value = '';
+    $('quiz-desc-ar').value = '';
+    $('quiz-time').value = '30';
+    $('quiz-nb-questions').value = '0';
+  }
+  $('quiz-edit-err').classList.add('hidden');
+  $('quiz-edit-modal').classList.remove('hidden');
+  setTimeout(() => $('quiz-name').focus(), 100);
+}
+
+function closeQuizEditModal() {
+  $('quiz-edit-modal').classList.add('hidden');
+  _quizEditingId = null;
+}
+
+async function saveQuiz() {
+  const name = $('quiz-name').value.trim();
+  const descFr = $('quiz-desc-fr').value.trim();
+  const descAr = $('quiz-desc-ar').value.trim();
+  const timePerQuestion = parseInt($('quiz-time').value) || 30;
+  // 🆕 Point 7 : nombre de questions à jouer (0 = toutes)
+  const nbQuestionsToPlay = Math.max(0, parseInt($('quiz-nb-questions').value) || 0);
+  const errEl = $('quiz-edit-err');
+  
+  if (!name) {
+    errEl.textContent = 'Le nom du quiz est requis';
+    errEl.classList.remove('hidden');
+    return;
+  }
+  
+  const fb = window.fb;
+  const themeId = _qeCurrentLesson;
+  
+  try {
+    if (_quizEditingId) {
+      const quizzes = await loadQuizzesForTheme(themeId);
+      const existing = quizzes.find(x => x.id === _quizEditingId);
+      const payload = {
+        ...(existing || {}),
+        name, descFr, descAr, timePerQuestion, nbQuestionsToPlay,
+        updatedAt: Date.now()
+      };
+      delete payload.id;
+      await fb.set(fb.ref(fb.db, 'theme_quizzes/' + themeId + '/' + _quizEditingId), payload);
+    } else {
+      const newId = 'quiz_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+      const quizzes = await loadQuizzesForTheme(themeId);
+      const maxOrder = quizzes.reduce((m, x) => Math.max(m, x.order || 0), -1);
+      await fb.set(fb.ref(fb.db, 'theme_quizzes/' + themeId + '/' + newId), {
+        name, descFr, descAr, timePerQuestion, nbQuestionsToPlay,
+        isDefault: false,
+        order: maxOrder + 1,
+        createdAt: Date.now()
+      });
+      _quizEditingId = newId;  // pour basculer dessus après
+    }
+    toast('✅ Quiz enregistré');
+    closeQuizEditModal();
+    delete _quizzesCache[themeId];
+    _qeCurrentQuiz = _quizEditingId || _qeCurrentQuiz;
+    await refreshQuizSelectForEditor();
+    await refreshQuizSelectForDashboard();
+    await loadQuestionsForEditor(_qeCurrentLesson, _qeCurrentQuiz);
+  } catch(e) {
+    console.error('Save quiz failed:', e);
+    errEl.textContent = 'Erreur: ' + e.message;
+    errEl.classList.remove('hidden');
+  }
+}
+
+async function askDeleteQuiz() {
+  if (_qeCurrentQuiz === 'default') {
+    toast('⚠️ Le Quiz 1 par défaut ne peut pas être supprimé. Utilise "🔄 Réinitialiser" à la place.');
+    return;
+  }
+  const quizzes = await loadQuizzesForTheme(_qeCurrentLesson);
+  const q = quizzes.find(x => x.id === _qeCurrentQuiz);
+  if (!q) return;
+  _quizDeletingId = _qeCurrentQuiz;
+  $('quiz-del-name').textContent = q.name;
+  $('quiz-delete-modal').classList.remove('hidden');
+}
+
+function closeQuizDeleteModal() {
+  _quizDeletingId = null;
+  $('quiz-delete-modal').classList.add('hidden');
+}
+
+async function confirmDeleteQuiz() {
+  if (!_quizDeletingId) return;
+  const fb = window.fb;
+  const themeId = _qeCurrentLesson;
+  try {
+    await Promise.all([
+      fb.remove(fb.ref(fb.db, 'theme_quizzes/' + themeId + '/' + _quizDeletingId)),
+      fb.remove(fb.ref(fb.db, 'quiz_questions/' + themeId + '_' + _quizDeletingId))
+    ]);
+    toast('🗑️ Quiz supprimé');
+    closeQuizDeleteModal();
+    delete _quizzesCache[themeId];
+    _qeCurrentQuiz = 'default';  // Revenir au quiz par défaut
+    await refreshQuizSelectForEditor();
+    await refreshQuizSelectForDashboard();
+    await loadQuestionsForEditor(_qeCurrentLesson, _qeCurrentQuiz);
+  } catch(e) {
+    console.error('Delete quiz failed:', e);
     toast('Erreur: ' + e.message);
   }
 }
@@ -5658,6 +7471,25 @@ window.askResetLesson = askResetLesson;
 window.closeQeResetModal = closeQeResetModal;
 window.confirmResetLesson = confirmResetLesson;
 window.toggleShuffleMode = toggleShuffleMode;
+
+// 🆕 Thèmes
+window.openThemeEditModal = openThemeEditModal;
+window.closeThemeEditModal = closeThemeEditModal;
+window.saveTheme = saveTheme;
+window.askDeleteTheme = askDeleteTheme;
+window.closeThemeDeleteModal = closeThemeDeleteModal;
+window.confirmDeleteTheme = confirmDeleteTheme;
+
+// 🆕 Quiz
+window.openQuizEditModal = openQuizEditModal;
+window.closeQuizEditModal = closeQuizEditModal;
+window.saveQuiz = saveQuiz;
+window.askDeleteQuiz = askDeleteQuiz;
+window.closeQuizDeleteModal = closeQuizDeleteModal;
+window.confirmDeleteQuiz = confirmDeleteQuiz;
+window.onQeQuizChange = onQeQuizChange;
+window.onQuizSelectChange = onQuizSelectChange;
+window.refreshQuizSelectForDashboard = refreshQuizSelectForDashboard;
 
 
 // =====================================
@@ -5683,6 +7515,23 @@ async function openSettingsModal() {
   $('settings-pointage-url').value = _pointageUrl || '';
   $('settings-test-result').classList.add('hidden');
   $('settings-test-result').textContent = '';
+  
+  // 🆕 Point 3 : charger les libellés personnalisés du profil
+  try {
+    const fb = window.fb;
+    const labelsSnap = await fb.get(fb.ref(fb.db, 'settings/profileLabels'));
+    if (labelsSnap.exists()) {
+      const lbl = labelsSnap.val();
+      $('settings-label-zone1').value = lbl.zone1 || '';
+      $('settings-label-zone2').value = lbl.zone2 || '';
+      $('settings-label-zone3').value = lbl.zone3 || '';
+    } else {
+      $('settings-label-zone1').value = '';
+      $('settings-label-zone2').value = '';
+      $('settings-label-zone3').value = '';
+    }
+  } catch(e) { /* ignore */ }
+  
   $('settings-modal').classList.remove('hidden');
 }
 
@@ -5722,6 +7571,11 @@ async function testPointageConnection() {
 async function saveSettings() {
   const url = ($('settings-pointage-url').value || '').trim();
   const fb = window.fb;
+  // 🆕 Point 3 : récupérer les libellés du profil
+  const zone1 = ($('settings-label-zone1').value || '').trim();
+  const zone2 = ($('settings-label-zone2').value || '').trim();
+  const zone3 = ($('settings-label-zone3').value || '').trim();
+  
   try {
     if (url) {
       await fb.set(fb.ref(fb.db, 'config/pointageUrl'), url);
@@ -5729,6 +7583,18 @@ async function saveSettings() {
       await fb.remove(fb.ref(fb.db, 'config/pointageUrl'));
     }
     _pointageUrl = url || null;
+    
+    // 🆕 Point 3 : sauvegarder les libellés personnalisés
+    if (zone1 || zone2 || zone3) {
+      await fb.set(fb.ref(fb.db, 'settings/profileLabels'), {
+        zone1: zone1 || null,
+        zone2: zone2 || null,
+        zone3: zone3 || null
+      });
+    } else {
+      await fb.remove(fb.ref(fb.db, 'settings/profileLabels'));
+    }
+    
     toast(t('settings_saved'));
     closeSettingsModal();
   } catch(e) {
@@ -6073,6 +7939,13 @@ async function goToAnalysis() {
   await loadAnalysisData();
 }
 
+// 🆕 Point 6 : filtre de difficulté pour l'onglet "Par question"
+window._anDifficultyFilter = '';
+function setAnDifficultyFilter(level) {
+  window._anDifficultyFilter = level;
+  renderAnalysisQuestions();
+}
+
 async function loadAnalysisData() {
   const container = $('an-container');
   container.innerHTML = '<div class="history-empty"><div class="icon">⏳</div><p>' + t('hist_loading') + '</p></div>';
@@ -6157,6 +8030,7 @@ function renderAnalysisCurrentTab() {
   if (_anCurrentTab === 'table') renderAnalysisTable();
   else if (_anCurrentTab === 'questions') renderAnalysisQuestions();
   else if (_anCurrentTab === 'sessions') renderAnalysisSessions();
+  else if (_anCurrentTab === 'quizzes') renderAnalysisByQuiz();
 }
 
 // Utilitaire : construit la liste unique des apprenants à travers les sessions filtrées,
@@ -6230,7 +8104,11 @@ function renderAnalysisTable() {
     const date = new Date(s.endedAt || s.startedAt);
     const dateStr = date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
     const stoppedMark = s.stoppedEarly ? ' ⏸' : '';
-    html += `<th colspan="${maxQ + 1}" class="session" onclick="showAnSessionDetail('${s.id}')" title="${t('an_session')} ${sIdx+1}">${t('an_session')} ${sIdx + 1} (${dateStr})${stoppedMark}</th>`;
+    // 🆕 Point 5 : afficher le vrai nom du quiz s'il existe, sinon "Session N"
+    const sessionLabel = s.quizName 
+      ? (s.quizName + ' (' + dateStr + ')')
+      : (t('an_session') + ' ' + (sIdx + 1) + ' (' + dateStr + ')');
+    html += `<th colspan="${maxQ + 1}" class="session" onclick="showAnSessionDetail('${s.id}')" title="${escapeAttr(sessionLabel)}">${escapeHtml(sessionLabel)}${stoppedMark}</th>`;
   });
   html += '<th rowspan="2" class="an-sortable ' + (_anSortKey === 'total' ? 'sorted-' + _anSortDir : '') + '" onclick="setAnalysisSort(\'total\')">' + t('an_grand_total') + ' <span class="arrow">▼</span></th>';
   html += '</tr>';
@@ -6405,13 +8283,31 @@ function renderAnalysisQuestions() {
   list.sort((a, b) => a.pct - b.pct);
   
   let html = '<div class="mb-4">';
-  html += '<p class="text-sm text-gray-600">';
-  html += '<span class="badge" style="background:#fecaca;color:#991b1b;">' + t('an_q_hard') + ' < 50%</span> ';
-  html += '<span class="badge ml-2" style="background:#fef3c7;color:#92400e;">' + t('an_q_medium') + ' 50-79%</span> ';
-  html += '<span class="badge ml-2" style="background:#d1fae5;color:#065f46;">' + t('an_q_easy') + ' ≥ 80%</span>';
+  // 🆕 Point 6 : badges cliquables pour filtrer
+  const ad = window._anDifficultyFilter || '';
+  html += '<p class="text-sm text-gray-600 mb-2">' + (t('an_q_filter_hint') || '👆 Cliquez sur une catégorie pour filtrer') + '</p>';
+  html += '<p class="text-sm" style="display:flex;gap:8px;flex-wrap:wrap;">';
+  html += '<span class="badge" style="background:#fecaca;color:#991b1b;cursor:pointer;' + (ad==='hard'?'box-shadow:0 0 0 3px #991b1b;font-weight:900;':'') + '" onclick="setAnDifficultyFilter(\'' + (ad==='hard'?'':'hard') + '\')">' + t('an_q_hard') + ' < 50%</span>';
+  html += '<span class="badge" style="background:#fef3c7;color:#92400e;cursor:pointer;' + (ad==='medium'?'box-shadow:0 0 0 3px #92400e;font-weight:900;':'') + '" onclick="setAnDifficultyFilter(\'' + (ad==='medium'?'':'medium') + '\')">' + t('an_q_medium') + ' 50-79%</span>';
+  html += '<span class="badge" style="background:#d1fae5;color:#065f46;cursor:pointer;' + (ad==='easy'?'box-shadow:0 0 0 3px #065f46;font-weight:900;':'') + '" onclick="setAnDifficultyFilter(\'' + (ad==='easy'?'':'easy') + '\')">' + t('an_q_easy') + ' ≥ 80%</span>';
+  if (ad) {
+    html += '<span class="badge" style="background:#e0e7ff;color:#3730a3;cursor:pointer;" onclick="setAnDifficultyFilter(\'\')">✕ ' + (t('an_q_clear_filter') || 'Effacer le filtre') + '</span>';
+  }
   html += '</p></div>';
   
-  list.forEach((q, idx) => {
+  // 🆕 Point 6 : appliquer le filtre de difficulté
+  let filtered = list;
+  if (ad === 'hard')    filtered = list.filter(q => q.pct < 50);
+  else if (ad === 'medium') filtered = list.filter(q => q.pct >= 50 && q.pct < 80);
+  else if (ad === 'easy')   filtered = list.filter(q => q.pct >= 80);
+  
+  if (filtered.length === 0 && ad) {
+    html += '<div class="history-empty"><div class="icon">📭</div><p>' + (t('an_q_no_match') || 'Aucune question dans cette catégorie') + '</p></div>';
+    container.innerHTML = html;
+    return;
+  }
+  
+  filtered.forEach((q, idx) => {
     const cls = q.pct >= 80 ? 'easy' : (q.pct >= 50 ? 'medium' : 'hard');
     const qDisplay = q.qText.length > 100 ? q.qText.slice(0, 100) + '...' : q.qText;
     const data = JSON.stringify({ qText: q.qText, correctIdx: q.correctIdx, options: q.options, distribution: q.distribution, totalPlayers: q.totalPlayers, totalCorrect: q.totalCorrect, notAnswered: q.notAnswered });
@@ -6541,6 +8437,146 @@ function renderAnalysisSessions() {
         <div class="stat-pill"><div class="l">${t('an_sess_avg')}</div><div class="v">${st.avg}%</div></div>
         <div class="stat-pill best"><div class="l">${t('an_sess_top')}</div><div class="v">${st.top}%</div></div>
       </div>
+    </div>`;
+  });
+  
+  container.innerHTML = html;
+}
+
+// ========== 🆕 Phase 3A — ONGLET 4 : PAR QUIZ (détection problèmes) ==========
+function renderAnalysisByQuiz() {
+  const container = $('an-container');
+  
+  // Agréger par quiz (key = quizId si dispo, sinon lessonId+quizName)
+  const quizStats = new Map();
+  
+  _anFilteredSessions.forEach(s => {
+    const quizKey = s.quizId || (s.lesson + '__' + (s.quizName || 'default'));
+    const quizDisplayName = s.quizName || (LANG === 'ar' ? (s.lessonNameAr || s.lesson) : (s.lessonNameFr || s.lesson));
+    const themeDisplayName = LANG === 'ar' ? (s.lessonNameAr || s.lesson) : (s.lessonNameFr || s.lesson);
+    
+    if (!quizStats.has(quizKey)) {
+      quizStats.set(quizKey, {
+        quizKey,
+        quizId: s.quizId,
+        quizName: quizDisplayName,
+        themeName: themeDisplayName,
+        sessions: [],
+        totalPlayers: 0,
+        totalAnswers: 0,
+        totalCorrect: 0,
+        questionsPerSession: 0,
+        worstQuestion: null,    // { qText, pct, qIdx }
+        sessionIds: []
+      });
+    }
+    const stat = quizStats.get(quizKey);
+    stat.sessions.push(s);
+    stat.sessionIds.push(s.id);
+    
+    // Calculs par session
+    const players = s.players || [];
+    stat.totalPlayers += players.length;
+    stat.questionsPerSession = Math.max(stat.questionsPerSession, s.totalQuestions || 0);
+    
+    players.forEach(p => {
+      if (!Array.isArray(p.perQuestion)) return;
+      p.perQuestion.forEach(pq => {
+        if (!pq || pq.played === false) return;
+        stat.totalAnswers++;
+        if (pq.correct) stat.totalCorrect++;
+      });
+    });
+    
+    // Trouver la question la plus ratée pour ce quiz
+    const questions = s.questions || [];
+    questions.forEach((q, qIdx) => {
+      if (!q) return;
+      let correctN = 0, totalN = 0;
+      players.forEach(p => {
+        const pq = (p.perQuestion || [])[qIdx];
+        if (!pq || pq.played === false) return;
+        totalN++;
+        if (pq.correct) correctN++;
+      });
+      if (totalN >= 1) {
+        const pct = Math.round((correctN / totalN) * 100);
+        const qText = q.questionFr || q.qFr || q.qText || ('Q' + (qIdx + 1));
+        if (!stat.worstQuestion || pct < stat.worstQuestion.pct) {
+          stat.worstQuestion = { qText, pct, qIdx };
+        }
+      }
+    });
+  });
+  
+  if (quizStats.size === 0) {
+    container.innerHTML = '<div class="history-empty"><div class="icon">📭</div><p>' + t('an_no_data') + '</p></div>';
+    return;
+  }
+  
+  // Calculer % de réussite global par quiz + trier (pires en premier)
+  const list = Array.from(quizStats.values());
+  list.forEach(qz => {
+    qz.successRate = qz.totalAnswers > 0 ? Math.round((qz.totalCorrect / qz.totalAnswers) * 100) : 0;
+    qz.sessionCount = qz.sessions.length;
+  });
+  list.sort((a, b) => a.successRate - b.successRate);
+  
+  // Header avec légende
+  let html = '<div class="mb-4">';
+  html += '<p class="text-sm text-gray-600 mb-3">' + (t('an_byquiz_explain') || '📊 Identifiez les quiz à retravailler. Les quiz avec le plus bas taux de réussite sont en haut.') + '</p>';
+  html += '<p class="text-sm">';
+  html += '<span class="badge" style="background:#fecaca;color:#991b1b;">🔴 ' + (t('an_q_hard') || 'Difficile') + ' < 50%</span> ';
+  html += '<span class="badge ml-2" style="background:#fef3c7;color:#92400e;">🟡 ' + (t('an_q_medium') || 'Moyen') + ' 50-79%</span> ';
+  html += '<span class="badge ml-2" style="background:#d1fae5;color:#065f46;">🟢 ' + (t('an_q_easy') || 'Facile') + ' ≥ 80%</span>';
+  html += '</p></div>';
+  
+  // Tableau des quiz
+  list.forEach(qz => {
+    const lvl = qz.successRate >= 80 ? 'easy' : (qz.successRate >= 50 ? 'medium' : 'hard');
+    const lvlColor = lvl === 'easy' ? '#10b981' : lvl === 'medium' ? '#f59e0b' : '#ef4444';
+    const lvlBg = lvl === 'easy' ? '#d1fae5' : lvl === 'medium' ? '#fef3c7' : '#fecaca';
+    const lvlIcon = lvl === 'easy' ? '🟢' : lvl === 'medium' ? '🟡' : '🔴';
+    
+    html += `<div class="card p-5 mb-3" style="border-left:6px solid ${lvlColor};">
+      <div class="flex items-start justify-between gap-4 flex-wrap mb-3">
+        <div class="flex-1" style="min-width:200px;">
+          <div class="flex items-center gap-2 mb-1">
+            <span style="font-size:24px;">${lvlIcon}</span>
+            <h3 class="font-bold text-lg" style="color:var(--copag-navy);">${escapeHtml(qz.quizName)}</h3>
+          </div>
+          <div class="text-xs text-gray-500">${t('an_byquiz_theme') || 'Thème'}: ${escapeHtml(qz.themeName)}</div>
+        </div>
+        <div class="text-right">
+          <div style="font-size:36px;font-weight:900;color:${lvlColor};font-family:'Outfit',sans-serif;line-height:1;">${qz.successRate}%</div>
+          <div class="text-xs text-gray-500 mt-1">${t('an_byquiz_success') || 'Taux de réussite'}</div>
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+        <div style="background:#f9fafb;padding:10px 12px;border-radius:10px;">
+          <div class="text-xs text-gray-500">${t('an_byquiz_sessions') || 'Sessions jouées'}</div>
+          <div class="font-bold text-lg" style="color:var(--copag-navy);">${qz.sessionCount}</div>
+        </div>
+        <div style="background:#f9fafb;padding:10px 12px;border-radius:10px;">
+          <div class="text-xs text-gray-500">${t('an_byquiz_total_players') || 'Apprenants'}</div>
+          <div class="font-bold text-lg" style="color:var(--copag-navy);">${qz.totalPlayers}</div>
+        </div>
+        <div style="background:#f9fafb;padding:10px 12px;border-radius:10px;">
+          <div class="text-xs text-gray-500">${t('an_byquiz_total_answers') || 'Réponses totales'}</div>
+          <div class="font-bold text-lg" style="color:var(--copag-navy);">${qz.totalAnswers}</div>
+        </div>
+        <div style="background:${lvlBg};padding:10px 12px;border-radius:10px;">
+          <div class="text-xs" style="color:${lvlColor};font-weight:600;">${t('an_byquiz_correct') || 'Bonnes réponses'}</div>
+          <div class="font-bold text-lg" style="color:${lvlColor};">${qz.totalCorrect}</div>
+        </div>
+      </div>
+      
+      ${qz.worstQuestion ? `
+        <div style="background:#fef2f2;border:1px solid #fecaca;padding:12px 14px;border-radius:12px;">
+          <div class="text-xs font-bold mb-1" style="color:#991b1b;">⚠️ ${t('an_byquiz_worst_q') || 'Question la plus ratée'} (${qz.worstQuestion.pct}% de réussite)</div>
+          <div class="text-sm" style="color:#7f1d1d;">${escapeHtml(qz.worstQuestion.qText.slice(0, 200))}${qz.worstQuestion.qText.length > 200 ? '…' : ''}</div>
+        </div>` : ''}
     </div>`;
   });
   
@@ -6741,15 +8777,26 @@ function handleUrlPrefill() {
 
 function init() {
   applyLang();
-  renderLessons();
   selectedLessonId = LESSONS[0].id;
   $('selected-lesson-name').textContent = LESSONS[0][LANG].title;
   setupMatriculeListener();
-  whenFbReady(() => {
-    setTimeout(() => {
+  whenFbReady(async () => {
+    // Charger les thèmes depuis Firebase + afficher
+    await renderLessons();
+    // Définir le 1er thème comme sélectionné par défaut + charger ses quiz
+    const themes = _themesCache || [];
+    if (themes.length > 0) {
+      selectedLessonId = themes[0].id;
+      const nm = LANG === 'ar' ? (themes[0].nameAr || themes[0].name) : themes[0].name;
+      $('selected-lesson-name').textContent = nm;
+      await refreshQuizSelectForDashboard();
+      await renderLessons();  // re-render avec la sélection
+    }
+    setTimeout(async () => {
       $('loading').style.display = 'none';
-      // Si l'URL contient des params (depuis l'app pointage), aller direct sur Rejoindre.
-      // Sinon, comportement normal : page d'accueil.
+      // 🆕 Phase 2A : essayer d'abord la reconnexion auto (sessionStorage)
+      const reconnected = await tryAutoReconnectStudent();
+      if (reconnected) return;
       const prefilled = handleUrlPrefill();
       if (!prefilled) {
         goTo('screen-welcome');
