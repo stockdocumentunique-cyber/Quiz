@@ -121,6 +121,69 @@
   .kahoot-tile .tile-dist-fill { height: 100%; background: rgba(255,255,255,0.9); width: 0%; transition: width 0.4s ease; }
   .kahoot-tile .tile-count-badge { position: absolute; top: 12px; right: 14px; background: rgba(0,0,0,0.25); color: white; padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 900; min-width: 36px; text-align: center; }
   
+  /* 🆕 ANTI-SPOIL : pendant la question, on cache les indices qui pourraient aider à tricher */
+  /* (le formateur projette son écran → les apprenants ne doivent pas voir qui a juste, qui a voté quoi, etc.) */
+  #screen-quiz-teacher.spoiler-hidden .live-donut { visibility: hidden; }
+  #screen-quiz-teacher.spoiler-hidden .tile-count-badge { display: none; }
+  #screen-quiz-teacher.spoiler-hidden .tile-dist-bar { display: none; }
+  #screen-quiz-teacher.spoiler-hidden .sidebar-student .student-name,
+  #screen-quiz-teacher.spoiler-hidden .sidebar-student .student-time,
+  #screen-quiz-teacher.spoiler-hidden .sidebar-student .student-status { display: none; }
+  /* On affiche à la place une simple pastille pleine ou vide */
+  #screen-quiz-teacher.spoiler-hidden .sidebar-student::after {
+    content: ''; display: inline-block; width: 100%; height: 18px; border-radius: 4px;
+    background: linear-gradient(90deg, #e5e7eb, #e5e7eb);
+  }
+  #screen-quiz-teacher.spoiler-hidden .sidebar-student.submitted::after {
+    background: linear-gradient(90deg, #10b981, #34d399);
+  }
+  
+  /* 🆕 Reveal screen amélioré (style Wayground) */
+  .reveal-grid { display: grid; grid-template-columns: 280px 1fr; gap: 20px; align-items: start; }
+  .reveal-donut-card { background: white; border-radius: 18px; padding: 20px; box-shadow: 0 4px 14px rgba(15,22,72,0.08); text-align: center; }
+  .reveal-big-donut { width: 200px; height: 200px; margin: 0 auto 12px; position: relative; }
+  .reveal-big-donut svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .reveal-big-donut circle { fill: none; stroke-width: 16; }
+  .reveal-big-donut .rbg { stroke: #e5e7eb; }
+  .reveal-big-donut .rfg { stroke: #10b981; stroke-linecap: round; transition: stroke-dashoffset 1s ease, stroke 0.3s ease; }
+  .reveal-big-donut.precision-mid .rfg { stroke: #f59e0b; }
+  .reveal-big-donut.precision-low .rfg { stroke: #ef4444; }
+  .reveal-big-donut .rcontent { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .reveal-big-donut .rpct { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 48px; color: var(--copag-navy); line-height: 1; }
+  .reveal-big-donut .rlabel { font-size: 13px; color: #6b7280; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+  
+  .reveal-stat-row { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-radius: 12px; background: #f9fafb; margin-bottom: 6px; }
+  .reveal-stat-row .icon { font-size: 22px; }
+  .reveal-stat-row .label { font-weight: 700; font-size: 13px; flex: 1; }
+  .reveal-stat-row .value { font-weight: 900; font-size: 18px; font-family: 'Outfit', sans-serif; }
+  .reveal-stat-row.correct { background: #ecfdf5; }
+  .reveal-stat-row.correct .value { color: #065f46; }
+  .reveal-stat-row.wrong { background: #fef2f2; }
+  .reveal-stat-row.wrong .value { color: #991b1b; }
+  .reveal-stat-row.skip { background: #f3f4f6; }
+  .reveal-stat-row.skip .value { color: #6b7280; }
+  
+  .reveal-options-card { background: white; border-radius: 18px; padding: 20px; box-shadow: 0 4px 14px rgba(15,22,72,0.08); }
+  .reveal-option-row { display: flex; align-items: center; gap: 14px; padding: 12px 14px; margin-bottom: 8px; border-radius: 12px; border: 2px solid #e5e7eb; transition: all 0.2s ease; }
+  .reveal-option-row.is-correct { border-color: #10b981; background: linear-gradient(90deg, #ecfdf5, white); }
+  .reveal-option-row .shape-mark { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; border-radius: 8px; color: white; font-weight: 900; flex-shrink: 0; }
+  .reveal-option-row .opt-text { flex: 1; font-weight: 700; font-size: 14px; }
+  .reveal-option-row .opt-count { background: #f3f4f6; padding: 4px 10px; border-radius: 999px; font-size: 13px; font-weight: 900; min-width: 80px; text-align: center; }
+  .reveal-option-row.is-correct .opt-count { background: #10b981; color: white; }
+  .reveal-option-row .check { color: #10b981; font-size: 18px; font-weight: 900; }
+  
+  .reveal-students-card { background: white; border-radius: 18px; padding: 16px; box-shadow: 0 4px 14px rgba(15,22,72,0.08); margin-top: 16px; }
+  .reveal-student-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; border-radius: 10px; margin-bottom: 4px; background: #fafbfc; border: 1px solid #f0f0f0; }
+  .reveal-student-row.correct { background: #ecfdf5; border-color: #a7f3d0; }
+  .reveal-student-row.wrong   { background: #fef2f2; border-color: #fecaca; }
+  .reveal-student-row.skip    { background: #f3f4f6; border-color: #e5e7eb; }
+  .reveal-student-row .sn-name { font-weight: 700; font-size: 13px; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .reveal-student-row .sn-time { font-size: 11px; color: #6b7280; }
+  .reveal-student-row .sn-status { font-size: 16px; flex-shrink: 0; }
+  
+  @media (max-width: 900px) {
+    .reveal-grid { grid-template-columns: 1fr; }
+  }
   .timer-ring { width: 100px; height: 100px; position: relative; display: flex; align-items: center; justify-content: center; }
   .timer-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
   .timer-ring circle { fill: none; stroke-width: 8; }
@@ -1886,28 +1949,80 @@
 </section>
 
 <!-- ANSWER REVEAL -->
+<!-- ANSWER REVEAL -->
 <section id="screen-answer-reveal" class="screen">
-  <div class="max-w-5xl mx-auto px-6 py-10">
-    <div class="card p-8 md:p-12 text-center mb-6" style="background: linear-gradient(135deg, var(--blue-700), var(--blue-900)); color: white;">
-      <div class="text-7xl mb-4">✅</div>
-      <div class="text-sm opacity-80 mb-2" data-i18n="ar_correct">Réponse correcte</div>
-      <h3 class="display-fr text-3xl md:text-5xl mb-4" id="reveal-correct">—</h3>
-      <div class="bg-white/10 rounded-2xl p-5 max-w-2xl mx-auto backdrop-blur-sm">
-        <div class="text-sm opacity-80 mb-2" data-i18n="ar_explain">Explication</div>
-        <p class="text-lg" id="reveal-explanation">—</p>
+  <div class="max-w-7xl mx-auto px-6 py-6">
+    <!-- Bandeau de la réponse correcte -->
+    <div class="card p-5 md:p-6 text-center mb-5" style="background: linear-gradient(135deg, var(--blue-700), var(--blue-900)); color: white;">
+      <div class="text-sm opacity-80 mb-1" data-i18n="ar_correct">Réponse correcte</div>
+      <h3 class="display-fr text-2xl md:text-3xl mb-3" id="reveal-correct">—</h3>
+      <div class="bg-white/10 rounded-2xl p-4 max-w-3xl mx-auto backdrop-blur-sm">
+        <div class="text-xs opacity-80 mb-1" data-i18n="ar_explain">Explication</div>
+        <p class="text-base" id="reveal-explanation">—</p>
       </div>
     </div>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-      <div class="card p-4 text-center"><div class="text-2xl mb-1">✅</div><div class="stat-num" id="stat-correct">0</div><div class="text-xs text-gray-500 mt-1" data-i18n="ar_s1">Correctes</div></div>
-      <div class="card p-4 text-center"><div class="text-2xl mb-1">❌</div><div class="stat-num" id="stat-wrong">0</div><div class="text-xs text-gray-500 mt-1" data-i18n="ar_s2">Mauvaises</div></div>
-      <div class="card p-4 text-center"><div class="text-2xl mb-1">⚡</div><div class="stat-num text-base" id="stat-fastest">—</div><div class="text-xs text-gray-500 mt-1" data-i18n="ar_s3">Plus rapide</div></div>
-      <div class="card p-4 text-center"><div class="text-2xl mb-1">📊</div><div class="stat-num"><span id="stat-rate">0</span>%</div><div class="text-xs text-gray-500 mt-1" data-i18n="ar_s4">Précision</div></div>
+    
+    <!-- 🆕 Grille 2 colonnes : stats à gauche, options + apprenants à droite -->
+    <div class="reveal-grid">
+      <!-- COLONNE GAUCHE : donut + stats -->
+      <div>
+        <div class="reveal-donut-card">
+          <div class="reveal-big-donut" id="reveal-big-donut">
+            <svg viewBox="0 0 100 100">
+              <circle class="rbg" cx="50" cy="50" r="42"></circle>
+              <circle class="rfg" cx="50" cy="50" r="42" id="reveal-donut-circle" stroke-dasharray="263.9" stroke-dashoffset="263.9"></circle>
+            </svg>
+            <div class="rcontent">
+              <div class="rpct" id="reveal-big-pct">0%</div>
+              <div class="rlabel" data-i18n="live_precision">Précision</div>
+            </div>
+          </div>
+          <div class="reveal-stat-row correct">
+            <span class="icon">✅</span>
+            <span class="label" data-i18n="ar_s_correct">Correct</span>
+            <span class="value"><span id="reveal-stat-correct">0</span>/<span id="reveal-stat-total">0</span></span>
+          </div>
+          <div class="reveal-stat-row wrong">
+            <span class="icon">❌</span>
+            <span class="label" data-i18n="ar_s_wrong">Incorrect</span>
+            <span class="value"><span id="reveal-stat-wrong">0</span>/<span id="reveal-stat-total2">0</span></span>
+          </div>
+          <div class="reveal-stat-row skip">
+            <span class="icon">😴</span>
+            <span class="label" data-i18n="ar_s_skip">Non essayé</span>
+            <span class="value"><span id="reveal-stat-skip">0</span>/<span id="reveal-stat-total3">0</span></span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- COLONNE DROITE : options avec distribution + liste apprenants -->
+      <div>
+        <div class="reveal-options-card">
+          <div class="font-bold mb-3 text-sm text-gray-700" data-i18n="ar_options_dist">📊 Distribution des réponses</div>
+          <div id="reveal-options-list"></div>
+        </div>
+        
+        <div class="reveal-students-card">
+          <div class="font-bold mb-3 text-sm text-gray-700" data-i18n="ar_students_results">👥 Résultats par apprenant</div>
+          <div id="reveal-students-list"></div>
+        </div>
+      </div>
     </div>
-    <div class="grid md:grid-cols-2 gap-3">
+    
+    <!-- Boutons d'action -->
+    <div class="grid md:grid-cols-2 gap-3 mt-5">
       <button class="btn btn-ghost" onclick="showLeaderboard()" data-i18n="ar_show_lb">📊 Voir le classement</button>
       <button class="btn btn-primary" onclick="skipToNextQuestion()" data-i18n="ar_skip_next">→ Question suivante</button>
     </div>
     <button class="btn btn-ghost w-full mt-3" onclick="confirmStopQuiz()" style="color:#ef4444;border-color:#fecaca;background:#fef2f2;" data-i18n="stop_quiz_btn">🛑 Arrêter le quiz</button>
+    
+    <!-- Anciens IDs cachés pour compatibilité (le code JS les utilise) -->
+    <div style="display:none;">
+      <span id="stat-correct">0</span>
+      <span id="stat-wrong">0</span>
+      <span id="stat-fastest">—</span>
+      <span id="stat-rate">0</span>
+    </div>
   </div>
 </section>
 
@@ -2136,6 +2251,11 @@ const I18N = {
     live_students: "👥 Apprenants",
     live_no_students: "Aucun apprenant",
     live_loading: "Chargement…",
+    ar_s_correct: "Correct",
+    ar_s_wrong: "Incorrect",
+    ar_s_skip: "Non essayé",
+    ar_options_dist: "📊 Distribution des réponses",
+    ar_students_results: "👥 Résultats par apprenant",
     sd_badge: "Apprenants",
     sd_title: "Liste des apprenants",
     sd_sub: "Gérez les apprenants enregistrés et consultez leurs performances",
@@ -2546,6 +2666,11 @@ const I18N = {
     live_students: "👥 المتدربون",
     live_no_students: "لا يوجد متدربون",
     live_loading: "جار التحميل…",
+    ar_s_correct: "صحيح",
+    ar_s_wrong: "خاطئ",
+    ar_s_skip: "لم يحاول",
+    ar_options_dist: "📊 توزيع الأجوبة",
+    ar_students_results: "👥 نتائج المتدربين",
     sd_badge: "المتدربين",
     sd_title: "قائمة المتدربين",
     sd_sub: "تدبير المتدربين المسجلين وعرض أدائهم",
@@ -3920,6 +4045,8 @@ function resetLiveDonut() {
 }
 
 // 🆕 B5 : Met à jour la sidebar des apprenants (✓ Soumis / ⏳ En train)
+// ⚠️ Si l'écran est en mode "spoiler-hidden", on n'affiche QUE le statut (pastille) pas les noms,
+// pour éviter de donner des indices visibles sur un écran projeté.
 function updateSidebarStudents(players, qAns) {
   const list = $('sidebar-students-list');
   if (!list) return;
@@ -3932,7 +4059,7 @@ function updateSidebarStudents(players, qAns) {
     return;
   }
   
-  // Tri : ceux qui ont répondu en premier (par temps) en haut, puis les autres
+  // Tri ordre stable : par nom (PAS par soumission ni temps, sinon ça révèle qui a répondu en premier !)
   const arr = pids.map(pid => {
     const p = players[pid];
     const ans = qAns[pid];
@@ -3942,11 +4069,7 @@ function updateSidebarStudents(players, qAns) {
       submitted: !!ans,
       time: ans ? (ans.time || 0) : null
     };
-  }).sort((a, b) => {
-    if (a.submitted !== b.submitted) return a.submitted ? -1 : 1;
-    if (a.submitted && b.submitted) return (a.time || 0) - (b.time || 0);
-    return a.name.localeCompare(b.name);
-  });
+  }).sort((a, b) => a.name.localeCompare(b.name));
   
   const submittedCount = arr.filter(s => s.submitted).length;
   $('sidebar-submitted-count').textContent = submittedCount;
@@ -3976,6 +4099,11 @@ function showTeacherQuestion(info) {
   $('q-num-teacher').textContent = qIdx + 1;
   $('q-total-teacher').textContent = QUESTIONS.length;
   $('q-text-teacher').textContent = q.q;
+  
+  // 🆕 ANTI-SPOIL : pendant la question, cacher tous les indices qui pourraient aider à tricher
+  // (donut %, distribution bars, count badges, noms dans sidebar)
+  const screen = document.getElementById('screen-quiz-teacher');
+  if (screen) screen.classList.add('spoiler-hidden');
 
   const fb = window.fb;
   fb.get(fb.ref(fb.db, 'games/' + currentPin + '/players')).then(s => {
@@ -4103,6 +4231,10 @@ async function revealAnswer() {
   updates['info/correctAnswer'] = correctIdx;
   await fb.update(fb.ref(fb.db, 'games/' + currentPin), updates);
 
+  // 🆕 ANTI-SPOIL : retirer la classe pour ré-afficher les indicateurs sur l'écran question
+  const screen = document.getElementById('screen-quiz-teacher');
+  if (screen) screen.classList.remove('spoiler-hidden');
+  
   // 🆕 B2 : Marquer la bonne réponse sur les tuiles Kahoot
   document.querySelectorAll('#answers-grid-teacher .kahoot-tile').forEach((btn, idx) => {
     if (idx === correctIdx) {
@@ -4113,13 +4245,91 @@ async function revealAnswer() {
       btn.classList.add('disabled');
     }
   });
+  
+  // 🆕 Préparer l'écran reveal style Wayground
+  $('reveal-correct').textContent = q.options[correctIdx];
+  $('reveal-explanation').textContent = q.explanation;
+  
+  const totalPlayers = Object.keys(players).length;
+  const submittedIds = Object.keys(answers || {});
+  const submittedCount = submittedIds.length;
+  const skipCount = totalPlayers - submittedCount;
+  const pct = submittedCount > 0 ? Math.round((correctCount / submittedCount) * 100) : 0;
+  
+  // Anciennes stats (compatibilité)
   $('stat-correct').textContent = correctCount;
   $('stat-wrong').textContent = wrongCount;
   $('stat-fastest').textContent = fastest || '—';
-  const total = Object.keys(players).length;
-  $('stat-rate').textContent = total > 0 ? Math.round(correctCount / total * 100) : 0;
-  $('reveal-correct').textContent = q.options[correctIdx];
-  $('reveal-explanation').textContent = q.explanation;
+  $('stat-rate').textContent = pct;
+  
+  // Nouvelles stats (écran reveal amélioré)
+  $('reveal-stat-correct').textContent = correctCount;
+  $('reveal-stat-wrong').textContent = submittedCount - correctCount;
+  $('reveal-stat-skip').textContent = skipCount;
+  $('reveal-stat-total').textContent = totalPlayers;
+  $('reveal-stat-total2').textContent = totalPlayers;
+  $('reveal-stat-total3').textContent = totalPlayers;
+  $('reveal-big-pct').textContent = pct + '%';
+  
+  // Big donut
+  const bigDonut = $('reveal-big-donut');
+  const bigCircle = $('reveal-donut-circle');
+  if (bigDonut && bigCircle) {
+    bigCircle.style.strokeDashoffset = 263.9 * (1 - pct / 100);
+    bigDonut.classList.toggle('precision-mid', pct >= 50 && pct < 80);
+    bigDonut.classList.toggle('precision-low', pct < 50);
+  }
+  
+  // 🆕 Distribution des options
+  const counts = [0,0,0,0];
+  Object.values(answers || {}).forEach(a => {
+    if (typeof a.choice === 'number' && a.choice >= 0 && a.choice < 4) counts[a.choice]++;
+  });
+  const shapes = ['▲','◆','●','■'];
+  const tileColors = ['#3b82f6', '#14b8a6', '#fb923c', '#ec4899'];
+  const optsList = $('reveal-options-list');
+  if (optsList) {
+    optsList.innerHTML = q.options.map((opt, idx) => {
+      const isCorrect = (idx === correctIdx);
+      const cnt = counts[idx];
+      const optPct = submittedCount > 0 ? Math.round((cnt / submittedCount) * 100) : 0;
+      return `<div class="reveal-option-row ${isCorrect ? 'is-correct' : ''}">
+        <div class="shape-mark" style="background:${tileColors[idx]};">${shapes[idx]}</div>
+        <div class="opt-text">${escapeHtml(opt)}</div>
+        <div class="opt-count">${cnt} (${optPct}%)</div>
+        ${isCorrect ? '<div class="check">✓</div>' : ''}
+      </div>`;
+    }).join('');
+  }
+  
+  // 🆕 Liste des apprenants avec résultat individuel
+  const studList = $('reveal-students-list');
+  if (studList) {
+    const arr = Object.keys(players).map(pid => {
+      const p = players[pid];
+      const ans = (answers || {})[pid];
+      let status, statusClass;
+      if (!ans) {
+        status = '—'; statusClass = 'skip';
+      } else if (ans.choice === correctIdx) {
+        status = '✓'; statusClass = 'correct';
+      } else {
+        status = '✗'; statusClass = 'wrong';
+      }
+      return { name: p.name || '—', status, statusClass, time: ans ? ans.time : null };
+    }).sort((a, b) => {
+      // Correct d'abord, puis par temps
+      const order = { correct: 0, wrong: 1, skip: 2 };
+      if (order[a.statusClass] !== order[b.statusClass]) return order[a.statusClass] - order[b.statusClass];
+      if (a.time != null && b.time != null) return a.time - b.time;
+      return a.name.localeCompare(b.name);
+    });
+    studList.innerHTML = arr.map(s => `<div class="reveal-student-row ${s.statusClass}">
+      <span class="sn-name">${escapeHtml(s.name)}</span>
+      ${s.time != null ? '<span class="sn-time">' + s.time.toFixed(1) + 's</span>' : ''}
+      <span class="sn-status">${s.status}</span>
+    </div>`).join('');
+  }
 
   setTimeout(() => goTo('screen-answer-reveal'), 1200);
 }
