@@ -3147,6 +3147,29 @@ let _currentQ = -1;
 let _lastQIdxShown = -1;
 let _lastStateShown = null;
 
+// 🆕 BUG FIX TIMER : horloge synchronisée avec le serveur Firebase
+// Tous les appareils (formateur + apprenants) utilisent la MÊME référence de temps
+// peu importe si leur horloge locale est décalée.
+let _serverTimeOffset = 0; // différence entre Date.now() local et le serveur
+
+function initServerClock() {
+  try {
+    const fb = window.fb;
+    if (!fb) return;
+    // Firebase fournit /.info/serverTimeOffset = offset en ms
+    const offsetRef = fb.ref(fb.db, '.info/serverTimeOffset');
+    fb.onValue(offsetRef, (snap) => {
+      _serverTimeOffset = snap.val() || 0;
+      // Pour debug : console.log('Server time offset:', _serverTimeOffset, 'ms');
+    });
+  } catch(e) { console.warn('Server clock init failed:', e); }
+}
+
+// Retourne le temps "serveur" — même valeur sur TOUS les appareils
+function serverNow() {
+  return Date.now() + _serverTimeOffset;
+}
+
 // 🆕 Phase A : Moteur audio (Web Audio API — pas de fichier nécessaire)
 let _audioCtx = null;
 let _soundEnabled = (localStorage.getItem('copag_sound') !== '0'); // ON par défaut
@@ -3695,7 +3718,7 @@ async function startQuiz() {
   const fb = window.fb;
   unsubAll();
   await fb.update(fb.ref(fb.db, 'games/' + currentPin + '/info'), {
-    state: 'question', currentQuestion: 0, questionStartTime: Date.now(), correctAnswer: null
+    state: 'question', currentQuestion: 0, questionStartTime: serverNow(), correctAnswer: null
   });
   watchGameAsTeacher();
 }
@@ -3767,9 +3790,9 @@ function startTeacherTimer(startTs, total) {
   clearInterval(timerInterval);
   resetTickState(); // 🆕 Phase A : reset état du tic-tac
   const update = () => {
-    const elapsed = (Date.now() - startTs) / 1000;
-    // 🐛 FIX : cap à total max pour éviter dépassement si décalage horloge
-    const left = Math.max(0, Math.min(total, Math.ceil(total - elapsed)));
+    // 🆕 BUG FIX : utiliser serverNow() pour synchro horloge entre tous les appareils
+    const elapsed = (serverNow() - startTs) / 1000;
+    const left = Math.max(0, Math.ceil(total - elapsed));
     $('timer-num-teacher').textContent = left;
     $('time-left-teacher').textContent = left;
     const dash = 282.7 * (1 - left / total);
@@ -3908,7 +3931,7 @@ async function nextQuestion() {
   } else {
     await fb.update(fb.ref(fb.db, 'games/' + currentPin + '/info'), {
       state: 'question', currentQuestion: nextIdx,
-      questionStartTime: Date.now(), correctAnswer: null
+      questionStartTime: serverNow(), correctAnswer: null
     });
   }
 }
@@ -4826,8 +4849,8 @@ function showStudentQuestion(info) {
   clearInterval(timerInterval);
   resetTickState(); // 🆕 Phase A : reset état du tic-tac
   const update = () => {
-    // 🐛 FIX : cap à total max pour éviter dépassement si décalage horloge
-    const left = Math.max(0, Math.min(total, Math.ceil(total - (Date.now() - startTs) / 1000)));
+    // 🆕 BUG FIX : utiliser serverNow() pour synchro horloge entre tous les appareils
+    const left = Math.max(0, Math.ceil(total - (serverNow() - startTs) / 1000));
     $('student-time-left').textContent = left;
     // 🆕 Phase A : tic-tac sonore côté apprenant
     maybePlayTick(left);
@@ -4845,7 +4868,8 @@ function showStudentQuestion(info) {
 async function studentAnswer(idx, info) {
   const fb = window.fb;
   const qIdx = info.currentQuestion;
-  const time = (Date.now() - info.questionStartTime) / 1000;
+  // 🆕 BUG FIX : utiliser serverNow() pour temps de réponse cohérent
+  const time = (serverNow() - info.questionStartTime) / 1000;
 
   await fb.set(fb.ref(fb.db, 'games/' + currentPin + '/answers/' + qIdx + '/' + currentPlayerId), {
     choice: idx, time, name: currentPlayerName
@@ -9220,6 +9244,7 @@ function init() {
   $('selected-lesson-name').textContent = LESSONS[0][LANG].title;
   setupMatriculeListener();
   whenFbReady(async () => {
+    initServerClock(); // 🆕 BUG FIX : synchroniser l'horloge avec le serveur
     // Charger les thèmes depuis Firebase + afficher
     await renderLessons();
     // Définir le 1er thème comme sélectionné par défaut + charger ses quiz
