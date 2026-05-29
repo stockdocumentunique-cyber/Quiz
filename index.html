@@ -84,12 +84,64 @@
   .sound-style-card:hover { border-color: var(--copag-cyan); background: #f0f9ff; }
   .sound-style-card.active { border-color: var(--copag-navy); background: linear-gradient(135deg, #eef7fc, white); box-shadow: 0 2px 8px rgba(15,22,72,0.1); }
   .sound-style-card.active::before { content: '✓ '; color: #10b981; font-weight: 900; }
+  
+  /* 🆕 B3 : Donut de précision live */
+  .live-donut { width: 100px; height: 100px; position: relative; display: flex; align-items: center; justify-content: center; }
+  .live-donut svg { position: absolute; inset: 0; transform: rotate(-90deg); }
+  .live-donut circle { fill: none; stroke-width: 8; }
+  .live-donut .ld-bg { stroke: rgba(255,255,255,0.18); }
+  .live-donut .ld-fg { stroke: #10b981; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease, stroke 0.3s ease; }
+  .live-donut.precision-mid .ld-fg { stroke: #f59e0b; }
+  .live-donut.precision-low .ld-fg { stroke: #ef4444; }
+  .live-donut .ld-content { position: relative; z-index: 1; text-align: center; line-height: 1; }
+  .live-donut .ld-pct { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 22px; color: white; }
+  .live-donut .ld-label { font-size: 9px; color: rgba(255,255,255,0.75); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; }
+  
+  /* 🆕 B3+B4+B5 : Layout 2 colonnes du quiz formateur */
+  .quiz-teacher-grid { display: grid; grid-template-columns: 1fr 280px; gap: 18px; align-items: start; }
+  .quiz-teacher-main { min-width: 0; }
+  .quiz-teacher-sidebar { background: white; border-radius: 16px; box-shadow: 0 4px 14px rgba(15,22,72,0.06); border: 1px solid #e5e7eb; padding: 14px; max-height: calc(100vh - 140px); display: flex; flex-direction: column; position: sticky; top: 90px; }
+  .sidebar-header { display: flex; align-items: center; justify-content: space-between; padding-bottom: 10px; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; }
+  .sidebar-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 4px; }
+  .sidebar-list::-webkit-scrollbar { width: 6px; }
+  .sidebar-list::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
+  .sidebar-student { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 7px 10px; border-radius: 10px; border: 1px solid #f0f0f0; background: #fafbfc; transition: all 0.2s ease; }
+  .sidebar-student.submitted { background: #ecfdf5; border-color: #a7f3d0; }
+  .sidebar-student .student-name { font-size: 12px; font-weight: 700; color: #1f2937; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sidebar-student .student-status { font-size: 14px; flex-shrink: 0; }
+  .sidebar-student.submitted .student-status { color: #10b981; }
+  .sidebar-student .student-time { font-size: 10px; color: #6b7280; flex-shrink: 0; }
+  @media (max-width: 900px) {
+    .quiz-teacher-grid { grid-template-columns: 1fr; }
+    .quiz-teacher-sidebar { position: static; max-height: 280px; }
+  }
+  
+  /* 🆕 B4 : Tuile Kahoot avec barre de distribution intégrée en bas */
+  .kahoot-tile .tile-dist-bar { position: absolute; left: 0; right: 0; bottom: 0; height: 6px; background: rgba(255,255,255,0.25); overflow: hidden; }
+  .kahoot-tile .tile-dist-fill { height: 100%; background: rgba(255,255,255,0.9); width: 0%; transition: width 0.4s ease; }
+  .kahoot-tile .tile-count-badge { position: absolute; top: 12px; right: 14px; background: rgba(0,0,0,0.25); color: white; padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 900; min-width: 36px; text-align: center; }
+  
   .timer-ring { width: 100px; height: 100px; position: relative; display: flex; align-items: center; justify-content: center; }
   .timer-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
   .timer-ring circle { fill: none; stroke-width: 8; }
   .timer-ring .bg { stroke: rgba(255,255,255,0.2); }
-  .timer-ring .fg { stroke: white; stroke-linecap: round; transition: stroke-dashoffset 1s linear; }
-  .timer-num { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 36px; color: white; z-index: 1; }
+  .timer-ring .fg { stroke: white; stroke-linecap: round; transition: stroke-dashoffset 1s linear, stroke 0.3s ease; }
+  .timer-num { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 36px; color: white; z-index: 1; transition: color 0.3s ease, transform 0.2s ease; }
+  
+  /* 🆕 Timer en mode urgent (≤ 6s) : chiffre rouge + pulsation */
+  .timer-num.timer-urgent { color: #ef4444 !important; animation: timerPulse 1s ease-in-out infinite; }
+  .timer-ring.timer-urgent .fg { stroke: #ef4444; }
+  .timer-ring.timer-urgent .bg { stroke: rgba(239,68,68,0.2); }
+  @keyframes timerPulse {
+    0%, 100% { transform: scale(1); text-shadow: 0 0 0 transparent; }
+    50%      { transform: scale(1.15); text-shadow: 0 0 12px rgba(239,68,68,0.7); }
+  }
+  /* Badge "Restant: X s" en mode urgent */
+  .badge.timer-urgent-badge { background: linear-gradient(135deg, #fecaca, #fee2e2); color: #991b1b; font-weight: 900; animation: badgePulse 1s ease-in-out infinite; }
+  @keyframes badgePulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+    50%      { box-shadow: 0 0 0 6px rgba(239,68,68,0); }
+  }
   .chip { background: linear-gradient(135deg, var(--blue-500), var(--blue-700)); color: white; padding: 8px 16px; border-radius: 999px; font-weight: 700; font-size: 14px; animation: pop 0.4s cubic-bezier(.4,2,.6,1); display: inline-flex; align-items: center; gap: 6px; }
   @keyframes pop { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
   .podium-bar { background: linear-gradient(180deg, var(--blue-500), var(--blue-700)); border-radius: 16px 16px 0 0; width: 100%; display: flex; align-items: flex-start; justify-content: center; padding-top: 16px; color: white; font-weight: 900; font-family: 'Outfit', sans-serif; font-size: 32px; position: relative; transition: height 0.8s cubic-bezier(.4,.2,.2,1); height: 0; }
@@ -1767,8 +1819,8 @@
 
 <!-- TEACHER QUIZ -->
 <section id="screen-quiz-teacher" class="screen">
-  <div class="max-w-6xl mx-auto px-6 py-8">
-    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+  <div class="max-w-7xl mx-auto px-6 py-6">
+    <div class="flex items-center justify-between mb-5 flex-wrap gap-3">
       <div class="badge"><span data-i18n="q_question">Question</span> <span id="q-num-teacher">1</span>/<span id="q-total-teacher">5</span></div>
       <div class="flex items-center gap-2">
         <div class="badge">👥 <span id="active-players">0</span></div>
@@ -1777,27 +1829,59 @@
         <button class="sound-toggle-btn" onclick="toggleSound()" title="Couper le son" style="background:white;border:2px solid #e5e7eb;border-radius:10px;padding:6px 10px;cursor:pointer;font-size:18px;line-height:1;">🔊</button>
       </div>
     </div>
-    <div class="q-banner mb-6">
-      <div class="flex items-start justify-between gap-6 flex-wrap">
-        <div class="flex-1 min-w-[280px]">
-          <div class="text-sm opacity-70 mb-3" data-i18n="q_label">Question</div>
-          <h3 class="text-3xl md:text-4xl font-black leading-snug" id="q-text-teacher">—</h3>
+    
+    <!-- 🆕 B3+B4+B5 : Layout 2 colonnes -->
+    <div class="quiz-teacher-grid">
+      
+      <!-- COLONNE PRINCIPALE -->
+      <div class="quiz-teacher-main">
+        <!-- Bandeau question avec timer + donut précision -->
+        <div class="q-banner mb-5">
+          <div class="flex items-start justify-between gap-4 flex-wrap">
+            <div class="flex-1 min-w-[260px]">
+              <div class="text-sm opacity-70 mb-2" data-i18n="q_label">Question</div>
+              <h3 class="text-2xl md:text-3xl font-black leading-snug" id="q-text-teacher">—</h3>
+            </div>
+            <div class="flex items-center gap-3">
+              <!-- 🆕 B3 : Donut de précision live -->
+              <div class="live-donut" id="live-donut">
+                <svg viewBox="0 0 100 100">
+                  <circle class="ld-bg" cx="50" cy="50" r="42"></circle>
+                  <circle class="ld-fg" cx="50" cy="50" r="42" id="live-donut-circle" stroke-dasharray="263.9" stroke-dashoffset="263.9"></circle>
+                </svg>
+                <div class="ld-content">
+                  <div class="ld-pct" id="live-donut-pct">—</div>
+                  <div class="ld-label" data-i18n="live_precision">Précision</div>
+                </div>
+              </div>
+              <!-- Timer -->
+              <div class="timer-ring">
+                <svg viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="45"></circle><circle class="fg" cx="50" cy="50" r="45" id="timer-circle" stroke-dasharray="282.7" stroke-dashoffset="0"></circle></svg>
+                <div class="timer-num" id="timer-num-teacher">30</div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="timer-ring">
-          <svg viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="45"></circle><circle class="fg" cx="50" cy="50" r="45" id="timer-circle" stroke-dasharray="282.7" stroke-dashoffset="0"></circle></svg>
-          <div class="timer-num" id="timer-num-teacher">30</div>
+        
+        <!-- Grille des tuiles (avec barres de distribution intégrées) -->
+        <div class="grid md:grid-cols-2 gap-4 mb-5" id="answers-grid-teacher"></div>
+        
+        <button class="btn btn-primary w-full" onclick="revealAnswer()" id="reveal-btn" data-i18n="q_skip">⏭️ Révéler la réponse</button>
+        <button class="btn btn-ghost w-full mt-3" onclick="confirmStopQuiz()" style="color:#ef4444;border-color:#fecaca;background:#fef2f2;" data-i18n="stop_quiz_btn">🛑 Arrêter le quiz</button>
+      </div>
+      
+      <!-- 🆕 B5 : COLONNE SIDEBAR : statut apprenants -->
+      <div class="quiz-teacher-sidebar">
+        <div class="sidebar-header">
+          <span class="font-bold text-sm" data-i18n="live_students">👥 Apprenants</span>
+          <span class="badge" style="font-size:11px;padding:3px 8px;"><span id="sidebar-submitted-count">0</span>/<span id="sidebar-total-count">0</span></span>
+        </div>
+        <div class="sidebar-list" id="sidebar-students-list">
+          <div class="text-xs text-gray-400 text-center p-3" data-i18n="live_no_students">Aucun apprenant</div>
         </div>
       </div>
+      
     </div>
-    <div class="grid md:grid-cols-2 gap-4 mb-6" id="answers-grid-teacher"></div>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-      <div class="answer-count" style="background: linear-gradient(135deg, #ef4444, #dc2626);"><div class="num" id="count-0">0</div><div class="text-xs">▲</div></div>
-      <div class="answer-count" style="background: linear-gradient(135deg, #3b82f6, #1e40af);"><div class="num" id="count-1">0</div><div class="text-xs">◆</div></div>
-      <div class="answer-count" style="background: linear-gradient(135deg, #fbbf24, #f59e0b);"><div class="num" id="count-2">0</div><div class="text-xs">●</div></div>
-      <div class="answer-count" style="background: linear-gradient(135deg, #10b981, #059669);"><div class="num" id="count-3">0</div><div class="text-xs">■</div></div>
-    </div>
-    <button class="btn btn-primary w-full" onclick="revealAnswer()" id="reveal-btn" data-i18n="q_skip">⏭️ Révéler la réponse</button>
-    <button class="btn btn-ghost w-full mt-3" onclick="confirmStopQuiz()" style="color:#ef4444;border-color:#fecaca;background:#fef2f2;" data-i18n="stop_quiz_btn">🛑 Arrêter le quiz</button>
   </div>
 </section>
 
@@ -2047,6 +2131,11 @@ const I18N = {
     // 🆕 B1 : QR code lobby
     lobby_scan: "📱 Scanner pour rejoindre",
     lobby_or_type: "Ou taper le code :",
+    // 🆕 B3 + B5
+    live_precision: "Précision",
+    live_students: "👥 Apprenants",
+    live_no_students: "Aucun apprenant",
+    live_loading: "Chargement…",
     sd_badge: "Apprenants",
     sd_title: "Liste des apprenants",
     sd_sub: "Gérez les apprenants enregistrés et consultez leurs performances",
@@ -2452,6 +2541,11 @@ const I18N = {
     // 🆕 B1 (AR)
     lobby_scan: "📱 امسح للانضمام",
     lobby_or_type: "أو اكتب الرمز:",
+    // 🆕 B3 + B5 (AR)
+    live_precision: "الدقة",
+    live_students: "👥 المتدربون",
+    live_no_students: "لا يوجد متدربون",
+    live_loading: "جار التحميل…",
     sd_badge: "المتدربين",
     sd_title: "قائمة المتدربين",
     sd_sub: "تدبير المتدربين المسجلين وعرض أدائهم",
@@ -3736,19 +3830,142 @@ function watchGameAsTeacher() {
   });
   gameListeners.push(unsub1);
 
+  // 🆕 B3+B4+B5 : écouter players ET answers en temps réel pour tout mettre à jour
+  let _lastPlayers = {};
+  let _lastAnswers = {};
+  
+  const playersRef = fb.ref(fb.db, 'games/' + currentPin + '/players');
+  const unsubP = fb.onValue(playersRef, (snap) => {
+    _lastPlayers = snap.val() || {};
+    refreshTeacherLiveView(_lastPlayers, _lastAnswers);
+  });
+  gameListeners.push(unsubP);
+  
   const answersRef = fb.ref(fb.db, 'games/' + currentPin + '/answers');
   const unsub2 = fb.onValue(answersRef, (snap) => {
-    const all = snap.val() || {};
-    if (_currentQ < 0) return;
-    const qAns = all[_currentQ] || {};
-    const counts = [0,0,0,0];
-    Object.values(qAns).forEach(a => {
-      if (typeof a.choice === 'number' && a.choice >= 0 && a.choice < 4) counts[a.choice]++;
-    });
-    counts.forEach((c, i) => { const el = $('count-' + i); if (el) el.textContent = c; });
-    $('answers-received').textContent = Object.keys(qAns).length;
+    _lastAnswers = snap.val() || {};
+    refreshTeacherLiveView(_lastPlayers, _lastAnswers);
   });
   gameListeners.push(unsub2);
+}
+
+// 🆕 B3+B4+B5 : Rafraîchit le donut + barres + sidebar en temps réel
+function refreshTeacherLiveView(players, allAnswers) {
+  if (_currentQ < 0) return;
+  const pids = Object.keys(players);
+  const totalPlayers = pids.length;
+  $('active-players').textContent = totalPlayers;
+  
+  const qAns = allAnswers[_currentQ] || {};
+  const submittedIds = Object.keys(qAns);
+  $('answers-received').textContent = submittedIds.length;
+  
+  // === B4 : Distribution par choix ===
+  const counts = [0,0,0,0];
+  Object.values(qAns).forEach(a => {
+    if (typeof a.choice === 'number' && a.choice >= 0 && a.choice < 4) counts[a.choice]++;
+  });
+  const totalAnswered = counts.reduce((a, b) => a + b, 0);
+  counts.forEach((c, i) => {
+    const badge = $('tile-count-' + i);
+    const fill = $('tile-dist-' + i);
+    if (badge) badge.textContent = c;
+    if (fill) {
+      const pct = totalAnswered > 0 ? (c / totalAnswered) * 100 : 0;
+      fill.style.width = pct + '%';
+    }
+  });
+  
+  // === B3 : Donut de précision live ===
+  // Calcul du % de bonnes réponses parmi ceux qui ont répondu
+  try {
+    const q = QUESTIONS[_currentQ] ? QUESTIONS[_currentQ][LANG] : null;
+    if (q && totalAnswered > 0) {
+      const correctIdx = q.correct;
+      const correctCount = counts[correctIdx] || 0;
+      const pct = Math.round((correctCount / totalAnswered) * 100);
+      updateLiveDonut(pct);
+    } else {
+      updateLiveDonut(null); // Pas encore de données
+    }
+  } catch(e) { /* ignore */ }
+  
+  // === B5 : Sidebar apprenants ===
+  updateSidebarStudents(players, qAns);
+}
+
+// 🆕 B3 : Met à jour le donut de précision live
+function updateLiveDonut(pct) {
+  const donut = $('live-donut');
+  const circle = $('live-donut-circle');
+  const pctEl = $('live-donut-pct');
+  if (!donut || !circle || !pctEl) return;
+  if (pct === null || isNaN(pct)) {
+    pctEl.textContent = '—';
+    circle.style.strokeDashoffset = 263.9;
+    donut.classList.remove('precision-mid', 'precision-low');
+    return;
+  }
+  pctEl.textContent = pct + '%';
+  // Stroke dashoffset : 263.9 = circonférence du cercle r=42
+  const offset = 263.9 * (1 - pct / 100);
+  circle.style.strokeDashoffset = offset;
+  // Couleur selon le %
+  donut.classList.toggle('precision-mid', pct >= 50 && pct < 80);
+  donut.classList.toggle('precision-low', pct < 50);
+}
+
+function resetLiveDonut() {
+  updateLiveDonut(null);
+}
+
+// 🆕 B5 : Met à jour la sidebar des apprenants (✓ Soumis / ⏳ En train)
+function updateSidebarStudents(players, qAns) {
+  const list = $('sidebar-students-list');
+  if (!list) return;
+  const pids = Object.keys(players);
+  $('sidebar-total-count').textContent = pids.length;
+  
+  if (pids.length === 0) {
+    list.innerHTML = '<div class="text-xs text-gray-400 text-center p-3">' + (t('live_no_students') || 'Aucun apprenant') + '</div>';
+    $('sidebar-submitted-count').textContent = '0';
+    return;
+  }
+  
+  // Tri : ceux qui ont répondu en premier (par temps) en haut, puis les autres
+  const arr = pids.map(pid => {
+    const p = players[pid];
+    const ans = qAns[pid];
+    return {
+      pid,
+      name: p.name || '—',
+      submitted: !!ans,
+      time: ans ? (ans.time || 0) : null
+    };
+  }).sort((a, b) => {
+    if (a.submitted !== b.submitted) return a.submitted ? -1 : 1;
+    if (a.submitted && b.submitted) return (a.time || 0) - (b.time || 0);
+    return a.name.localeCompare(b.name);
+  });
+  
+  const submittedCount = arr.filter(s => s.submitted).length;
+  $('sidebar-submitted-count').textContent = submittedCount;
+  
+  list.innerHTML = arr.map(s => {
+    const status = s.submitted ? '✓' : '⏳';
+    const timeStr = s.submitted && s.time != null ? s.time.toFixed(1) + 's' : '';
+    return `<div class="sidebar-student ${s.submitted ? 'submitted' : ''}">
+      <span class="student-name" title="${escapeAttr(s.name)}">${escapeHtml(s.name)}</span>
+      ${timeStr ? '<span class="student-time">' + timeStr + '</span>' : ''}
+      <span class="student-status">${status}</span>
+    </div>`;
+  }).join('');
+}
+
+function resetSidebarStudents() {
+  const list = $('sidebar-students-list');
+  if (list) list.innerHTML = '<div class="text-xs text-gray-400 text-center p-3">' + (t('live_loading') || 'Chargement…') + '</div>';
+  if ($('sidebar-submitted-count')) $('sidebar-submitted-count').textContent = '0';
 }
 
 function showTeacherQuestion(info) {
@@ -3768,18 +3985,27 @@ function showTeacherQuestion(info) {
 
   const grid = $('answers-grid-teacher');
   grid.innerHTML = '';
-  // 🆕 B2 : Tuiles style Kahoot (formes + couleurs spécifiques)
+  // 🆕 B2+B4 : Tuiles Kahoot avec barre de distribution + badge count
   const shapes = ['▲','◆','●','■'];
   const tileClasses = ['tile-blue', 'tile-teal', 'tile-orange', 'tile-pink'];
   q.options.forEach((opt, idx) => {
     const btn = document.createElement('div');
     btn.className = 'kahoot-tile ' + tileClasses[idx];
     btn.dataset.idx = idx;
-    btn.innerHTML = `<div class="tile-shape">${shapes[idx]}</div><div class="tile-label">${opt}</div>`;
+    btn.innerHTML = `
+      <div class="tile-shape">${shapes[idx]}</div>
+      <div class="tile-label">${opt}</div>
+      <div class="tile-count-badge" id="tile-count-${idx}">0</div>
+      <div class="tile-dist-bar"><div class="tile-dist-fill" id="tile-dist-${idx}"></div></div>
+    `;
     grid.appendChild(btn);
   });
-  ['count-0','count-1','count-2','count-3'].forEach(id => $(id).textContent = '0');
   $('answers-received').textContent = '0';
+  
+  // 🆕 B3 : Reset du donut de précision live
+  resetLiveDonut();
+  // 🆕 B5 : Reset de la sidebar apprenants
+  resetSidebarStudents();
 
   goTo('screen-quiz-teacher');
   startTeacherTimer(info.questionStartTime, info.timePerQuestion || 30);
@@ -3789,6 +4015,11 @@ function startTeacherTimer(startTs, total) {
   total = total || 30;
   clearInterval(timerInterval);
   resetTickState(); // 🆕 Phase A : reset état du tic-tac
+  // Récupérer les éléments du timer pour appliquer les classes urgentes
+  const timerNumEl = $('timer-num-teacher');
+  const timerRingEl = timerNumEl ? timerNumEl.parentElement : null; // div.timer-ring
+  const timerBadgeEl = $('time-left-teacher') ? $('time-left-teacher').closest('.badge') : null;
+  
   const update = () => {
     // 🆕 BUG FIX : utiliser serverNow() pour synchro horloge entre tous les appareils
     const elapsed = (serverNow() - startTs) / 1000;
@@ -3797,10 +4028,21 @@ function startTeacherTimer(startTs, total) {
     $('time-left-teacher').textContent = left;
     const dash = 282.7 * (1 - left / total);
     $('timer-circle').style.strokeDashoffset = dash;
+    
+    // 🆕 Mode urgent visuel : ≤ 6s = rouge + pulsation
+    const urgent = (left > 0 && left <= 6);
+    if (timerNumEl)   timerNumEl.classList.toggle('timer-urgent', urgent);
+    if (timerRingEl)  timerRingEl.classList.toggle('timer-urgent', urgent);
+    if (timerBadgeEl) timerBadgeEl.classList.toggle('timer-urgent-badge', urgent);
+    
     // 🆕 Phase A : tic-tac sonore
     maybePlayTick(left);
     if (left <= 0) {
       clearInterval(timerInterval);
+      // Retirer les classes urgentes à la fin
+      if (timerNumEl)   timerNumEl.classList.remove('timer-urgent');
+      if (timerRingEl)  timerRingEl.classList.remove('timer-urgent');
+      if (timerBadgeEl) timerBadgeEl.classList.remove('timer-urgent-badge');
       playTimeUpSound(); // 🆕 son de fin
       revealAnswer();
     }
@@ -4848,14 +5090,21 @@ function showStudentQuestion(info) {
   const total = info.timePerQuestion || 30;
   clearInterval(timerInterval);
   resetTickState(); // 🆕 Phase A : reset état du tic-tac
+  // 🆕 Récupérer le badge du timer pour appliquer la classe urgente
+  const stuBadgeEl = $('student-time-left') ? $('student-time-left').closest('.badge') : null;
+  
   const update = () => {
     // 🆕 BUG FIX : utiliser serverNow() pour synchro horloge entre tous les appareils
     const left = Math.max(0, Math.ceil(total - (serverNow() - startTs) / 1000));
     $('student-time-left').textContent = left;
+    // 🆕 Mode urgent visuel
+    const urgent = (left > 0 && left <= 6);
+    if (stuBadgeEl) stuBadgeEl.classList.toggle('timer-urgent-badge', urgent);
     // 🆕 Phase A : tic-tac sonore côté apprenant
     maybePlayTick(left);
     if (left <= 0) {
       clearInterval(timerInterval);
+      if (stuBadgeEl) stuBadgeEl.classList.remove('timer-urgent-badge');
       playTimeUpSound(); // 🆕 son de fin
     }
   };
