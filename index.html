@@ -78,6 +78,12 @@
   .kahoot-tile.wrong-flash { animation: tilePulseWrong 0.6s ease 2; }
   @keyframes tilePulseCorrect { 0%, 100% { box-shadow: 0 6px 14px rgba(0,0,0,0.18); } 50% { box-shadow: 0 0 0 6px #10b981, 0 6px 14px rgba(0,0,0,0.18); } }
   @keyframes tilePulseWrong { 0%, 100% { box-shadow: 0 6px 14px rgba(0,0,0,0.18); } 50% { box-shadow: 0 0 0 6px #ef4444, 0 6px 14px rgba(0,0,0,0.18); } }
+  
+  /* 🆕 Carte de style de son */
+  .sound-style-card { padding: 10px 12px; border-radius: 10px; border: 2px solid #e5e7eb; background: white; cursor: pointer; transition: all 0.15s ease; }
+  .sound-style-card:hover { border-color: var(--copag-cyan); background: #f0f9ff; }
+  .sound-style-card.active { border-color: var(--copag-navy); background: linear-gradient(135deg, #eef7fc, white); box-shadow: 0 2px 8px rgba(15,22,72,0.1); }
+  .sound-style-card.active::before { content: '✓ '; color: #10b981; font-weight: 900; }
   .timer-ring { width: 100px; height: 100px; position: relative; display: flex; align-items: center; justify-content: center; }
   .timer-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
   .timer-ring circle { fill: none; stroke-width: 8; }
@@ -1215,11 +1221,32 @@
       <input id="settings-label-zone3" type="text" placeholder="au classement COPAG" style="width:100%; padding:8px 12px; border-radius:8px; border:2px solid #e5e7eb; font-family:inherit; font-size:13px;">
     </div>
     
-    <!-- 🆕 Phase A : Test des sons -->
+    <!-- 🆕 Phase A : Test des sons + choix du style -->
     <hr style="border:0;border-top:1px solid #e5e7eb;margin:20px 0;">
     <h4 class="font-bold text-base mb-2" data-i18n="settings_sound_title">🔊 Sons du quiz</h4>
-    <p class="text-xs text-gray-500 mb-3" data-i18n="settings_sound_hint">Écoute chaque son avant de l'activer en quiz. Le tic-tac s'accélère et devient plus aigu quand il reste 6 secondes ou moins.</p>
+    <p class="text-xs text-gray-500 mb-3" data-i18n="settings_sound_hint">Choisis un style de son ci-dessous (cliquer pour entendre + sélectionner). Le tic-tac s'accélère quand il reste 6 secondes ou moins.</p>
     
+    <!-- Sélecteur de style -->
+    <div class="grid grid-cols-2 gap-2 mb-4">
+      <div class="sound-style-card" data-style="electronic" onclick="setSoundStyle('electronic')">
+        <div class="font-bold text-sm">🎹 Électronique</div>
+        <div class="text-xs text-gray-500">Bip court et net</div>
+      </div>
+      <div class="sound-style-card" data-style="clock" onclick="setSoundStyle('clock')">
+        <div class="font-bold text-sm">🕰️ Horloge</div>
+        <div class="text-xs text-gray-500">Tic-tac mécanique</div>
+      </div>
+      <div class="sound-style-card" data-style="heartbeat" onclick="setSoundStyle('heartbeat')">
+        <div class="font-bold text-sm">💓 Battement</div>
+        <div class="text-xs text-gray-500">Battement de cœur</div>
+      </div>
+      <div class="sound-style-card" data-style="chime" onclick="setSoundStyle('chime')">
+        <div class="font-bold text-sm">🎐 Carillon</div>
+        <div class="text-xs text-gray-500">Cloche douce</div>
+      </div>
+    </div>
+    
+    <!-- Boutons de test isolés -->
     <div class="grid grid-cols-3 gap-2 mb-3">
       <button class="btn btn-ghost py-2 text-xs" onclick="playTick(false, true)" style="font-size:11px;">🎵 Tic normal</button>
       <button class="btn btn-ghost py-2 text-xs" onclick="playTick(true, true)" style="font-size:11px;">⚡ Tic urgent</button>
@@ -2015,7 +2042,7 @@ const I18N = {
     quiz_nb_q_hint: "Laissez 0 pour jouer toutes les questions du quiz. Sinon, indiquez combien jouer (ex: 10 sur 15). Les premières questions de votre liste seront utilisées — vous pouvez les réordonner dans \"Gérer les questions\".",
     // 🆕 Phase A : sons
     settings_sound_title: "🔊 Sons du quiz",
-    settings_sound_hint: "Écoute chaque son avant de l'activer en quiz. Le tic-tac s'accélère et devient plus aigu quand il reste 6 secondes ou moins.",
+    settings_sound_hint: "Choisis un style de son ci-dessous (cliquer pour entendre + sélectionner). Le tic-tac s'accélère quand il reste 6 secondes ou moins.",
     settings_sound_status: "État des sons",
     // 🆕 B1 : QR code lobby
     lobby_scan: "📱 Scanner pour rejoindre",
@@ -2420,7 +2447,7 @@ const I18N = {
     quiz_nb_q_hint: "اترك 0 للعب كل أسئلة الكويز. وإلا، اذكر عدد الأسئلة (مثلاً: 10 من 15). سيتم استخدام الأسئلة الأولى من قائمتك — يمكنك إعادة ترتيبها في \"إدارة الأسئلة\".",
     // 🆕 Phase A : أصوات
     settings_sound_title: "🔊 أصوات الكويز",
-    settings_sound_hint: "استمع لكل صوت قبل تفعيله في الكويز. تيك-تاك يتسارع ويصبح أكثر حدة عندما تبقى 6 ثوانٍ أو أقل.",
+    settings_sound_hint: "اختر نمط صوت أدناه (انقر للاستماع والاختيار). تيك-تاك يتسارع عندما تبقى 6 ثوانٍ أو أقل.",
     settings_sound_status: "حالة الأصوات",
     // 🆕 B1 (AR)
     lobby_scan: "📱 امسح للانضمام",
@@ -3123,7 +3150,16 @@ let _lastStateShown = null;
 // 🆕 Phase A : Moteur audio (Web Audio API — pas de fichier nécessaire)
 let _audioCtx = null;
 let _soundEnabled = (localStorage.getItem('copag_sound') !== '0'); // ON par défaut
+let _soundStyle = localStorage.getItem('copag_sound_style') || 'electronic'; // style par défaut
 let _lastTickSecond = -1; // pour ne jouer qu'un tic par seconde
+
+// 4 styles de sons disponibles
+const SOUND_STYLES = {
+  electronic: { name: '🎹 Électronique', desc: 'Bip court et net' },
+  clock:      { name: '🕰️ Horloge',     desc: 'Tic-tac mécanique' },
+  heartbeat:  { name: '💓 Battement',    desc: 'Battement de cœur' },
+  chime:      { name: '🎐 Carillon',     desc: 'Cloche douce' }
+};
 
 function _initAudio() {
   if (_audioCtx) return _audioCtx;
@@ -3131,6 +3167,75 @@ function _initAudio() {
     _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
   } catch(e) { _audioCtx = null; }
   return _audioCtx;
+}
+
+// ============ MOTEURS DE SON PAR STYLE ============
+
+// Style 1 : ÉLECTRONIQUE (bip court square)
+function _tickElectronic(ctx, now, urgent) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'square';
+  osc.frequency.value = urgent ? 1200 : 800;
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(urgent ? 0.18 : 0.10, now + 0.005);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + (urgent ? 0.10 : 0.07));
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.12);
+}
+
+// Style 2 : HORLOGE (tic-tac mécanique = bruit blanc filtré)
+function _tickClock(ctx, now, urgent) {
+  const dur = 0.04;
+  const buffer = ctx.createBuffer(1, ctx.sampleRate * dur, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < data.length; i++) {
+    data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (ctx.sampleRate * 0.008));
+  }
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+  const filter = ctx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.value = urgent ? 4000 : 2500;
+  filter.Q.value = 8;
+  const gain = ctx.createGain();
+  gain.gain.value = urgent ? 0.5 : 0.3;
+  src.connect(filter).connect(gain).connect(ctx.destination);
+  src.start(now);
+}
+
+// Style 3 : BATTEMENT DE CŒUR (boum-boum)
+function _tickHeartbeat(ctx, now, urgent) {
+  const playBoum = (offset, vol) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(urgent ? 120 : 80, now + offset);
+    osc.frequency.exponentialRampToValueAtTime(urgent ? 60 : 40, now + offset + 0.15);
+    gain.gain.setValueAtTime(0, now + offset);
+    gain.gain.linearRampToValueAtTime(vol, now + offset + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + offset + 0.18);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now + offset);
+    osc.stop(now + offset + 0.2);
+  };
+  playBoum(0, urgent ? 0.35 : 0.22);
+  playBoum(urgent ? 0.18 : 0.25, urgent ? 0.3 : 0.18);
+}
+
+// Style 4 : CARILLON (cloche douce)
+function _tickChime(ctx, now, urgent) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = urgent ? 1320 : 880; // E6 vs A5
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(urgent ? 0.20 : 0.13, now + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + (urgent ? 0.35 : 0.45));
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.5);
 }
 
 // Joue un tic court (utilisé pour le décompte)
@@ -3141,23 +3246,18 @@ function playTick(urgent, forceTest) {
   if (ctx.state === 'suspended') ctx.resume();
   
   const now = ctx.currentTime;
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  
-  // urgent = plus aigu + plus fort
-  osc.type = 'square';
-  osc.frequency.value = urgent ? 1200 : 800;
-  
-  gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(urgent ? 0.15 : 0.08, now + 0.005);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + (urgent ? 0.08 : 0.05));
-  
-  osc.connect(gain).connect(ctx.destination);
-  osc.start(now);
-  osc.stop(now + 0.1);
+  switch(_soundStyle) {
+    case 'clock':     _tickClock(ctx, now, urgent); break;
+    case 'heartbeat': _tickHeartbeat(ctx, now, urgent); break;
+    case 'chime':     _tickChime(ctx, now, urgent); break;
+    case 'electronic':
+    default:          _tickElectronic(ctx, now, urgent); break;
+  }
 }
 
-// Joue le son de fin de question (ding distinct)
+// ============ SON DE FIN PAR STYLE ============
+
+// Joue le son de fin de question (différent selon le style)
 function playTimeUpSound(forceTest) {
   if (!_soundEnabled && !forceTest) return;
   const ctx = _initAudio();
@@ -3165,22 +3265,66 @@ function playTimeUpSound(forceTest) {
   if (ctx.state === 'suspended') ctx.resume();
   
   const now = ctx.currentTime;
-  // Deux notes descendantes pour un "ding-dong" agréable
-  [
-    { freq: 880, start: 0,    dur: 0.25 },
-    { freq: 587, start: 0.15, dur: 0.4  }
-  ].forEach(n => {
+  
+  if (_soundStyle === 'clock') {
+    // Sonnerie de réveil mécanique : 3 cloches rapides
+    [0, 0.18, 0.36].forEach(off => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = 1500;
+      gain.gain.setValueAtTime(0, now + off);
+      gain.gain.linearRampToValueAtTime(0.25, now + off + 0.01);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + off + 0.15);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now + off);
+      osc.stop(now + off + 0.2);
+    });
+  } else if (_soundStyle === 'heartbeat') {
+    // Flatline : long bip continu
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
-    osc.frequency.value = n.freq;
-    gain.gain.setValueAtTime(0, now + n.start);
-    gain.gain.linearRampToValueAtTime(0.2, now + n.start + 0.02);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + n.start + n.dur);
+    osc.frequency.value = 440;
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.25, now + 0.02);
+    gain.gain.setValueAtTime(0.25, now + 0.8);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 1.0);
     osc.connect(gain).connect(ctx.destination);
-    osc.start(now + n.start);
-    osc.stop(now + n.start + n.dur);
-  });
+    osc.start(now);
+    osc.stop(now + 1.1);
+  } else if (_soundStyle === 'chime') {
+    // Gong harmonique (3 notes ensemble)
+    [523, 659, 784].forEach((freq, i) => { // Do-Mi-Sol
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.15 - i*0.03, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 1.2);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now);
+      osc.stop(now + 1.3);
+    });
+  } else {
+    // Électronique : ding-dong classique (deux notes)
+    [
+      { freq: 880, start: 0,    dur: 0.3 },
+      { freq: 587, start: 0.18, dur: 0.5  }
+    ].forEach(n => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = n.freq;
+      gain.gain.setValueAtTime(0, now + n.start);
+      gain.gain.linearRampToValueAtTime(0.25, now + n.start + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + n.start + n.dur);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now + n.start);
+      osc.stop(now + n.start + n.dur);
+    });
+  }
 }
 
 // Joue le tic en fonction du temps restant (logique commune formateur + apprenant)
@@ -3212,16 +3356,32 @@ function toggleSound() {
   }
 }
 
+// 🆕 Sélection du style de son
+function setSoundStyle(style) {
+  if (!SOUND_STYLES[style]) return;
+  _soundStyle = style;
+  localStorage.setItem('copag_sound_style', style);
+  updateSoundButtons();
+  // Test immédiat pour entendre le nouveau style
+  setTimeout(() => playTick(false, true), 50);
+  setTimeout(() => playTick(true, true), 700);
+  setTimeout(() => playTimeUpSound(true), 1400);
+}
+
 function updateSoundButtons() {
   document.querySelectorAll('.sound-toggle-btn').forEach(b => {
     b.textContent = _soundEnabled ? '🔊' : '🔇';
     b.title = _soundEnabled ? 'Couper le son' : 'Activer le son';
   });
-  // 🆕 Mise à jour du panneau Paramètres
+  // Mise à jour du panneau Paramètres
   const settingsBtn = document.getElementById('settings-sound-toggle-btn');
   const settingsState = document.getElementById('settings-sound-state');
   if (settingsBtn) settingsBtn.textContent = _soundEnabled ? '🔊' : '🔇';
   if (settingsState) settingsState.textContent = _soundEnabled ? '✅ Activés' : '❌ Désactivés (silencieux)';
+  // Mise à jour du sélecteur de style
+  document.querySelectorAll('.sound-style-card').forEach(c => {
+    c.classList.toggle('active', c.dataset.style === _soundStyle);
+  });
 }
 
 function toggleSoundFromSettings() {
@@ -3608,7 +3768,8 @@ function startTeacherTimer(startTs, total) {
   resetTickState(); // 🆕 Phase A : reset état du tic-tac
   const update = () => {
     const elapsed = (Date.now() - startTs) / 1000;
-    const left = Math.max(0, Math.ceil(total - elapsed));
+    // 🐛 FIX : cap à total max pour éviter dépassement si décalage horloge
+    const left = Math.max(0, Math.min(total, Math.ceil(total - elapsed)));
     $('timer-num-teacher').textContent = left;
     $('time-left-teacher').textContent = left;
     const dash = 282.7 * (1 - left / total);
@@ -4665,7 +4826,8 @@ function showStudentQuestion(info) {
   clearInterval(timerInterval);
   resetTickState(); // 🆕 Phase A : reset état du tic-tac
   const update = () => {
-    const left = Math.max(0, Math.ceil(total - (Date.now() - startTs) / 1000));
+    // 🐛 FIX : cap à total max pour éviter dépassement si décalage horloge
+    const left = Math.max(0, Math.min(total, Math.ceil(total - (Date.now() - startTs) / 1000)));
     $('student-time-left').textContent = left;
     // 🆕 Phase A : tic-tac sonore côté apprenant
     maybePlayTick(left);
