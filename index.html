@@ -9,6 +9,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&family=Tajawal:wght@400;500;700;900&family=Outfit:wght@300;400;600;800;900&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+<!-- 🆕 B1 : Librairie QR Code -->
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 
 <style>
   :root {
@@ -51,6 +53,31 @@
   .ans-btn.correct { box-shadow: 0 0 0 4px white, 0 0 0 8px #10b981, 0 14px 30px rgba(16,185,129,0.5); }
   .ans-btn.dimmed { opacity: 0.3; }
   .pin-display { background: white; border-radius: 18px; padding: 18px 36px; font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 56px; letter-spacing: 12px; color: var(--blue-700); border: 3px dashed var(--blue-300); display: inline-block; }
+  
+  /* 🆕 B1 : Layout Lobby avec QR */
+  .lobby-grid { display: grid; grid-template-columns: 340px 1fr; gap: 24px; align-items: start; }
+  .lobby-qr-card { background: white; border-radius: 20px; padding: 20px; box-shadow: 0 4px 16px rgba(15,22,72,0.08); border: 1px solid #e5e7eb; }
+  .lobby-qr-box { width: 280px; height: 280px; margin: 0 auto; background: white; border-radius: 16px; display: flex; align-items: center; justify-content: center; padding: 12px; border: 2px solid #f0f4f9; }
+  .lobby-qr-box img, .lobby-qr-box canvas { width: 100%; height: 100%; display: block; }
+  .lobby-info-card { background: white; border-radius: 20px; padding: 24px; box-shadow: 0 4px 16px rgba(15,22,72,0.08); border: 1px solid #e5e7eb; }
+  @media (max-width: 900px) { .lobby-grid { grid-template-columns: 1fr; } .lobby-qr-box { width: 240px; height: 240px; } }
+  
+  /* 🆕 B2 : Tuiles colorées style Kahoot pour les réponses (formateur ET apprenant) */
+  .kahoot-tile { position: relative; min-height: 140px; border-radius: 20px; padding: 24px 18px; cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; box-shadow: 0 6px 14px rgba(0,0,0,0.18); display: flex; align-items: center; justify-content: center; text-align: center; color: white; font-weight: 800; font-size: 20px; line-height: 1.3; border: none; overflow: hidden; }
+  .kahoot-tile:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(0,0,0,0.22); }
+  .kahoot-tile:active { transform: translateY(0); }
+  .kahoot-tile.disabled { opacity: 0.55; cursor: not-allowed; pointer-events: none; }
+  .kahoot-tile .tile-shape { position: absolute; top: 14px; left: 14px; font-size: 28px; opacity: 0.85; }
+  .kahoot-tile .tile-label { z-index: 1; padding: 0 12px; }
+  .kahoot-tile.tile-blue { background: linear-gradient(135deg, #3b82f6, #1d4ed8); }
+  .kahoot-tile.tile-teal { background: linear-gradient(135deg, #14b8a6, #0d9488); }
+  .kahoot-tile.tile-orange { background: linear-gradient(135deg, #fb923c, #ea580c); }
+  .kahoot-tile.tile-pink { background: linear-gradient(135deg, #ec4899, #be185d); }
+  .kahoot-tile.selected { outline: 5px solid white; outline-offset: -5px; transform: scale(1.02); }
+  .kahoot-tile.correct-flash { animation: tilePulseCorrect 0.6s ease 2; }
+  .kahoot-tile.wrong-flash { animation: tilePulseWrong 0.6s ease 2; }
+  @keyframes tilePulseCorrect { 0%, 100% { box-shadow: 0 6px 14px rgba(0,0,0,0.18); } 50% { box-shadow: 0 0 0 6px #10b981, 0 6px 14px rgba(0,0,0,0.18); } }
+  @keyframes tilePulseWrong { 0%, 100% { box-shadow: 0 6px 14px rgba(0,0,0,0.18); } 50% { box-shadow: 0 0 0 6px #ef4444, 0 6px 14px rgba(0,0,0,0.18); } }
   .timer-ring { width: 100px; height: 100px; position: relative; display: flex; align-items: center; justify-content: center; }
   .timer-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
   .timer-ring circle { fill: none; stroke-width: 8; }
@@ -94,9 +121,11 @@
     .logo-sub { font-size: 12px; letter-spacing: 3px; }
     .logo-tagline { display: none; }
     /* Étudiant : 1 réponse par ligne sur mobile pour les textes longs */
-    #student-answers-grid { grid-template-columns: 1fr !important; }
+    #student-answers-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
     #student-answers-grid .ans-btn { min-height: 72px !important; padding: 14px 18px !important; font-size: 16px !important; }
     #student-answers-grid .ans-btn .shape { width: 36px !important; height: 36px !important; font-size: 16px !important; }
+    #student-answers-grid .kahoot-tile { min-height: 90px !important; padding: 14px 8px !important; font-size: 14px !important; }
+    #student-answers-grid .kahoot-tile .tile-shape { font-size: 20px !important; top: 8px !important; left: 8px !important; }
   }
   .stat-num { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 42px; color: var(--blue-700); line-height: 1; }
   .lesson-card { background: white; border-radius: 18px; padding: 24px; border: 2px solid #e6eeff; cursor: pointer; transition: all 0.2s; text-align: start; }
@@ -1185,6 +1214,25 @@
       <label class="block text-xs font-bold mb-1 text-gray-700" data-i18n="settings_label_zone3">Zone jaune (bas) — Libellé "au classement…"</label>
       <input id="settings-label-zone3" type="text" placeholder="au classement COPAG" style="width:100%; padding:8px 12px; border-radius:8px; border:2px solid #e5e7eb; font-family:inherit; font-size:13px;">
     </div>
+    
+    <!-- 🆕 Phase A : Test des sons -->
+    <hr style="border:0;border-top:1px solid #e5e7eb;margin:20px 0;">
+    <h4 class="font-bold text-base mb-2" data-i18n="settings_sound_title">🔊 Sons du quiz</h4>
+    <p class="text-xs text-gray-500 mb-3" data-i18n="settings_sound_hint">Écoute chaque son avant de l'activer en quiz. Le tic-tac s'accélère et devient plus aigu quand il reste 6 secondes ou moins.</p>
+    
+    <div class="grid grid-cols-3 gap-2 mb-3">
+      <button class="btn btn-ghost py-2 text-xs" onclick="playTick(false, true)" style="font-size:11px;">🎵 Tic normal</button>
+      <button class="btn btn-ghost py-2 text-xs" onclick="playTick(true, true)" style="font-size:11px;">⚡ Tic urgent</button>
+      <button class="btn btn-ghost py-2 text-xs" onclick="playTimeUpSound(true)" style="font-size:11px;">🔔 Fin de temps</button>
+    </div>
+    
+    <div class="flex items-center justify-between p-3 mb-2" style="background:var(--blue-50);border-radius:10px;">
+      <div>
+        <div class="font-bold text-sm" data-i18n="settings_sound_status">État des sons</div>
+        <div class="text-xs text-gray-600" id="settings-sound-state">—</div>
+      </div>
+      <button class="btn btn-primary py-2 px-4 text-sm" onclick="toggleSoundFromSettings()" id="settings-sound-toggle-btn">🔊</button>
+    </div>
 
     <div class="flex gap-3 mt-5">
       <button class="btn btn-ghost flex-1" onclick="closeSettingsModal()" data-i18n="cancel">Annuler</button>
@@ -1555,34 +1603,54 @@
 
 <!-- TEACHER LOBBY -->
 <section id="screen-teacher-lobby" class="screen">
-  <div class="topbar">
-    <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
-      <div class="logo"><div class="logo-mark"><div class="logo-img" role="img" aria-label="COPAG Academy"></div></div><div class="logo-stack"><span class="logo-name">COPAG</span><span class="logo-sub">ACADEMY</span><span class="logo-tagline">Compétences d'aujourd'hui, Avenir assuré</span></div></div>
-      <button class="btn btn-ghost py-2 px-4 text-sm" onclick="endGame()" data-i18n="cancel">Annuler</button>
-    </div>
-  </div>
-  <div class="max-w-5xl mx-auto px-6 py-10 text-center">
+  <div class="max-w-6xl mx-auto px-6 py-8">
     <div class="badge mb-5"><span class="pulse-dot"></span> <span data-i18n="lobby_waiting">En attente des apprenants...</span></div>
-    <p class="text-gray-500 mb-3 text-lg" data-i18n="lobby_instruct">Rejoignez sur</p>
-    <div class="font-bold text-2xl mb-3" style="color: var(--copag-cyan)" id="join-url">—</div>
-    <p class="text-gray-500 mb-3 text-lg" data-i18n="lobby_pin_label">avec le code</p>
-    <div class="pin-display mb-8" id="game-pin">------</div>
-    <!-- 🆕 Nom du groupe auto-généré -->
-    <div class="mb-6 inline-flex items-center gap-2 px-4 py-2 rounded-full" style="background:#eef7fc;border:1px solid #d4ecfb;">
-      <span style="color:#1e2a78;font-weight:700;font-size:13px;" data-i18n="lobby_group_name">👥 Groupe</span>
-      <span id="lobby-group-name" style="color:#1ea8e0;font-weight:800;font-size:14px;font-family:'Outfit',monospace;">—</span>
-    </div>
-    <div class="card p-6 mb-6">
-      <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
-        <div class="flex items-center gap-3">
-          <div class="text-2xl">👥</div>
-          <span class="font-bold text-lg"><span data-i18n="lobby_joined">Connectés</span>: <span id="player-count" style="color: var(--blue-700)">0</span></span>
+    
+    <!-- 🆕 B1 : Layout 2 colonnes : QR à gauche, infos+joueurs à droite -->
+    <div class="lobby-grid">
+      <!-- COLONNE GAUCHE : QR Code -->
+      <div class="lobby-qr-card">
+        <div class="text-center mb-2 font-bold text-gray-700 text-sm" data-i18n="lobby_scan">📱 Scanner pour rejoindre</div>
+        <div id="lobby-qr-container" class="lobby-qr-box">
+          <div class="text-gray-400 text-sm">⏳</div>
         </div>
-        <button class="btn btn-primary" id="start-quiz-btn" onclick="startQuiz()" disabled><span data-i18n="lobby_begin">Démarrer le quiz</span> →</button>
+        <div class="text-center mt-3">
+          <div class="text-xs text-gray-500 mb-1" data-i18n="lobby_or_type">Ou taper le code :</div>
+          <div class="pin-display" id="game-pin" style="font-size:32px;">------</div>
+        </div>
       </div>
-      <div class="flex flex-wrap gap-2 justify-center min-h-[80px] items-center" id="players-list">
-        <span class="text-gray-400" data-i18n="lobby_empty">Les apprenants apparaîtront ici</span>
+      
+      <!-- COLONNE DROITE : Infos + joueurs -->
+      <div class="lobby-info-card">
+        <div class="text-center mb-4">
+          <p class="text-gray-500 mb-2" data-i18n="lobby_instruct">Rejoignez sur</p>
+          <div class="font-bold text-xl" style="color: var(--copag-cyan); word-break:break-all;" id="join-url">—</div>
+        </div>
+        
+        <!-- Nom du groupe -->
+        <div class="mb-4 flex items-center justify-center gap-2 px-4 py-2 rounded-full" style="background:#eef7fc;border:1px solid #d4ecfb;">
+          <span style="color:#1e2a78;font-weight:700;font-size:13px;" data-i18n="lobby_group_name">👥 Groupe</span>
+          <span id="lobby-group-name" style="color:#1ea8e0;font-weight:800;font-size:14px;font-family:'Outfit',monospace;">—</span>
+        </div>
+        
+        <!-- Compteur + bouton démarrer -->
+        <div class="flex items-center justify-between mb-3 flex-wrap gap-3">
+          <div class="flex items-center gap-2">
+            <div class="text-3xl">👥</div>
+            <span class="font-bold text-lg"><span data-i18n="lobby_joined">Connectés</span>: <span id="player-count" style="color: var(--blue-700); font-size:24px;">0</span></span>
+          </div>
+          <button class="btn btn-primary" id="start-quiz-btn" onclick="startQuiz()" disabled><span data-i18n="lobby_begin">Démarrer le quiz</span> →</button>
+        </div>
+        
+        <!-- Liste des joueurs -->
+        <div class="flex flex-wrap gap-2 justify-center min-h-[80px] items-center p-3" id="players-list" style="background:#f9fafb;border-radius:12px;">
+          <span class="text-gray-400" data-i18n="lobby_empty">Les apprenants apparaîtront ici</span>
+        </div>
       </div>
+    </div>
+    
+    <div class="text-center mt-6">
+      <button class="btn btn-ghost py-2 px-4 text-sm" onclick="endGame()" data-i18n="cancel">Annuler</button>
     </div>
   </div>
 </section>
@@ -1945,6 +2013,13 @@ const I18N = {
     // 🆕 Point 7 : nombre de questions
     quiz_nb_q: "🎯 Nombre de questions à jouer",
     quiz_nb_q_hint: "Laissez 0 pour jouer toutes les questions du quiz. Sinon, indiquez combien jouer (ex: 10 sur 15). Les premières questions de votre liste seront utilisées — vous pouvez les réordonner dans \"Gérer les questions\".",
+    // 🆕 Phase A : sons
+    settings_sound_title: "🔊 Sons du quiz",
+    settings_sound_hint: "Écoute chaque son avant de l'activer en quiz. Le tic-tac s'accélère et devient plus aigu quand il reste 6 secondes ou moins.",
+    settings_sound_status: "État des sons",
+    // 🆕 B1 : QR code lobby
+    lobby_scan: "📱 Scanner pour rejoindre",
+    lobby_or_type: "Ou taper le code :",
     sd_badge: "Apprenants",
     sd_title: "Liste des apprenants",
     sd_sub: "Gérez les apprenants enregistrés et consultez leurs performances",
@@ -2343,6 +2418,13 @@ const I18N = {
     // 🆕 Point 7 (AR)
     quiz_nb_q: "🎯 عدد الأسئلة للعب",
     quiz_nb_q_hint: "اترك 0 للعب كل أسئلة الكويز. وإلا، اذكر عدد الأسئلة (مثلاً: 10 من 15). سيتم استخدام الأسئلة الأولى من قائمتك — يمكنك إعادة ترتيبها في \"إدارة الأسئلة\".",
+    // 🆕 Phase A : أصوات
+    settings_sound_title: "🔊 أصوات الكويز",
+    settings_sound_hint: "استمع لكل صوت قبل تفعيله في الكويز. تيك-تاك يتسارع ويصبح أكثر حدة عندما تبقى 6 ثوانٍ أو أقل.",
+    settings_sound_status: "حالة الأصوات",
+    // 🆕 B1 (AR)
+    lobby_scan: "📱 امسح للانضمام",
+    lobby_or_type: "أو اكتب الرمز:",
     sd_badge: "المتدربين",
     sd_title: "قائمة المتدربين",
     sd_sub: "تدبير المتدربين المسجلين وعرض أدائهم",
@@ -3052,8 +3134,8 @@ function _initAudio() {
 }
 
 // Joue un tic court (utilisé pour le décompte)
-function playTick(urgent) {
-  if (!_soundEnabled) return;
+function playTick(urgent, forceTest) {
+  if (!_soundEnabled && !forceTest) return;
   const ctx = _initAudio();
   if (!ctx) return;
   if (ctx.state === 'suspended') ctx.resume();
@@ -3076,8 +3158,8 @@ function playTick(urgent) {
 }
 
 // Joue le son de fin de question (ding distinct)
-function playTimeUpSound() {
-  if (!_soundEnabled) return;
+function playTimeUpSound(forceTest) {
+  if (!_soundEnabled && !forceTest) return;
   const ctx = _initAudio();
   if (!ctx) return;
   if (ctx.state === 'suspended') ctx.resume();
@@ -3135,6 +3217,15 @@ function updateSoundButtons() {
     b.textContent = _soundEnabled ? '🔊' : '🔇';
     b.title = _soundEnabled ? 'Couper le son' : 'Activer le son';
   });
+  // 🆕 Mise à jour du panneau Paramètres
+  const settingsBtn = document.getElementById('settings-sound-toggle-btn');
+  const settingsState = document.getElementById('settings-sound-state');
+  if (settingsBtn) settingsBtn.textContent = _soundEnabled ? '🔊' : '🔇';
+  if (settingsState) settingsState.textContent = _soundEnabled ? '✅ Activés' : '❌ Désactivés (silencieux)';
+}
+
+function toggleSoundFromSettings() {
+  toggleSound();
 }
 
 function $(id) { return document.getElementById(id); }
@@ -3378,8 +3469,42 @@ async function createGame() {
   let path = (window.location.pathname || '').replace(/index\.html?$/i, '').replace(/\/$/, '');
   if (path) joinUrl += path;
   $('join-url').textContent = joinUrl || 'milk-learn.web.app';
+  
+  // 🆕 B1 : Générer le QR Code avec l'URL complète + PIN pré-rempli
+  generateLobbyQR(joinUrl, pin);
+  
   goTo('screen-teacher-lobby');
   watchLobbyAsTeacher();
+}
+
+// 🆕 B1 : Génère le QR Code dans le lobby
+function generateLobbyQR(joinUrl, pin) {
+  const container = document.getElementById('lobby-qr-container');
+  if (!container) return;
+  container.innerHTML = ''; // reset
+  
+  // Construire l'URL complète avec PIN pré-rempli
+  const protocol = window.location.protocol || 'https:';
+  const fullUrl = protocol + '//' + (joinUrl || 'milk-learn.web.app') + '?pin=' + pin;
+  
+  try {
+    if (typeof QRCode !== 'undefined') {
+      new QRCode(container, {
+        text: fullUrl,
+        width: 256,
+        height: 256,
+        colorDark: '#0f1648',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
+      });
+    } else {
+      // Fallback : message d'erreur
+      container.innerHTML = '<div style="text-align:center;color:#9ca3af;font-size:13px;">QR indisponible<br><span style="font-size:11px;">' + fullUrl + '</span></div>';
+    }
+  } catch(e) {
+    console.warn('QR generation failed:', e);
+    container.innerHTML = '<div style="text-align:center;color:#9ca3af;font-size:13px;">QR indisponible</div>';
+  }
 }
 
 function watchLobbyAsTeacher() {
@@ -3460,12 +3585,14 @@ function showTeacherQuestion(info) {
 
   const grid = $('answers-grid-teacher');
   grid.innerHTML = '';
+  // 🆕 B2 : Tuiles style Kahoot (formes + couleurs spécifiques)
   const shapes = ['▲','◆','●','■'];
-  const cls = ['ans-red','ans-blue','ans-yellow','ans-green'];
+  const tileClasses = ['tile-blue', 'tile-teal', 'tile-orange', 'tile-pink'];
   q.options.forEach((opt, idx) => {
     const btn = document.createElement('div');
-    btn.className = 'ans-btn ' + cls[idx];
-    btn.innerHTML = `<div class="shape">${shapes[idx]}</div><div>${opt}</div>`;
+    btn.className = 'kahoot-tile ' + tileClasses[idx];
+    btn.dataset.idx = idx;
+    btn.innerHTML = `<div class="tile-shape">${shapes[idx]}</div><div class="tile-label">${opt}</div>`;
     grid.appendChild(btn);
   });
   ['count-0','count-1','count-2','count-3'].forEach(id => $(id).textContent = '0');
@@ -3550,9 +3677,15 @@ async function revealAnswer() {
   updates['info/correctAnswer'] = correctIdx;
   await fb.update(fb.ref(fb.db, 'games/' + currentPin), updates);
 
-  document.querySelectorAll('#answers-grid-teacher .ans-btn').forEach((btn, idx) => {
-    if (idx === correctIdx) btn.classList.add('correct');
-    else btn.classList.add('dimmed');
+  // 🆕 B2 : Marquer la bonne réponse sur les tuiles Kahoot
+  document.querySelectorAll('#answers-grid-teacher .kahoot-tile').forEach((btn, idx) => {
+    if (idx === correctIdx) {
+      btn.classList.add('correct-flash');
+      btn.style.outline = '5px solid white';
+      btn.style.outlineOffset = '-5px';
+    } else {
+      btn.classList.add('disabled');
+    }
   });
   $('stat-correct').textContent = correctCount;
   $('stat-wrong').textContent = wrongCount;
@@ -4513,13 +4646,16 @@ function showStudentQuestion(info) {
   $('student-answer-waiting').classList.add('hidden');
   grid.classList.remove('hidden');
   grid.innerHTML = '';
+  // 🆕 B2 : Tuiles Kahoot côté apprenant
   const shapes = ['▲','◆','●','■'];
-  const cls = ['ans-red','ans-blue','ans-yellow','ans-green'];
+  const tileClasses = ['tile-blue', 'tile-teal', 'tile-orange', 'tile-pink'];
   q.options.forEach((opt, idx) => {
     const btn = document.createElement('button');
-    btn.className = 'ans-btn ' + cls[idx];
+    btn.className = 'kahoot-tile ' + tileClasses[idx];
     btn.dataset.idx = idx;
-    btn.innerHTML = `<div class="shape">${shapes[idx]}</div><div style="font-size:14px;">${opt}</div>`;
+    btn.style.fontSize = '17px';
+    btn.style.minHeight = '110px';
+    btn.innerHTML = `<div class="tile-shape">${shapes[idx]}</div><div class="tile-label">${opt}</div>`;
     btn.onclick = () => studentAnswer(idx, info);
     grid.appendChild(btn);
   });
@@ -4553,9 +4689,11 @@ async function studentAnswer(idx, info) {
     choice: idx, time, name: currentPlayerName
   });
 
-  document.querySelectorAll('#student-answers-grid .ans-btn').forEach((btn, i) => {
+  // 🆕 B2 : Feedback visuel sur les tuiles Kahoot
+  document.querySelectorAll('#student-answers-grid .kahoot-tile').forEach((btn, i) => {
     btn.disabled = true;
-    if (i !== idx) btn.classList.add('dimmed');
+    if (i === idx) btn.classList.add('selected');
+    else btn.classList.add('disabled');
   });
   setTimeout(() => {
     $('student-answers-grid').classList.add('hidden');
@@ -7648,6 +7786,8 @@ async function openSettingsModal() {
     }
   } catch(e) { /* ignore */ }
   
+  updateSoundButtons(); // 🆕 Phase A : mettre à jour l'état du bouton son dans Paramètres
+  
   $('settings-modal').classList.remove('hidden');
 }
 
@@ -8845,8 +8985,25 @@ function handleUrlPrefill() {
     const params = new URLSearchParams(window.location.search);
     const matr = params.get('matricule');
     const nom  = params.get('nom');
+    const pin  = params.get('pin'); // 🆕 B1 : PIN depuis QR code
     
-    if (!matr && !nom) return false;
+    if (!matr && !nom && !pin) return false;
+    
+    // 🆕 B1 : Pré-remplir le PIN depuis le QR
+    if (pin) {
+      // Aller direct sur l'écran apprenant
+      goTo('screen-student-join');
+      setTimeout(() => {
+        const pinEl = $('student-pin');
+        if (pinEl) {
+          pinEl.value = pin.trim();
+          // Focus sur le champ matricule pour la suite
+          const matrEl = $('student-matricule');
+          if (matrEl) matrEl.focus();
+        }
+      }, 200);
+      // Ne pas return ici : on continue pour pré-remplir matricule/nom aussi
+    }
     
     // Pré-remplir matricule
     if (matr) {
@@ -8864,17 +9021,20 @@ function handleUrlPrefill() {
       if (nameEl) nameEl.value = decodeURIComponent(nom.replace(/\+/g, ' ')).trim();
     }
     
-    // Aller direct à la page "Rejoindre le jeu" et focus sur le PIN
-    goTo('screen-student-join');
-    setTimeout(() => {
-      const pinEl = $('student-pin');
-      if (pinEl) pinEl.focus();
-    }, 400);
+    // Aller direct à la page "Rejoindre le jeu" et focus sur le PIN (si pas déjà fait par le pin)
+    if (!pin) {
+      goTo('screen-student-join');
+      setTimeout(() => {
+        const pinEl = $('student-pin');
+        if (pinEl) pinEl.focus();
+      }, 400);
+    }
     
     // Toast de bienvenue
     setTimeout(() => {
-      const displayName = nom ? decodeURIComponent(nom.replace(/\+/g, ' ')).trim() : matr;
-      toast('👋 ' + (LANG === 'ar' ? 'مرحباً' : 'Bienvenue') + ' ' + displayName + ' !');
+      const displayName = nom ? decodeURIComponent(nom.replace(/\+/g, ' ')).trim() : (matr || pin);
+      const greet = pin ? (LANG === 'ar' ? 'مرحباً، أدخل بياناتك' : 'Bienvenue, entre tes infos') : ('👋 ' + (LANG === 'ar' ? 'مرحباً' : 'Bienvenue') + ' ' + displayName + ' !');
+      toast(greet);
     }, 600);
     
     // Nettoyer l'URL pour éviter de répéter au refresh
