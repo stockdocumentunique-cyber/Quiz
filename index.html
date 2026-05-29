@@ -1637,7 +1637,10 @@
   <div class="max-w-md mx-auto px-4 py-6">
     <div class="flex items-center justify-between mb-4">
       <div class="badge"><span data-i18n="q_question">Question</span> <span id="student-q-num">1</span>/<span id="student-q-total">5</span></div>
-      <div class="badge">⏱️ <span id="student-time-left">30</span>s</div>
+      <div class="flex items-center gap-2">
+        <div class="badge">⏱️ <span id="student-time-left">30</span>s</div>
+        <button class="sound-toggle-btn" onclick="toggleSound()" title="Couper le son" style="background:white;border:2px solid #e5e7eb;border-radius:10px;padding:6px 10px;cursor:pointer;font-size:16px;line-height:1;">🔊</button>
+      </div>
     </div>
     <div class="card p-5 mb-5 text-center" style="background: linear-gradient(135deg, var(--blue-700), var(--blue-900)); color: white;">
       <p class="text-lg font-bold" id="student-q-text">—</p>
@@ -1676,6 +1679,7 @@
         <div class="badge">👥 <span id="active-players">0</span></div>
         <div class="badge">✅ <span id="answers-received">0</span></div>
         <div class="badge">⏱️ <span data-i18n="q_remaining">Restant</span>: <span id="time-left-teacher">30</span>s</div>
+        <button class="sound-toggle-btn" onclick="toggleSound()" title="Couper le son" style="background:white;border:2px solid #e5e7eb;border-radius:10px;padding:6px 10px;cursor:pointer;font-size:18px;line-height:1;">🔊</button>
       </div>
     </div>
     <div class="q-banner mb-6">
@@ -3034,6 +3038,105 @@ let _currentQ = -1;
 let _lastQIdxShown = -1;
 let _lastStateShown = null;
 
+// 🆕 Phase A : Moteur audio (Web Audio API — pas de fichier nécessaire)
+let _audioCtx = null;
+let _soundEnabled = (localStorage.getItem('copag_sound') !== '0'); // ON par défaut
+let _lastTickSecond = -1; // pour ne jouer qu'un tic par seconde
+
+function _initAudio() {
+  if (_audioCtx) return _audioCtx;
+  try {
+    _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  } catch(e) { _audioCtx = null; }
+  return _audioCtx;
+}
+
+// Joue un tic court (utilisé pour le décompte)
+function playTick(urgent) {
+  if (!_soundEnabled) return;
+  const ctx = _initAudio();
+  if (!ctx) return;
+  if (ctx.state === 'suspended') ctx.resume();
+  
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  
+  // urgent = plus aigu + plus fort
+  osc.type = 'square';
+  osc.frequency.value = urgent ? 1200 : 800;
+  
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(urgent ? 0.15 : 0.08, now + 0.005);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + (urgent ? 0.08 : 0.05));
+  
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.1);
+}
+
+// Joue le son de fin de question (ding distinct)
+function playTimeUpSound() {
+  if (!_soundEnabled) return;
+  const ctx = _initAudio();
+  if (!ctx) return;
+  if (ctx.state === 'suspended') ctx.resume();
+  
+  const now = ctx.currentTime;
+  // Deux notes descendantes pour un "ding-dong" agréable
+  [
+    { freq: 880, start: 0,    dur: 0.25 },
+    { freq: 587, start: 0.15, dur: 0.4  }
+  ].forEach(n => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.value = n.freq;
+    gain.gain.setValueAtTime(0, now + n.start);
+    gain.gain.linearRampToValueAtTime(0.2, now + n.start + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + n.start + n.dur);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now + n.start);
+    osc.stop(now + n.start + n.dur);
+  });
+}
+
+// Joue le tic en fonction du temps restant (logique commune formateur + apprenant)
+function maybePlayTick(left) {
+  // Ne tic-tac que si secondes entières
+  if (left <= 0) return;
+  if (left === _lastTickSecond) return;
+  _lastTickSecond = left;
+  // À 6s ou moins = urgent (aigu)
+  playTick(left <= 6);
+  // Si on arrive sur la dernière seconde, on programme un second tic à mi-seconde
+  if (left <= 6 && left > 1) {
+    setTimeout(() => { if (_soundEnabled) playTick(true); }, 500);
+  }
+}
+
+function resetTickState() {
+  _lastTickSecond = -1;
+}
+
+function toggleSound() {
+  _soundEnabled = !_soundEnabled;
+  localStorage.setItem('copag_sound', _soundEnabled ? '1' : '0');
+  updateSoundButtons();
+  if (_soundEnabled) {
+    // Petit retour audio pour confirmer
+    _initAudio();
+    setTimeout(() => playTick(false), 50);
+  }
+}
+
+function updateSoundButtons() {
+  document.querySelectorAll('.sound-toggle-btn').forEach(b => {
+    b.textContent = _soundEnabled ? '🔊' : '🔇';
+    b.title = _soundEnabled ? 'Couper le son' : 'Activer le son';
+  });
+}
+
 function $(id) { return document.getElementById(id); }
 function toast(msg) {
   const el = document.createElement('div');
@@ -3375,6 +3478,7 @@ function showTeacherQuestion(info) {
 function startTeacherTimer(startTs, total) {
   total = total || 30;
   clearInterval(timerInterval);
+  resetTickState(); // 🆕 Phase A : reset état du tic-tac
   const update = () => {
     const elapsed = (Date.now() - startTs) / 1000;
     const left = Math.max(0, Math.ceil(total - elapsed));
@@ -3382,7 +3486,13 @@ function startTeacherTimer(startTs, total) {
     $('time-left-teacher').textContent = left;
     const dash = 282.7 * (1 - left / total);
     $('timer-circle').style.strokeDashoffset = dash;
-    if (left <= 0) { clearInterval(timerInterval); revealAnswer(); }
+    // 🆕 Phase A : tic-tac sonore
+    maybePlayTick(left);
+    if (left <= 0) {
+      clearInterval(timerInterval);
+      playTimeUpSound(); // 🆕 son de fin
+      revealAnswer();
+    }
   };
   update();
   timerInterval = setInterval(update, 250);
@@ -4417,10 +4527,16 @@ function showStudentQuestion(info) {
   const startTs = info.questionStartTime;
   const total = info.timePerQuestion || 30;
   clearInterval(timerInterval);
+  resetTickState(); // 🆕 Phase A : reset état du tic-tac
   const update = () => {
     const left = Math.max(0, Math.ceil(total - (Date.now() - startTs) / 1000));
     $('student-time-left').textContent = left;
-    if (left <= 0) clearInterval(timerInterval);
+    // 🆕 Phase A : tic-tac sonore côté apprenant
+    maybePlayTick(left);
+    if (left <= 0) {
+      clearInterval(timerInterval);
+      playTimeUpSound(); // 🆕 son de fin
+    }
   };
   update();
   timerInterval = setInterval(update, 250);
@@ -8777,6 +8893,7 @@ function handleUrlPrefill() {
 
 function init() {
   applyLang();
+  updateSoundButtons(); // 🆕 Phase A : afficher 🔊 ou 🔇 selon préférence
   selectedLessonId = LESSONS[0].id;
   $('selected-lesson-name').textContent = LESSONS[0][LANG].title;
   setupMatriculeListener();
