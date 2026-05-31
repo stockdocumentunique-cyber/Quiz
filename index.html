@@ -184,6 +184,14 @@
   @media (max-width: 900px) {
     .reveal-grid { grid-template-columns: 1fr; }
   }
+  
+  /* 🆕 B6 : KPI Cards pro pour le rapport */
+  .kpi-card-pro { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-radius: 14px; border: 1px solid #e5e7eb; box-shadow: 0 2px 8px rgba(15,22,72,0.04); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+  .kpi-card-pro:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(15,22,72,0.1); }
+  .kpi-card-pro .kpi-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 22px; color: white; flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+  .kpi-card-pro .kpi-content { min-width: 0; }
+  .kpi-card-pro .kpi-label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; margin-bottom: 2px; }
+  .kpi-card-pro .kpi-value { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 24px; color: var(--copag-navy); line-height: 1.1; }
   .timer-ring { width: 100px; height: 100px; position: relative; display: flex; align-items: center; justify-content: center; }
   .timer-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
   .timer-ring circle { fill: none; stroke-width: 8; }
@@ -1203,6 +1211,38 @@
   <div class="max-w-6xl mx-auto px-6 py-8">
     <h2 class="display-fr text-4xl mb-1" data-i18n="an_title">📊 Évaluation des acquis</h2>
     <p class="text-gray-500 mb-6" data-i18n="an_sub">Analyse complète par apprenant, par session et par question</p>
+
+    <!-- 🆕 B6 : 4 KPI Cards style Wayground -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+      <div class="kpi-card-pro" style="background: linear-gradient(135deg, #ecfdf5, white); border-color:#a7f3d0;">
+        <div class="kpi-icon" style="background: linear-gradient(135deg, #10b981, #059669);">🎯</div>
+        <div class="kpi-content">
+          <div class="kpi-label" data-i18n="kpi_precision">Précision globale</div>
+          <div class="kpi-value" id="kpi-precision-val">—</div>
+        </div>
+      </div>
+      <div class="kpi-card-pro" style="background: linear-gradient(135deg, #eff6ff, white); border-color:#bfdbfe;">
+        <div class="kpi-icon" style="background: linear-gradient(135deg, #3b82f6, #1d4ed8);">📊</div>
+        <div class="kpi-content">
+          <div class="kpi-label" data-i18n="kpi_completion">Taux d'achèvement</div>
+          <div class="kpi-value" id="kpi-completion-val">—</div>
+        </div>
+      </div>
+      <div class="kpi-card-pro" style="background: linear-gradient(135deg, #fef3c7, white); border-color:#fde68a;">
+        <div class="kpi-icon" style="background: linear-gradient(135deg, #f59e0b, #d97706);">👥</div>
+        <div class="kpi-content">
+          <div class="kpi-label" data-i18n="kpi_total_students">Apprenants uniques</div>
+          <div class="kpi-value" id="kpi-students-val">0</div>
+        </div>
+      </div>
+      <div class="kpi-card-pro" style="background: linear-gradient(135deg, #f5f3ff, white); border-color:#ddd6fe;">
+        <div class="kpi-icon" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9);">❓</div>
+        <div class="kpi-content">
+          <div class="kpi-label" data-i18n="kpi_total_questions">Questions jouées</div>
+          <div class="kpi-value" id="kpi-questions-val">0</div>
+        </div>
+      </div>
+    </div>
 
     <!-- FILTRES -->
     <div class="card p-4 mb-5" style="background: linear-gradient(135deg, var(--blue-50), white);">
@@ -2256,6 +2296,11 @@ const I18N = {
     ar_s_skip: "Non essayé",
     ar_options_dist: "📊 Distribution des réponses",
     ar_students_results: "👥 Résultats par apprenant",
+    // 🆕 B6 KPI Cards
+    kpi_precision: "Précision globale",
+    kpi_completion: "Taux d'achèvement",
+    kpi_total_students: "Apprenants uniques",
+    kpi_total_questions: "Questions jouées",
     sd_badge: "Apprenants",
     sd_title: "Liste des apprenants",
     sd_sub: "Gérez les apprenants enregistrés et consultez leurs performances",
@@ -2671,6 +2716,11 @@ const I18N = {
     ar_s_skip: "لم يحاول",
     ar_options_dist: "📊 توزيع الأجوبة",
     ar_students_results: "👥 نتائج المتدربين",
+    // 🆕 B6 KPI Cards (AR)
+    kpi_precision: "الدقة العامة",
+    kpi_completion: "معدل الإكمال",
+    kpi_total_students: "متدربون فريدون",
+    kpi_total_questions: "أسئلة ملعوبة",
     sd_badge: "المتدربين",
     sd_title: "قائمة المتدربين",
     sd_sub: "تدبير المتدربين المسجلين وعرض أدائهم",
@@ -3370,6 +3420,7 @@ let _lastStateShown = null;
 // Tous les appareils (formateur + apprenants) utilisent la MÊME référence de temps
 // peu importe si leur horloge locale est décalée.
 let _serverTimeOffset = 0; // différence entre Date.now() local et le serveur
+let _autoRevealTriggered = false; // 🆕 flag auto-révélation (reset à chaque nouvelle question)
 
 function initServerClock() {
   try {
@@ -3990,33 +4041,46 @@ function refreshTeacherLiveView(players, allAnswers) {
   Object.values(qAns).forEach(a => {
     if (typeof a.choice === 'number' && a.choice >= 0 && a.choice < 4) counts[a.choice]++;
   });
-  const totalAnswered = counts.reduce((a, b) => a + b, 0);
   counts.forEach((c, i) => {
     const badge = $('tile-count-' + i);
     const fill = $('tile-dist-' + i);
     if (badge) badge.textContent = c;
     if (fill) {
-      const pct = totalAnswered > 0 ? (c / totalAnswered) * 100 : 0;
+      // 🔧 FIX : % calculé sur total des apprenants (pas seulement ceux qui ont répondu)
+      const pct = totalPlayers > 0 ? (c / totalPlayers) * 100 : 0;
       fill.style.width = pct + '%';
     }
   });
   
   // === B3 : Donut de précision live ===
-  // Calcul du % de bonnes réponses parmi ceux qui ont répondu
+  // 🔧 FIX : Précision = correct / TOTAL APPRENANTS (pas / submittedCount)
   try {
     const q = QUESTIONS[_currentQ] ? QUESTIONS[_currentQ][LANG] : null;
-    if (q && totalAnswered > 0) {
+    if (q && totalPlayers > 0) {
       const correctIdx = q.correct;
       const correctCount = counts[correctIdx] || 0;
-      const pct = Math.round((correctCount / totalAnswered) * 100);
+      const pct = Math.round((correctCount / totalPlayers) * 100);
       updateLiveDonut(pct);
     } else {
-      updateLiveDonut(null); // Pas encore de données
+      updateLiveDonut(null);
     }
   } catch(e) { /* ignore */ }
   
   // === B5 : Sidebar apprenants ===
   updateSidebarStudents(players, qAns);
+  
+  // 🆕 AUTO-RÉVÉLATION : si tous les apprenants ont répondu, passer direct au reveal
+  // (sans attendre le timer) — comme Wayground/Kahoot
+  if (totalPlayers > 0 && submittedIds.length >= totalPlayers && !_autoRevealTriggered) {
+    _autoRevealTriggered = true;
+    // Petit délai pour laisser voir le dernier "✓" puis on passe au reveal
+    setTimeout(() => {
+      // Re-vérifier qu'on est toujours sur l'écran question (au cas où le formateur a déjà cliqué Révéler)
+      if (_currentQ >= 0 && _lastQIdxShown === _currentQ) {
+        revealAnswer();
+      }
+    }, 600);
+  }
 }
 
 // 🆕 B3 : Met à jour le donut de précision live
@@ -4094,6 +4158,8 @@ function resetSidebarStudents() {
 function showTeacherQuestion(info) {
   const qIdx = info.currentQuestion;
   _currentQ = qIdx;
+  _autoRevealTriggered = false; // 🆕 reset auto-révélation pour la nouvelle question
+  window._revealedQ = -1;        // 🆕 reset garde-fou reveal
   const q = QUESTIONS[qIdx][LANG];
 
   $('q-num-teacher').textContent = qIdx + 1;
@@ -4184,6 +4250,9 @@ async function revealAnswer() {
   const fb = window.fb;
   const qIdx = _currentQ;
   if (qIdx < 0) return;
+  // 🆕 Garde-fou : si on a déjà révélé cette question, ne pas refaire
+  if (window._revealedQ === qIdx) return;
+  window._revealedQ = qIdx;
   const q = QUESTIONS[qIdx][LANG];
   const correctIdx = q.correct;
 
@@ -4254,7 +4323,9 @@ async function revealAnswer() {
   const submittedIds = Object.keys(answers || {});
   const submittedCount = submittedIds.length;
   const skipCount = totalPlayers - submittedCount;
-  const pct = submittedCount > 0 ? Math.round((correctCount / submittedCount) * 100) : 0;
+  // 🔧 FIX : Précision = correct / TOTAL APPRENANTS (pas / submittedCount)
+  // Cohérent avec Wayground : "non essayé" compte contre la note
+  const pct = totalPlayers > 0 ? Math.round((correctCount / totalPlayers) * 100) : 0;
   
   // Anciennes stats (compatibilité)
   $('stat-correct').textContent = correctCount;
@@ -4292,7 +4363,8 @@ async function revealAnswer() {
     optsList.innerHTML = q.options.map((opt, idx) => {
       const isCorrect = (idx === correctIdx);
       const cnt = counts[idx];
-      const optPct = submittedCount > 0 ? Math.round((cnt / submittedCount) * 100) : 0;
+      // 🔧 FIX : % calculé sur total apprenants (pas seulement ceux qui ont répondu)
+      const optPct = totalPlayers > 0 ? Math.round((cnt / totalPlayers) * 100) : 0;
       return `<div class="reveal-option-row ${isCorrect ? 'is-correct' : ''}">
         <div class="shape-mark" style="background:${tileColors[idx]};">${shapes[idx]}</div>
         <div class="opt-text">${escapeHtml(opt)}</div>
@@ -8901,7 +8973,57 @@ function applyAnalysisFilters() {
   });
   
   $('an-count-badge').textContent = _anFilteredSessions.length + ' ' + t('an_sess_count');
+  
+  // 🆕 B6 : Calculer les 4 KPI cards
+  computeAnalysisKPIs(_anFilteredSessions);
+  
   renderAnalysisCurrentTab();
+}
+
+// 🆕 B6 : calcul des KPIs globaux (sur les sessions filtrées)
+function computeAnalysisKPIs(sessions) {
+  if (!sessions || sessions.length === 0) {
+    $('kpi-precision-val').textContent  = '—';
+    $('kpi-completion-val').textContent = '—';
+    $('kpi-students-val').textContent   = '0';
+    $('kpi-questions-val').textContent  = '0';
+    return;
+  }
+  
+  let totalQuestions = 0;
+  let totalAnswered = 0;
+  let totalCorrect = 0;
+  const uniqStudents = new Set();
+  
+  sessions.forEach(s => {
+    (s.players || []).forEach(p => {
+      // Identité unique
+      const key = p.matricule ? String(p.matricule) : ('N:' + (p.name || '').toUpperCase());
+      uniqStudents.add(key);
+      
+      const perQ = Array.isArray(p.perQuestion) ? p.perQuestion : [];
+      perQ.forEach(pq => {
+        if (!pq) return;
+        totalQuestions++;
+        if (pq.played !== false && pq.choice != null) {
+          totalAnswered++;
+          if (pq.correct) totalCorrect++;
+        }
+      });
+    });
+  });
+  
+  // Précision globale = correct / total questions (apprenants × questions)
+  const precision = totalQuestions > 0 ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+  // Achèvement = répondu / total questions
+  const completion = totalQuestions > 0 ? Math.round((totalAnswered / totalQuestions) * 100) : 0;
+  // Nb total de questions jouées (somme sur toutes les sessions)
+  const totalQPlayed = sessions.reduce((acc, s) => acc + (s.totalQuestions || (s.questions || []).length || 0), 0);
+  
+  $('kpi-precision-val').textContent  = precision + '%';
+  $('kpi-completion-val').textContent = completion + '%';
+  $('kpi-students-val').textContent   = uniqStudents.size;
+  $('kpi-questions-val').textContent  = totalQPlayed;
 }
 
 function onAnalysisFilterChange() {
