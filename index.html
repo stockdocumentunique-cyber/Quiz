@@ -121,6 +121,16 @@
   .kahoot-tile .tile-dist-fill { height: 100%; background: rgba(255,255,255,0.9); width: 0%; transition: width 0.4s ease; }
   .kahoot-tile .tile-count-badge { position: absolute; top: 12px; right: 14px; background: rgba(0,0,0,0.25); color: white; padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 900; min-width: 36px; text-align: center; }
   
+  /* 🆕 Bouton manuel "cacher noms" : force le masquage même HORS phase question */
+  #screen-quiz-teacher.names-force-hidden .sidebar-student .student-name,
+  #screen-quiz-teacher.names-force-hidden .sidebar-student .student-time { display: none; }
+  #screen-quiz-teacher.names-force-hidden .sidebar-student .student-status {
+    margin-left: auto;
+  }
+  #screen-quiz-teacher.names-force-hidden .sidebar-student::before {
+    content: '👤'; opacity: 0.5; flex: 1;
+  }
+  
   /* 🆕 ANTI-SPOIL : pendant la question, on cache les indices qui pourraient aider à tricher */
   /* (le formateur projette son écran → les apprenants ne doivent pas voir qui a juste, qui a voté quoi, etc.) */
   #screen-quiz-teacher.spoiler-hidden .live-donut { visibility: hidden; }
@@ -1358,24 +1368,6 @@
     </div>
     <p id="settings-test-result" class="text-sm text-center hidden"></p>
     
-    <!-- 🆕 Point 3 : libellés personnalisables du profil apprenant -->
-    <hr style="border:0;border-top:1px solid #e5e7eb;margin:20px 0;">
-    <h4 class="font-bold text-base mb-3" data-i18n="settings_profile_title">🎨 Libellés du profil apprenant</h4>
-    <p class="text-xs text-gray-500 mb-3" data-i18n="settings_profile_hint">Personnalisez les textes affichés sur la page de fin de quiz vue par les apprenants.</p>
-    
-    <div class="mb-3">
-      <label class="block text-xs font-bold mb-1 text-gray-700" data-i18n="settings_label_zone1">Zone bleue (haut) — Libellé</label>
-      <input id="settings-label-zone1" type="text" placeholder="Cette session" style="width:100%; padding:8px 12px; border-radius:8px; border:2px solid #e5e7eb; font-family:inherit; font-size:13px;">
-    </div>
-    <div class="mb-3">
-      <label class="block text-xs font-bold mb-1 text-gray-700" data-i18n="settings_label_zone2">Zone blanche (milieu) — Libellé</label>
-      <input id="settings-label-zone2" type="text" placeholder="TOTAL" style="width:100%; padding:8px 12px; border-radius:8px; border:2px solid #e5e7eb; font-family:inherit; font-size:13px;">
-    </div>
-    <div class="mb-3">
-      <label class="block text-xs font-bold mb-1 text-gray-700" data-i18n="settings_label_zone3">Zone jaune (bas) — Libellé "au classement…"</label>
-      <input id="settings-label-zone3" type="text" placeholder="au classement COPAG" style="width:100%; padding:8px 12px; border-radius:8px; border:2px solid #e5e7eb; font-family:inherit; font-size:13px;">
-    </div>
-    
     <!-- 🆕 Phase A : Test des sons + choix du style -->
     <hr style="border:0;border-top:1px solid #e5e7eb;margin:20px 0;">
     <h4 class="font-bold text-base mb-2" data-i18n="settings_sound_title">🔊 Sons du quiz</h4>
@@ -1687,44 +1679,6 @@
     <h2 class="display-fr text-4xl mb-1" data-i18n="td_title">Tableau de bord</h2>
     <p class="text-gray-500 mb-8" data-i18n="td_sub">Choisissez une leçon et lancez une session</p>
     
-    <!-- 🆕 Phase 3B : Vue globale COPAG — KPIs -->
-    <div id="global-kpis" class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-      <div class="card p-4" style="background:linear-gradient(135deg,#eef7fc,white);">
-        <div class="text-xs text-gray-500 mb-1" data-i18n="kpi_sessions">Sessions totales</div>
-        <div class="font-bold text-2xl" style="color:var(--copag-navy);font-family:'Outfit',sans-serif;" id="kpi-sessions">—</div>
-        <div class="text-xs mt-1" style="color:var(--copag-cyan);"><span id="kpi-sessions-week">0</span> <span data-i18n="kpi_week">cette semaine</span></div>
-      </div>
-      <div class="card p-4" style="background:linear-gradient(135deg,#d4ecfb,white);">
-        <div class="text-xs text-gray-500 mb-1" data-i18n="kpi_apprenants">Apprenants actifs</div>
-        <div class="font-bold text-2xl" style="color:var(--copag-navy);font-family:'Outfit',sans-serif;" id="kpi-apprenants">—</div>
-        <div class="text-xs mt-1" style="color:var(--copag-cyan);"><span id="kpi-apprenants-month">0</span> <span data-i18n="kpi_month">ce mois</span></div>
-      </div>
-      <div class="card p-4" style="background:linear-gradient(135deg,#d1fae5,white);">
-        <div class="text-xs text-gray-500 mb-1" data-i18n="kpi_avg_score">Score moyen global</div>
-        <div class="font-bold text-2xl" style="color:#065f46;font-family:'Outfit',sans-serif;" id="kpi-avg-score">—</div>
-        <div class="text-xs mt-1" style="color:#10b981;"><span data-i18n="kpi_accuracy">Précision</span>: <span id="kpi-accuracy">—</span></div>
-      </div>
-      <div class="card p-4" style="background:linear-gradient(135deg,#fef3c7,white);">
-        <div class="text-xs text-gray-500 mb-1" data-i18n="kpi_top_theme">Thème le + populaire</div>
-        <div class="font-bold text-base" style="color:#92400e;line-height:1.2;margin-top:4px;" id="kpi-top-theme">—</div>
-        <div class="text-xs mt-1" style="color:#f59e0b;"><span id="kpi-top-theme-count">0</span> <span data-i18n="kpi_sessions_short">sessions</span></div>
-      </div>
-    </div>
-    
-    <!-- 🆕 Sessions d'aujourd'hui -->
-    <div id="today-sessions-section" class="card p-5 mb-6" style="background:white;border:1px solid #e6eeff;">
-      <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <h3 class="font-bold text-lg flex items-center gap-2" style="color:var(--copag-navy);">
-          📅 <span data-i18n="today_title">Sessions d'aujourd'hui</span>
-          <span class="badge" id="today-count-badge" style="background:var(--copag-cyan);color:white;">0</span>
-        </h3>
-        <button class="btn btn-ghost py-2 px-3 text-xs" onclick="loadTodaySessions()" data-i18n="today_refresh">🔄 Actualiser</button>
-      </div>
-      <div id="today-sessions-list">
-        <div class="text-gray-400 text-sm text-center py-4" data-i18n="today_loading">Chargement...</div>
-      </div>
-    </div>
-    
     <!-- 🆕 Phase 2C : Bannière session active -->
     <div id="active-session-banner" class="card p-5 mb-6 hidden" style="background: linear-gradient(135deg, #fef3c7, #fde68a); border: 2px solid #f59e0b;">
       <div class="flex items-center justify-between gap-4 flex-wrap">
@@ -1750,7 +1704,6 @@
     
     <div class="flex justify-end mb-4 gap-2 flex-wrap">
       <button class="btn btn-ghost py-2 px-4 text-sm" onclick="goToQuestionEditor()" data-i18n="td_edit_questions">📝 Gérer les questions</button>
-      <button class="btn btn-ghost py-2 px-4 text-sm" onclick="goToGroups()" data-i18n="td_view_groups">🎓 Groupes</button>
       <button class="btn btn-ghost py-2 px-4 text-sm" onclick="goToStudentsDashboard()" data-i18n="td_view_students">👥 Apprenants</button>
       <button class="btn btn-ghost py-2 px-4 text-sm" onclick="goToAnalysis()" data-i18n="td_view_analysis">📊 Analyse</button>
       <button class="btn btn-ghost py-2 px-4 text-sm" onclick="goToHistory()" data-i18n="td_view_history">📋 Historique</button>
@@ -1977,7 +1930,10 @@
       <div class="quiz-teacher-sidebar">
         <div class="sidebar-header">
           <span class="font-bold text-sm" data-i18n="live_students">👥 Apprenants</span>
-          <span class="badge" style="font-size:11px;padding:3px 8px;"><span id="sidebar-submitted-count">0</span>/<span id="sidebar-total-count">0</span></span>
+          <div class="flex items-center gap-2">
+            <button id="toggle-names-btn" onclick="toggleNamesVisibility()" title="Afficher/cacher les noms" style="background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:13px;line-height:1;">👁️‍🗨️</button>
+            <span class="badge" style="font-size:11px;padding:3px 8px;"><span id="sidebar-submitted-count">0</span>/<span id="sidebar-total-count">0</span></span>
+          </div>
         </div>
         <div class="sidebar-list" id="sidebar-students-list">
           <div class="text-xs text-gray-400 text-center p-3" data-i18n="live_no_students">Aucun apprenant</div>
@@ -2105,7 +2061,6 @@
     <!-- 🆕 Phase 2A : Boutons d'action de fin de quiz -->
     <div class="flex flex-col sm:flex-row items-center justify-center gap-3 flex-wrap">
       <button class="btn btn-primary text-lg" id="btn-next-quiz" onclick="openNextQuizModal()" data-i18n="fin_next_quiz">▶ Nouveau quiz (même thème)</button>
-      <button class="btn btn-ghost text-lg" onclick="restartFromHome()" data-i18n="fin_close_session">🏁 Clôturer la session</button>
     </div>
     <!-- Compteur de quiz joués dans la session -->
     <p class="text-sm text-gray-400 mt-6" id="session-quiz-count" style="display:none;">
@@ -4155,12 +4110,39 @@ function resetSidebarStudents() {
   if ($('sidebar-submitted-count')) $('sidebar-submitted-count').textContent = '0';
 }
 
+// 🆕 Bouton afficher/cacher noms dans la sidebar (anti-triche manuel)
+// État sauvé dans localStorage pour persister entre les sessions
+let _namesHidden = (localStorage.getItem('copag_names_hidden') === '1');
+
+function applyNamesVisibility() {
+  const screen = document.getElementById('screen-quiz-teacher');
+  if (!screen) return;
+  // 🔑 Note : la classe "spoiler-hidden" gère DÉJÀ le masquage pendant la question
+  // Ce toggle MANUEL force le masquage même APRÈS le reveal ou en dehors du quiz
+  screen.classList.toggle('names-force-hidden', _namesHidden);
+  const btn = document.getElementById('toggle-names-btn');
+  if (btn) {
+    btn.textContent = _namesHidden ? '🙈' : '👁️‍🗨️';
+    btn.title = _namesHidden ? 'Afficher les noms' : 'Cacher les noms';
+    btn.style.background = _namesHidden ? '#fef3c7' : '#f3f4f6';
+  }
+}
+
+function toggleNamesVisibility() {
+  _namesHidden = !_namesHidden;
+  localStorage.setItem('copag_names_hidden', _namesHidden ? '1' : '0');
+  applyNamesVisibility();
+}
+
 function showTeacherQuestion(info) {
   const qIdx = info.currentQuestion;
   _currentQ = qIdx;
   _autoRevealTriggered = false; // 🆕 reset auto-révélation pour la nouvelle question
   window._revealedQ = -1;        // 🆕 reset garde-fou reveal
   const q = QUESTIONS[qIdx][LANG];
+  
+  // 🆕 Appliquer l'état du bouton "cacher noms" (préférence sauvée)
+  applyNamesVisibility();
 
   $('q-num-teacher').textContent = qIdx + 1;
   $('q-total-teacher').textContent = QUESTIONS.length;
@@ -5613,6 +5595,9 @@ function goToAnalysisAndShow(sessionId) {
 
 // 🆕 Phase 3B : KPIs globaux COPAG (chargés depuis /history)
 async function loadGlobalKPIs() {
+  // 🧹 KPIs dashboard supprimés — fonction conservée vide pour ne pas casser les appels
+  return;
+  /* eslint-disable */
   const fb = window.fb;
   if (!fb) return;
   try {
@@ -8487,21 +8472,7 @@ async function openSettingsModal() {
   $('settings-test-result').classList.add('hidden');
   $('settings-test-result').textContent = '';
   
-  // 🆕 Point 3 : charger les libellés personnalisés du profil
-  try {
-    const fb = window.fb;
-    const labelsSnap = await fb.get(fb.ref(fb.db, 'settings/profileLabels'));
-    if (labelsSnap.exists()) {
-      const lbl = labelsSnap.val();
-      $('settings-label-zone1').value = lbl.zone1 || '';
-      $('settings-label-zone2').value = lbl.zone2 || '';
-      $('settings-label-zone3').value = lbl.zone3 || '';
-    } else {
-      $('settings-label-zone1').value = '';
-      $('settings-label-zone2').value = '';
-      $('settings-label-zone3').value = '';
-    }
-  } catch(e) { /* ignore */ }
+  // 🧹 Libellés du profil apprenant : section supprimée
   
   updateSoundButtons(); // 🆕 Phase A : mettre à jour l'état du bouton son dans Paramètres
   
@@ -8544,10 +8515,6 @@ async function testPointageConnection() {
 async function saveSettings() {
   const url = ($('settings-pointage-url').value || '').trim();
   const fb = window.fb;
-  // 🆕 Point 3 : récupérer les libellés du profil
-  const zone1 = ($('settings-label-zone1').value || '').trim();
-  const zone2 = ($('settings-label-zone2').value || '').trim();
-  const zone3 = ($('settings-label-zone3').value || '').trim();
   
   try {
     if (url) {
@@ -8557,16 +8524,7 @@ async function saveSettings() {
     }
     _pointageUrl = url || null;
     
-    // 🆕 Point 3 : sauvegarder les libellés personnalisés
-    if (zone1 || zone2 || zone3) {
-      await fb.set(fb.ref(fb.db, 'settings/profileLabels'), {
-        zone1: zone1 || null,
-        zone2: zone2 || null,
-        zone3: zone3 || null
-      });
-    } else {
-      await fb.remove(fb.ref(fb.db, 'settings/profileLabels'));
-    }
+    // 🧹 Libellés du profil apprenant : section supprimée
     
     toast(t('settings_saved'));
     closeSettingsModal();
