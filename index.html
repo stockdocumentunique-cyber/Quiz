@@ -121,14 +121,15 @@
   .kahoot-tile .tile-dist-fill { height: 100%; background: rgba(255,255,255,0.9); width: 0%; transition: width 0.4s ease; }
   .kahoot-tile .tile-count-badge { position: absolute; top: 12px; right: 14px; background: rgba(0,0,0,0.25); color: white; padding: 3px 10px; border-radius: 999px; font-size: 13px; font-weight: 900; min-width: 36px; text-align: center; }
   
-  /* 🆕 Bouton manuel "cacher noms" : force le masquage même HORS phase question */
-  #screen-quiz-teacher.names-force-hidden .sidebar-student .student-name,
-  #screen-quiz-teacher.names-force-hidden .sidebar-student .student-time { display: none; }
-  #screen-quiz-teacher.names-force-hidden .sidebar-student .student-status {
-    margin-left: auto;
+  /* 🆕 Bouton manuel "afficher noms" : FORCE l'affichage même pendant la question (override anti-triche) */
+  /* Par défaut, l'anti-triche cache les noms pendant la question. Ce bouton permet au formateur de forcer leur affichage. */
+  #screen-quiz-teacher.names-force-shown.spoiler-hidden .sidebar-student .student-name,
+  #screen-quiz-teacher.names-force-shown.spoiler-hidden .sidebar-student .student-time,
+  #screen-quiz-teacher.names-force-shown.spoiler-hidden .sidebar-student .student-status {
+    display: inline !important;
   }
-  #screen-quiz-teacher.names-force-hidden .sidebar-student::before {
-    content: '👤'; opacity: 0.5; flex: 1;
+  #screen-quiz-teacher.names-force-shown.spoiler-hidden .sidebar-student::after {
+    display: none !important;
   }
   
   /* 🆕 ANTI-SPOIL : pendant la question, on cache les indices qui pourraient aider à tricher */
@@ -148,10 +149,72 @@
     background: linear-gradient(90deg, #10b981, #34d399);
   }
   
-  /* 🆕 Reveal screen amélioré (style Wayground) */
-  .reveal-grid { display: grid; grid-template-columns: 280px 1fr; gap: 20px; align-items: start; }
+  /* 🆕 Carte de suspense (X correct / Y apprenants) — pour créer du 7amas avant révélation */
+  .reveal-suspense-card {
+    background: linear-gradient(135deg, #fef3c7, #fde68a);
+    border: 2px solid #fbbf24;
+    border-radius: 18px;
+    padding: 18px 24px;
+    display: inline-block;
+    box-shadow: 0 4px 16px rgba(251,191,36,0.25);
+    margin: 0 auto;
+    max-width: 100%;
+    animation: suspensePulse 2s ease-in-out infinite;
+  }
+  .reveal-suspense-card .suspense-label {
+    font-size: 13px;
+    color: #92400e;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .reveal-suspense-card .suspense-value {
+    font-family: 'Outfit', sans-serif;
+    font-weight: 900;
+    font-size: 56px;
+    color: var(--copag-navy);
+    line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .reveal-suspense-card .suspense-sep {
+    color: #d97706;
+    font-size: 42px;
+    margin: 0 4px;
+  }
+  .reveal-suspense-card .suspense-emoji {
+    font-size: 36px;
+    margin-left: 6px;
+    animation: suspenseFlame 0.8s ease-in-out infinite alternate;
+  }
+  @keyframes suspensePulse {
+    0%, 100% { box-shadow: 0 4px 16px rgba(251,191,36,0.25); transform: scale(1); }
+    50%      { box-shadow: 0 8px 24px rgba(251,191,36,0.45); transform: scale(1.02); }
+  }
+  @keyframes suspenseFlame {
+    from { transform: scale(1) rotate(-3deg); }
+    to   { transform: scale(1.15) rotate(3deg); }
+  }
+  /* Wrapper pour centrer la carte */
+  #screen-answer-reveal .reveal-suspense-card { display: inline-block; }
+  
+  .reveal-grid { display: grid; grid-template-columns: 260px 1fr 320px; gap: 16px; align-items: start; }
+  /* 🆕 Mode "colonne apprenants cachée" : 2 colonnes au lieu de 3 */
+  .reveal-grid.hide-students-column { grid-template-columns: 260px 1fr; }
+  .reveal-grid.hide-students-column #reveal-students-column { display: none; }
+  /* 🆕 Mode "noms masqués" dans la section reveal : remplace les noms par "Apprenant N" numéroté */
+  .reveal-students-card-side.names-hidden #reveal-students-list { counter-reset: anon; }
+  .reveal-students-card-side.names-hidden .reveal-student-row { counter-increment: anon; }
+  .reveal-students-card-side.names-hidden .sn-name { visibility: hidden; position: relative; }
+  .reveal-students-card-side.names-hidden .sn-name::after {
+    content: 'Apprenant ' counter(anon); visibility: visible; position: absolute; left: 0; top: 0;
+    color: #6b7280; font-style: italic;
+  }
   .reveal-donut-card { background: white; border-radius: 18px; padding: 20px; box-shadow: 0 4px 14px rgba(15,22,72,0.08); text-align: center; }
-  .reveal-big-donut { width: 200px; height: 200px; margin: 0 auto 12px; position: relative; }
+  .reveal-big-donut { width: 180px; height: 180px; margin: 0 auto 12px; position: relative; }
   .reveal-big-donut svg { width: 100%; height: 100%; transform: rotate(-90deg); }
   .reveal-big-donut circle { fill: none; stroke-width: 16; }
   .reveal-big-donut .rbg { stroke: #e5e7eb; }
@@ -183,6 +246,11 @@
   .reveal-option-row .check { color: #10b981; font-size: 18px; font-weight: 900; }
   
   .reveal-students-card { background: white; border-radius: 18px; padding: 16px; box-shadow: 0 4px 14px rgba(15,22,72,0.08); margin-top: 16px; }
+  /* 🆕 Variante en sidebar à droite (layout 3 colonnes) */
+  .reveal-students-card-side { background: white; border-radius: 18px; padding: 16px; box-shadow: 0 4px 14px rgba(15,22,72,0.08); max-height: 460px; display: flex; flex-direction: column; }
+  .reveal-students-card-side #reveal-students-list { overflow-y: auto; flex: 1; }
+  .reveal-students-card-side #reveal-students-list::-webkit-scrollbar { width: 6px; }
+  .reveal-students-card-side #reveal-students-list::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
   .reveal-student-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 12px; border-radius: 10px; margin-bottom: 4px; background: #fafbfc; border: 1px solid #f0f0f0; }
   .reveal-student-row.correct { background: #ecfdf5; border-color: #a7f3d0; }
   .reveal-student-row.wrong   { background: #fef2f2; border-color: #fecaca; }
@@ -191,8 +259,9 @@
   .reveal-student-row .sn-time { font-size: 11px; color: #6b7280; }
   .reveal-student-row .sn-status { font-size: 16px; flex-shrink: 0; }
   
-  @media (max-width: 900px) {
+  @media (max-width: 1100px) {
     .reveal-grid { grid-template-columns: 1fr; }
+    .reveal-students-card-side { max-height: 320px; }
   }
   
   /* 🆕 B6 : KPI Cards pro pour le rapport */
@@ -202,6 +271,188 @@
   .kpi-card-pro .kpi-content { min-width: 0; }
   .kpi-card-pro .kpi-label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; margin-bottom: 2px; }
   .kpi-card-pro .kpi-value { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 24px; color: var(--copag-navy); line-height: 1.1; }
+  
+  /* 🆕 PHASE C : Grille matricielle (Participants × Questions) style Wayground */
+  .matrix-wrap { overflow-x: auto; border: 1px solid #e5e7eb; border-radius: 12px; background: white; margin-bottom: 8px; -webkit-overflow-scrolling: touch; }
+  .matrix-table { border-collapse: collapse; font-size: 12px; min-width: 100%; }
+  .matrix-table th, .matrix-table td { padding: 8px 6px; text-align: center; border-right: 1px solid #f3f4f6; border-bottom: 1px solid #f3f4f6; }
+  .matrix-table thead th {
+    background: linear-gradient(180deg, #f9fafb, #f3f4f6);
+    font-weight: 800; color: var(--copag-navy);
+    position: sticky; top: 0; z-index: 1;
+    font-size: 11px; padding: 10px 6px;
+  }
+  .matrix-table .matrix-name-col { text-align: left; min-width: 180px; position: sticky; left: 0; z-index: 2; background: linear-gradient(180deg, #f9fafb, #f3f4f6); }
+  .matrix-table .matrix-q-col { min-width: 42px; max-width: 56px; }
+  .matrix-table .matrix-score-col { min-width: 60px; background: #eef7fc; }
+  .matrix-table tbody td.matrix-name {
+    text-align: left; min-width: 180px;
+    font-weight: 700; color: #1f2937;
+    position: sticky; left: 0; z-index: 1;
+    background: white;
+  }
+  .matrix-table tbody tr:nth-child(even) td.matrix-name { background: #fafbfc; }
+  .matrix-table .matrix-rank { display: inline-block; min-width: 24px; font-weight: 900; }
+  .matrix-table .matrix-name-text { display: inline-block; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+  .matrix-table .matrix-cell {
+    width: 42px; height: 38px; font-weight: 900; font-size: 14px;
+    transition: transform 0.15s ease;
+  }
+  .matrix-table .matrix-cell:hover { transform: scale(1.15); cursor: help; }
+  .matrix-table .matrix-cell.correct { background: #d1fae5; color: #065f46; }
+  .matrix-table .matrix-cell.wrong { background: #fee2e2; color: #991b1b; }
+  .matrix-table .matrix-cell.skip { background: #f3f4f6; color: #9ca3af; }
+  .matrix-table .matrix-score {
+    font-weight: 900; font-family: 'Outfit', sans-serif;
+    color: var(--copag-navy); background: #eef7fc;
+    font-size: 13px;
+  }
+  /* Ligne footer : taux de réussite par question */
+  .matrix-table tfoot td { font-weight: 800; font-size: 11px; }
+  .matrix-table tfoot td.matrix-name { background: linear-gradient(180deg, #f3f4f6, #e5e7eb); position: sticky; left: 0; }
+  .matrix-table .matrix-cell-pct {
+    font-weight: 900; font-family: 'Outfit', sans-serif;
+    background: white;
+  }
+  .matrix-table .matrix-cell-pct.pct-high { background: #d1fae5; color: #065f46; }
+  .matrix-table .matrix-cell-pct.pct-mid  { background: #fef3c7; color: #92400e; }
+  .matrix-table .matrix-cell-pct.pct-low  { background: #fee2e2; color: #991b1b; }
+  
+  /* 🆕 MES GROUPES — cartes de groupes */
+  .mg-card {
+    background: white;
+    border-radius: 14px;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 12px;
+    padding: 16px 18px;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    cursor: pointer;
+  }
+  .mg-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(15,22,72,0.08); border-color: var(--copag-cyan); }
+  .mg-card-header { display: flex; align-items: center; gap: 14px; }
+  .mg-card-icon {
+    width: 50px; height: 50px; border-radius: 12px;
+    background: linear-gradient(135deg, var(--copag-cyan), var(--blue-700));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(30,168,224,0.3);
+  }
+  .mg-card-info { flex: 1; min-width: 0; }
+  .mg-card-name { font-weight: 800; font-size: 16px; color: var(--copag-navy); margin-bottom: 4px; }
+  .mg-card-desc { font-size: 13px; color: #6b7280; margin-bottom: 6px; }
+  .mg-card-meta { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: #9ca3af; }
+  .mg-card-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  
+  /* Liste de sélection des apprenants (modal) */
+  .mg-emp-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 12px; border-radius: 8px; cursor: pointer;
+    transition: background 0.15s ease;
+    border: 1px solid transparent;
+  }
+  .mg-emp-row:hover { background: #f9fafb; }
+  .mg-emp-row.selected { background: #ecfdf5; border-color: #a7f3d0; }
+  .mg-emp-row input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--copag-cyan); cursor: pointer; flex-shrink: 0; }
+  .mg-emp-row .mg-emp-name { flex: 1; font-size: 13px; font-weight: 600; color: #1f2937; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mg-emp-row .mg-emp-matr { font-size: 11px; color: #6b7280; background: #f3f4f6; padding: 2px 8px; border-radius: 6px; font-family: monospace; flex-shrink: 0; }
+  .mg-emp-row.selected .mg-emp-matr { background: #d1fae5; color: #065f46; }
+  
+  /* 🆕 LIVRAISON 2/3 : Badge outsider (apprenant hors groupe) dans la sidebar */
+  .sidebar-student.is-outsider {
+    background: linear-gradient(90deg, #fef3c7, white) !important;
+    border-color: #fde68a !important;
+  }
+  .sidebar-student.is-outsider.submitted {
+    background: linear-gradient(90deg, #fef3c7, #ecfdf5) !important;
+  }
+  .outsider-badge {
+    font-size: 13px;
+    animation: outsiderPulse 1.5s ease-in-out infinite;
+    flex-shrink: 0;
+  }
+  @keyframes outsiderPulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50%      { transform: scale(1.2); opacity: 0.85; }
+  }
+  /* 🆕 Bouton "Ajouter au groupe" dans la sidebar (pour outsiders) */
+  .add-to-group-btn {
+    background: var(--copag-cyan);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
+    flex-shrink: 0;
+    box-shadow: 0 2px 6px rgba(30,168,224,0.3);
+  }
+  .add-to-group-btn:hover {
+    background: #1490c7;
+    transform: scale(1.1);
+  }
+  
+  /* 🆕 LIVRAISON 3/3 : Cartes de groupes dans Analyse */
+  .an-grp-card {
+    display: flex; align-items: center; gap: 14px;
+    background: white; border: 1px solid #e5e7eb; border-radius: 14px;
+    padding: 16px 18px; margin-bottom: 12px; cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  }
+  .an-grp-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(15,22,72,0.08); border-color: var(--copag-cyan); }
+  .an-grp-icon {
+    width: 50px; height: 50px; border-radius: 12px;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(245,158,11,0.3);
+  }
+  .an-grp-info { flex: 1; min-width: 0; }
+  .an-grp-name { font-weight: 800; font-size: 16px; color: var(--copag-navy); margin-bottom: 4px; }
+  .an-grp-desc { font-size: 13px; color: #6b7280; margin-bottom: 6px; }
+  .an-grp-meta { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: #9ca3af; }
+  .an-grp-stats { display: flex; gap: 8px; flex-shrink: 0; }
+  .an-grp-stat-pill {
+    background: #f3f4f6; padding: 8px 12px; border-radius: 10px;
+    text-align: center; min-width: 80px;
+  }
+  .an-grp-stat-pill.best { background: #ecfdf5; }
+  .an-grp-stat-pill .l { font-size: 10px; color: #6b7280; text-transform: uppercase; font-weight: 700; margin-bottom: 2px; }
+  .an-grp-stat-pill .v { font-family: 'Outfit', sans-serif; font-weight: 900; font-size: 18px; color: var(--copag-navy); }
+  .an-grp-stat-pill.best .v { color: #065f46; }
+  
+  /* Graphique de progression */
+  .grp-progress-chart {
+    background: linear-gradient(135deg, #f0f9ff, white);
+    border: 1px solid #d4ecfb;
+    border-radius: 14px; padding: 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  /* Cartes "apprenants en difficulté" */
+  .grp-warn-section { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 700px) { .grp-warn-section { grid-template-columns: 1fr; } }
+  .grp-warn-card {
+    border-radius: 12px; padding: 14px; border: 1px solid #e5e7eb;
+  }
+  .grp-warn-card.grp-warn-low { background: linear-gradient(135deg, #fef2f2, white); border-color: #fecaca; }
+  .grp-warn-card.grp-warn-absent { background: linear-gradient(135deg, #f3f4f6, white); border-color: #d1d5db; }
+  .grp-warn-title { font-weight: 800; font-size: 13px; color: var(--copag-navy); margin-bottom: 8px; }
+  .grp-warn-list { display: flex; flex-direction: column; gap: 4px; }
+  .grp-warn-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 10px; background: white; border-radius: 8px; font-size: 12px;
+  }
+  .grp-warn-pct { font-family: 'Outfit', sans-serif; font-weight: 900; color: #991b1b; }
+  
+  /* 🆕 Headers de matrice "Par groupe" : nom du quiz + thème + date */
+  .matrix-q-quiz { min-width: 110px; max-width: 140px; padding: 8px 6px !important; line-height: 1.3; }
+  .matrix-q-quiz-name { font-size: 12px; font-weight: 800; color: var(--copag-navy); white-space: normal; word-break: break-word; }
+  .matrix-q-quiz-theme { font-size: 9px; font-weight: 600; color: #9ca3af; font-style: italic; margin-top: 2px; }
+  .matrix-q-quiz-date { font-size: 10px; font-weight: 600; color: var(--copag-cyan); margin-top: 2px; }
+  
   .timer-ring { width: 100px; height: 100px; position: relative; display: flex; align-items: center; justify-content: center; }
   .timer-ring svg { position: absolute; inset: 0; transform: rotate(-90deg); }
   .timer-ring circle { fill: none; stroke-width: 8; }
@@ -1151,6 +1402,83 @@
 
 
 <!-- GROUPES (formateur) -->
+<!-- 🆕 MES GROUPES (nouveaux groupes gérés manuellement) -->
+<section id="screen-my-groups" class="screen">
+  <div class="topbar">
+    <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
+      <div class="logo">
+        <div class="logo-mark"><div class="logo-img" role="img" aria-label="COPAG Academy"></div></div>
+        <div class="logo-stack"><span class="logo-name">COPAG</span><span class="logo-sub">ACADEMY</span><span class="logo-tagline">Compétences d'aujourd'hui, Avenir assuré</span></div>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="badge">🎓 <span data-i18n="mg_badge">Mes groupes</span></span>
+        <button class="btn btn-ghost py-2 px-4 text-sm" onclick="goTo('screen-teacher-dashboard')" data-i18n="back">← Retour</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="max-w-5xl mx-auto px-6 py-10">
+    <div class="flex items-start justify-between flex-wrap gap-4 mb-6">
+      <div>
+        <h2 class="display-fr text-4xl mb-1" data-i18n="mg_title">🎓 Mes groupes</h2>
+        <p class="text-gray-500" data-i18n="mg_sub">Suivez la progression d'un ensemble d'apprenants sur plusieurs sessions</p>
+      </div>
+      <div class="flex gap-2 flex-wrap">
+        <button class="btn btn-ghost" onclick="linkOldSessionsToGroups()" data-i18n="mg_link_old" title="Associer les anciennes sessions aux groupes existants">🔗 Lier les anciennes sessions</button>
+        <button class="btn btn-primary" onclick="openCreateGroupModal()" data-i18n="mg_create_btn">➕ Créer un groupe</button>
+      </div>
+    </div>
+
+    <div id="my-groups-list">
+      <div class="history-empty">
+        <div class="icon">⏳</div>
+        <p data-i18n="hist_loading">Chargement...</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 🆕 Modal création / édition de groupe -->
+<div id="mg-create-modal" class="modal-overlay hidden" onclick="if(event.target===this)closeCreateGroupModal()">
+  <div class="modal-content" style="max-width: 720px;">
+    <div class="modal-header">
+      <h3 id="mg-modal-title" data-i18n="mg_create_title">🎓 Créer un groupe</h3>
+      <button class="modal-close" onclick="closeCreateGroupModal()">✕</button>
+    </div>
+    <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+      <input type="hidden" id="mg-edit-id" value="">
+      
+      <div class="mb-4">
+        <label class="block text-sm font-bold mb-2" data-i18n="mg_form_name">Nom du groupe *</label>
+        <input id="mg-form-name" type="text" placeholder="Ex: Promo Maroc Été 2026" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-family:inherit; font-size:14px;">
+      </div>
+      
+      <div class="mb-4">
+        <label class="block text-sm font-bold mb-2" data-i18n="mg_form_desc">Description (optionnel)</label>
+        <textarea id="mg-form-desc" placeholder="Ex: Formation pasteurisation niveau 1, sur 3 jours" rows="2" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-family:inherit; font-size:14px; resize:vertical;"></textarea>
+      </div>
+      
+      <div class="mb-4">
+        <label class="block text-sm font-bold mb-2" data-i18n="mg_form_members">👥 Membres du groupe</label>
+        <p class="text-xs text-gray-500 mb-2" data-i18n="mg_form_members_hint">Cochez les apprenants à ajouter (recherche par nom ou matricule)</p>
+        <input id="mg-search-input" type="text" placeholder="🔍 Rechercher par nom ou matricule..." oninput="filterMgEmployees()" style="width:100%; padding:8px 12px; border-radius:8px; border:2px solid #e5e7eb; font-size:13px; margin-bottom:10px;">
+        <div class="flex items-center justify-between mb-2 text-xs">
+          <span><strong id="mg-selected-count">0</strong> <span data-i18n="mg_form_selected">sélectionné(s)</span></span>
+          <button class="btn btn-ghost py-1 px-2 text-xs" onclick="clearMgSelection()" data-i18n="mg_clear_sel">Tout décocher</button>
+        </div>
+        <div id="mg-employees-list" style="max-height: 280px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 10px; padding: 4px;">
+          <div class="text-center text-gray-400 text-xs p-4">⏳ Chargement...</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost flex-1" onclick="closeCreateGroupModal()" data-i18n="cancel">Annuler</button>
+      <button class="btn btn-primary flex-1" onclick="saveGroup()" id="mg-save-btn" data-i18n="mg_save_btn">✅ Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- GROUPES (existant - inchangé) -->
 <section id="screen-groups" class="screen">
   <div class="topbar">
     <div class="max-w-6xl mx-auto px-6 py-3 flex items-center justify-between">
@@ -1281,6 +1609,7 @@
       <button class="filter-tab" data-antab="questions" onclick="setAnalysisTab('questions')" data-i18n="an_tab_questions">❓ Par question</button>
       <button class="filter-tab" data-antab="sessions" onclick="setAnalysisTab('sessions')" data-i18n="an_tab_sessions">👥 Par session</button>
       <button class="filter-tab" data-antab="quizzes" onclick="setAnalysisTab('quizzes')" data-i18n="an_tab_quizzes">📌 Par quiz</button>
+      <button class="filter-tab" data-antab="groups" onclick="setAnalysisTab('groups')" data-i18n="an_tab_groups">🎓 Par groupe</button>
     </div>
 
     <!-- CONTENU -->
@@ -1320,6 +1649,17 @@
       <button class="detail-close" onclick="closeAnSessionModal()">✕</button>
     </div>
     <div id="an-sess-modal-body" style="padding: 0 4px;"></div>
+  </div>
+</div>
+
+<!-- 🆕 LIVRAISON 3/3 : Group analysis detail modal -->
+<div id="an-group-modal" class="session-detail-modal hidden" onclick="if(event.target===this)closeAnGroupModal()">
+  <div class="session-detail-content" style="max-width: 960px;">
+    <div class="detail-header">
+      <h3 class="display-fr text-2xl" id="an-grp-modal-title">🎓 Groupe</h3>
+      <button class="detail-close" onclick="closeAnGroupModal()">✕</button>
+    </div>
+    <div id="an-grp-modal-body" style="padding: 0 4px;"></div>
   </div>
 </div>
 
@@ -1705,6 +2045,7 @@
     <div class="flex justify-end mb-4 gap-2 flex-wrap">
       <button class="btn btn-ghost py-2 px-4 text-sm" onclick="goToQuestionEditor()" data-i18n="td_edit_questions">📝 Gérer les questions</button>
       <button class="btn btn-ghost py-2 px-4 text-sm" onclick="goToStudentsDashboard()" data-i18n="td_view_students">👥 Apprenants</button>
+      <button class="btn btn-ghost py-2 px-4 text-sm" onclick="goToMyGroups()" data-i18n="td_view_my_groups">🎓 Groupes</button>
       <button class="btn btn-ghost py-2 px-4 text-sm" onclick="goToAnalysis()" data-i18n="td_view_analysis">📊 Analyse</button>
       <button class="btn btn-ghost py-2 px-4 text-sm" onclick="goToHistory()" data-i18n="td_view_history">📋 Historique</button>
       <button class="btn btn-ghost py-2 px-4 text-sm" onclick="openSettingsModal()" data-i18n="td_settings">🔧 Paramètres</button>
@@ -1724,6 +2065,16 @@
         <select id="td-quiz-select" onchange="onQuizSelectChange()" style="width:100%; padding: 10px 14px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; font-size: 14px; font-family: inherit;">
           <option value="">—</option>
         </select>
+      </div>
+      <!-- 🆕 LIVRAISON 2/3 : Sélecteur de groupe -->
+      <div class="mb-4">
+        <label class="text-sm opacity-80 mb-1 block" data-i18n="td_group_select">🎓 Pour quel groupe ? <span style="opacity:0.6;font-weight:normal;">(optionnel)</span></label>
+        <select id="td-group-select" onchange="onGroupSelectChange()" style="width:100%; padding: 10px 14px; border-radius: 10px; border: 2px solid rgba(255,255,255,0.3); background: rgba(255,255,255,0.1); color: white; font-size: 14px; font-family: inherit;">
+          <option value="" data-i18n="td_group_none">— Aucun groupe (ouvert à tous)</option>
+        </select>
+        <div id="td-group-info" class="text-xs mt-2" style="opacity:0.8; display:none;">
+          <span id="td-group-count">0</span> <span data-i18n="td_group_count">apprenants dans ce groupe</span>
+        </div>
       </div>
       <div class="flex items-center justify-between flex-wrap gap-4">
         <label style="display:inline-flex; align-items:center; gap:8px; cursor:pointer; font-size:13px; opacity:0.9;">
@@ -1766,6 +2117,15 @@
         <div class="mb-4 flex items-center justify-center gap-2 px-4 py-2 rounded-full" style="background:#eef7fc;border:1px solid #d4ecfb;">
           <span style="color:#1e2a78;font-weight:700;font-size:13px;" data-i18n="lobby_group_name">👥 Groupe</span>
           <span id="lobby-group-name" style="color:#1ea8e0;font-weight:800;font-size:14px;font-family:'Outfit',monospace;">—</span>
+        </div>
+        
+        <!-- 🆕 LIVRAISON 2/3 : Badge "Mon groupe sélectionné" -->
+        <div id="lobby-my-group-badge" class="mb-4 inline-flex items-center gap-2 px-4 py-2 rounded-full" style="background:linear-gradient(135deg, #ecfdf5, #d1fae5); border:1px solid #a7f3d0; display:none;">
+          <span style="font-size:18px;">🎓</span>
+          <div style="text-align:left;">
+            <div style="color:#065f46;font-weight:800;font-size:13px;" id="lobby-my-group-name">—</div>
+            <div style="color:#047857;font-size:11px;"><span id="lobby-my-group-count">0</span> <span data-i18n="td_group_count">apprenants dans ce groupe</span></div>
+          </div>
         </div>
         
         <!-- Compteur + bouton démarrer -->
@@ -1931,7 +2291,7 @@
         <div class="sidebar-header">
           <span class="font-bold text-sm" data-i18n="live_students">👥 Apprenants</span>
           <div class="flex items-center gap-2">
-            <button id="toggle-names-btn" onclick="toggleNamesVisibility()" title="Afficher/cacher les noms" style="background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:13px;line-height:1;">👁️‍🗨️</button>
+            <button id="toggle-names-btn" onclick="toggleNamesVisibility()" title="Afficher les noms" style="background:#f3f4f6;border:1px solid #e5e7eb;border-radius:8px;padding:4px 8px;cursor:pointer;font-size:13px;line-height:1;">🙈</button>
             <span class="badge" style="font-size:11px;padding:3px 8px;"><span id="sidebar-submitted-count">0</span>/<span id="sidebar-total-count">0</span></span>
           </div>
         </div>
@@ -1958,8 +2318,25 @@
       </div>
     </div>
     
-    <!-- 🆕 Grille 2 colonnes : stats à gauche, options + apprenants à droite -->
-    <div class="reveal-grid">
+    <!-- 🆕 Compteur de suspense : juste le ratio correct/total apprenants (anti-spoil) -->
+    <div class="reveal-suspense-card text-center mb-4">
+      <div class="suspense-label" data-i18n="ar_suspense_label">🎯 Réponses correctes</div>
+      <div class="suspense-value">
+        <span id="reveal-suspense-correct">0</span>
+        <span class="suspense-sep">/</span>
+        <span id="reveal-suspense-total">0</span>
+        <span class="suspense-emoji">🔥</span>
+      </div>
+    </div>
+    
+    <!-- 🆕 Bouton principal pour DÉVOILER les statistiques (caché par défaut) -->
+    <div class="text-center mb-5" id="reveal-stats-toggle-wrap">
+      <button class="btn btn-primary" id="reveal-stats-toggle-btn" onclick="toggleRevealStatsVisibility()" style="padding: 14px 28px; font-size: 16px;" data-i18n="ar_show_stats">📊 Afficher les statistiques détaillées</button>
+      <p class="text-xs text-gray-500 mt-2" data-i18n="ar_show_stats_hint">Les statistiques restent cachées par défaut pour ne pas révéler les performances individuelles.</p>
+    </div>
+    
+    <!-- 🆕 Grille 3 colonnes : stats à gauche, options au milieu, apprenants à droite -->
+    <div class="reveal-grid" id="reveal-stats-section" style="display:none;">
       <!-- COLONNE GAUCHE : donut + stats -->
       <div>
         <div class="reveal-donut-card">
@@ -1991,21 +2368,24 @@
         </div>
       </div>
       
-      <!-- COLONNE DROITE : options avec distribution + liste apprenants -->
+      <!-- COLONNE MILIEU : distribution des options -->
       <div>
         <div class="reveal-options-card">
           <div class="font-bold mb-3 text-sm text-gray-700" data-i18n="ar_options_dist">📊 Distribution des réponses</div>
           <div id="reveal-options-list"></div>
         </div>
-        
-        <div class="reveal-students-card">
+      </div>
+      
+      <!-- COLONNE DROITE : résultats par apprenant -->
+      <div id="reveal-students-column">
+        <div class="reveal-students-card-side">
           <div class="font-bold mb-3 text-sm text-gray-700" data-i18n="ar_students_results">👥 Résultats par apprenant</div>
           <div id="reveal-students-list"></div>
         </div>
       </div>
     </div>
     
-    <!-- Boutons d'action -->
+    <!-- Boutons d'action (2 boutons en ligne) -->
     <div class="grid md:grid-cols-2 gap-3 mt-5">
       <button class="btn btn-ghost" onclick="showLeaderboard()" data-i18n="ar_show_lb">📊 Voir le classement</button>
       <button class="btn btn-primary" onclick="skipToNextQuestion()" data-i18n="ar_skip_next">→ Question suivante</button>
@@ -2058,9 +2438,21 @@
     </div>
     <h3 class="font-bold text-2xl mb-4" data-i18n="fin_all">📋 Classement complet</h3>
     <div id="final-list" class="mb-8 max-w-xl mx-auto"></div>
+    
+    <!-- 🆕 Bandeau "Outsiders détectés" (apprenants hors groupe) -->
+    <div id="final-outsiders-card" class="teacher-only mb-6 max-w-2xl mx-auto" style="display:none; background:linear-gradient(135deg, #fef3c7, #fde68a); border:2px solid #fbbf24; border-radius:14px; padding:16px;">
+      <div class="flex items-center gap-2 mb-2">
+        <span style="font-size:20px;">⚠️</span>
+        <h4 class="font-bold text-base" style="color:#92400e;" data-i18n="final_outsiders_title">Apprenants hors groupe détectés</h4>
+      </div>
+      <p class="text-xs mb-3" style="color:#78350f;" data-i18n="final_outsiders_hint">Ces apprenants ont joué mais ne font pas partie du groupe "<span id="final-outsiders-group-name">—</span>". Voulez-vous les ajouter au groupe (permanent) ?</p>
+      <div id="final-outsiders-list"></div>
+    </div>
+    
     <!-- 🆕 Phase 2A : Boutons d'action de fin de quiz -->
     <div class="flex flex-col sm:flex-row items-center justify-center gap-3 flex-wrap">
-      <button class="btn btn-primary text-lg" id="btn-next-quiz" onclick="openNextQuizModal()" data-i18n="fin_next_quiz">▶ Nouveau quiz (même thème)</button>
+      <button class="btn btn-primary text-lg teacher-only" id="btn-next-quiz" onclick="openNextQuizModal()" data-i18n="fin_next_quiz">▶ Nouveau quiz (même thème)</button>
+      <button class="btn btn-ghost text-lg teacher-only" onclick="restartFromHome()" data-i18n="fin_close_session">🏁 Clôturer la session</button>
     </div>
     <!-- Compteur de quiz joués dans la session -->
     <p class="text-sm text-gray-400 mt-6" id="session-quiz-count" style="display:none;">
@@ -2251,6 +2643,87 @@ const I18N = {
     ar_s_skip: "Non essayé",
     ar_options_dist: "📊 Distribution des réponses",
     ar_students_results: "👥 Résultats par apprenant",
+    ar_show_stats: "📊 Afficher les statistiques détaillées",
+    ar_show_stats_hint: "Les statistiques restent cachées par défaut pour ne pas révéler les performances individuelles.",
+    ar_suspense_label: "🎯 Réponses correctes",
+    // 🆕 Phase C : Grille matricielle
+    an_matrix_title: "Vue d'ensemble — Participants × Questions",
+    an_matrix_hint: "🟢 Correct · 🔴 Incorrect · ⚪ Non répondu",
+    an_matrix_apprenant: "Apprenant",
+    an_matrix_score: "Score",
+    an_matrix_correct: "corrects",
+    // 🆕 MES GROUPES
+    td_view_my_groups: "🎓 Groupes",
+    mg_badge: "Mes groupes",
+    mg_title: "🎓 Mes groupes",
+    mg_sub: "Suivez la progression d'un ensemble d'apprenants sur plusieurs sessions",
+    mg_create_btn: "➕ Créer un groupe",
+    mg_create_title: "Créer un groupe",
+    mg_edit_title: "Modifier le groupe",
+    mg_form_name: "Nom du groupe *",
+    mg_form_desc: "Description (optionnel)",
+    mg_form_members: "👥 Membres du groupe",
+    mg_form_members_hint: "Cochez les apprenants à ajouter (recherche par nom ou matricule)",
+    mg_form_selected: "sélectionné(s)",
+    mg_clear_sel: "Tout décocher",
+    mg_save_btn: "✅ Enregistrer",
+    mg_saving: "Enregistrement...",
+    mg_card_members: "membres",
+    mg_edit: "Modifier",
+    mg_delete: "Supprimer",
+    mg_empty: "Aucun groupe créé pour l'instant",
+    mg_empty_hint: "Crée ton premier groupe pour suivre la progression de tes apprenants",
+    mg_err_name: "⚠️ Le nom du groupe est obligatoire",
+    mg_warn_no_members: "Aucun membre sélectionné. Créer le groupe quand même ?",
+    mg_no_match: "Aucun apprenant ne correspond à la recherche",
+    mg_no_employees: "Aucun apprenant enregistré. Ajoute des apprenants depuis l'onglet \"👥 Apprenants\".",
+    mg_created: "✅ Groupe créé",
+    mg_updated: "✅ Groupe modifié",
+    mg_deleted: "🗑️ Groupe supprimé",
+    mg_delete_confirm: "Supprimer le groupe",
+    mg_load_error: "Erreur lors du chargement des groupes",
+    // 🆕 Lier anciennes sessions
+    mg_link_old: "🔗 Lier les anciennes sessions",
+    mg_link_old_confirm: "Lier automatiquement les anciennes sessions à leurs groupes ? (basé sur les apprenants ayant participé : si ≥50% des apprenants sont membres d'un groupe, la session sera liée à ce groupe)",
+    mg_link_processing: "Analyse des sessions...",
+    mg_link_no_groups: "Aucun groupe créé",
+    mg_link_no_match: "Aucune session à lier (pas de correspondance trouvée)",
+    mg_link_done: "sessions liées",
+    // 🆕 LIVRAISON 2/3 : sélecteur de groupe + alerte outsiders
+    td_group_select: "🎓 Pour quel groupe ?",
+    td_group_none: "— Aucun groupe (ouvert à tous)",
+    td_group_count: "apprenants dans ce groupe",
+    outsider_alert: "a rejoint la session mais ne fait pas partie du groupe sélectionné !",
+    outsider_tooltip: "Apprenant hors groupe",
+    // 🆕 Bouton "Ajouter au groupe"
+    outsider_add_btn: "Ajouter au groupe",
+    outsider_add_btn_title: "Ajouter cet apprenant au groupe (permanent)",
+    outsider_add_confirm: "Ajouter",
+    outsider_add_confirm2: "au groupe (permanent) ?",
+    outsider_added: "ajouté au groupe (permanent)",
+    outsider_no_matricule: "Pas de matricule, ajout impossible",
+    outsider_no_group: "Aucun groupe actif pour cette session",
+    outsider_grp_missing: "Groupe introuvable",
+    outsider_already_in: "Déjà membre du groupe",
+    final_outsiders_title: "Apprenants hors groupe détectés",
+    final_outsiders_hint: 'Ces apprenants ont joué mais ne font pas partie du groupe. Voulez-vous les ajouter au groupe (permanent) ?',
+    // 🆕 LIVRAISON 3/3 : onglet Par groupe
+    an_tab_groups: "🎓 Par groupe",
+    an_grp_empty: "Aucun groupe créé pour l'instant",
+    an_grp_empty_hint: "Crée d'abord un groupe pour voir ici la progression de tes apprenants",
+    an_grp_intro: "Cliquez sur un groupe pour voir sa progression détaillée",
+    an_grp_days: "jours",
+    an_grp_sessions: "sessions",
+    an_grp_avg_score: "Score moyen",
+    an_grp_participation: "Participation",
+    an_grp_progression: "Progression dans le temps",
+    an_grp_matrix_title: "Matrice — Membres × Sessions",
+    an_grp_matrix_hint: "🟢 ≥ 80% · 🟠 50-79% · 🔴 < 50% · — Absent",
+    an_grp_attention: "Apprenants nécessitant de l'attention",
+    an_grp_low_perf: "Performance faible",
+    an_grp_absent: "N'ont jamais participé",
+    an_grp_no_sessions: "Aucune session n'a été lancée pour ce groupe",
+    an_grp_no_sessions_hint: "Lance une session en sélectionnant ce groupe pour commencer le suivi",
     // 🆕 B6 KPI Cards
     kpi_precision: "Précision globale",
     kpi_completion: "Taux d'achèvement",
@@ -2671,6 +3144,87 @@ const I18N = {
     ar_s_skip: "لم يحاول",
     ar_options_dist: "📊 توزيع الأجوبة",
     ar_students_results: "👥 نتائج المتدربين",
+    ar_show_stats: "📊 إظهار الإحصائيات التفصيلية",
+    ar_show_stats_hint: "تبقى الإحصائيات مخفية افتراضياً لعدم الكشف عن الأداء الفردي.",
+    ar_suspense_label: "🎯 الأجوبة الصحيحة",
+    // 🆕 Phase C : الشبكة المصفوفية (AR)
+    an_matrix_title: "نظرة عامة — المتدربون × الأسئلة",
+    an_matrix_hint: "🟢 صحيح · 🔴 خاطئ · ⚪ لم يجب",
+    an_matrix_apprenant: "المتدرب",
+    an_matrix_score: "النتيجة",
+    an_matrix_correct: "الصحيحة",
+    // 🆕 MES GROUPES (AR)
+    td_view_my_groups: "🎓 المجموعات",
+    mg_badge: "مجموعاتي",
+    mg_title: "🎓 مجموعاتي",
+    mg_sub: "تتبع تقدم مجموعة من المتدربين عبر عدة جلسات",
+    mg_create_btn: "➕ إنشاء مجموعة",
+    mg_create_title: "إنشاء مجموعة",
+    mg_edit_title: "تعديل المجموعة",
+    mg_form_name: "اسم المجموعة *",
+    mg_form_desc: "الوصف (اختياري)",
+    mg_form_members: "👥 أعضاء المجموعة",
+    mg_form_members_hint: "حدد المتدربين للإضافة (بحث بالاسم أو الرقم)",
+    mg_form_selected: "محدد",
+    mg_clear_sel: "إلغاء التحديد",
+    mg_save_btn: "✅ حفظ",
+    mg_saving: "جار الحفظ...",
+    mg_card_members: "أعضاء",
+    mg_edit: "تعديل",
+    mg_delete: "حذف",
+    mg_empty: "لا توجد مجموعات حالياً",
+    mg_empty_hint: "أنشئ مجموعتك الأولى لتتبع تقدم المتدربين",
+    mg_err_name: "⚠️ اسم المجموعة إجباري",
+    mg_warn_no_members: "لم يتم تحديد أي عضو. إنشاء المجموعة على أي حال؟",
+    mg_no_match: "لا يوجد متدرب يطابق البحث",
+    mg_no_employees: "لا يوجد متدربون مسجلون. أضف متدربين من علامة \"👥 المتدربون\".",
+    mg_created: "✅ تم إنشاء المجموعة",
+    mg_updated: "✅ تم تعديل المجموعة",
+    mg_deleted: "🗑️ تم حذف المجموعة",
+    mg_delete_confirm: "حذف المجموعة",
+    mg_load_error: "خطأ أثناء تحميل المجموعات",
+    // 🆕 ربط الجلسات القديمة (AR)
+    mg_link_old: "🔗 ربط الجلسات القديمة",
+    mg_link_old_confirm: "هل تريد ربط الجلسات القديمة تلقائياً بمجموعاتها ؟ (سيتم ربط الجلسة بمجموعة إذا كان ≥50% من المتدربين أعضاء فيها)",
+    mg_link_processing: "تحليل الجلسات...",
+    mg_link_no_groups: "لم يتم إنشاء أي مجموعة",
+    mg_link_no_match: "لا توجد جلسات للربط (لم يُعثر على تطابق)",
+    mg_link_done: "جلسات تم ربطها",
+    // 🆕 LIVRAISON 2/3 (AR)
+    td_group_select: "🎓 لأي مجموعة ؟",
+    td_group_none: "— لا توجد مجموعة (مفتوح للجميع)",
+    td_group_count: "متدرب في هذه المجموعة",
+    outsider_alert: "انضم للجلسة لكنه ليس من المجموعة المختارة !",
+    outsider_tooltip: "متدرب خارج المجموعة",
+    // 🆕 زر "إضافة للمجموعة" (AR)
+    outsider_add_btn: "إضافة للمجموعة",
+    outsider_add_btn_title: "إضافة هذا المتدرب للمجموعة (دائم)",
+    outsider_add_confirm: "إضافة",
+    outsider_add_confirm2: "للمجموعة (دائم) ؟",
+    outsider_added: "تمت إضافته للمجموعة (دائم)",
+    outsider_no_matricule: "لا يوجد رقم تعريف، الإضافة غير ممكنة",
+    outsider_no_group: "لا توجد مجموعة نشطة لهذه الجلسة",
+    outsider_grp_missing: "المجموعة غير موجودة",
+    outsider_already_in: "عضو في المجموعة بالفعل",
+    final_outsiders_title: "متدربون خارج المجموعة",
+    final_outsiders_hint: 'لعب هؤلاء المتدربون لكنهم ليسوا من المجموعة. هل تريد إضافتهم للمجموعة (دائم) ؟',
+    // 🆕 LIVRAISON 3/3 (AR)
+    an_tab_groups: "🎓 حسب المجموعة",
+    an_grp_empty: "لا توجد مجموعات حالياً",
+    an_grp_empty_hint: "أنشئ أولاً مجموعة لمتابعة تقدم متدربيك",
+    an_grp_intro: "انقر على مجموعة لرؤية تقدمها بالتفصيل",
+    an_grp_days: "أيام",
+    an_grp_sessions: "جلسات",
+    an_grp_avg_score: "النتيجة المتوسطة",
+    an_grp_participation: "المشاركة",
+    an_grp_progression: "التقدم عبر الزمن",
+    an_grp_matrix_title: "المصفوفة — الأعضاء × الجلسات",
+    an_grp_matrix_hint: "🟢 ≥ 80% · 🟠 50-79% · 🔴 < 50% · — غائب",
+    an_grp_attention: "متدربون يحتاجون للاهتمام",
+    an_grp_low_perf: "أداء ضعيف",
+    an_grp_absent: "لم يشاركوا أبداً",
+    an_grp_no_sessions: "لم تُطلق أي جلسة لهذه المجموعة بعد",
+    an_grp_no_sessions_hint: "أطلق جلسة باختيار هذه المجموعة لبدء المتابعة",
     // 🆕 B6 KPI Cards (AR)
     kpi_precision: "الدقة العامة",
     kpi_completion: "معدل الإكمال",
@@ -3776,6 +4330,84 @@ function onQuizSelectChange() {
   _selectedQuizId = $('td-quiz-select').value;
 }
 
+// 🆕 LIVRAISON 2/3 : variables pour le groupe sélectionné au lancement
+let _selectedMyGroupId = null;
+let _selectedMyGroupName = null;
+let _selectedMyGroupMembers = null; // tableau de matricules
+
+// Charge les groupes depuis Firebase et peuple le select
+async function loadGroupsForLaunchSelect() {
+  const select = document.getElementById('td-group-select');
+  if (!select) return;
+  try {
+    const fb = window.fb;
+    if (!fb) return;
+    const snap = await fb.get(fb.ref(fb.db, 'myGroups'));
+    const groups = snap.exists() ? snap.val() : {};
+    
+    // Garder la première option "Aucun groupe"
+    select.innerHTML = '<option value="">' + (t('td_group_none') || '— Aucun groupe (ouvert à tous)') + '</option>';
+    
+    const entries = Object.entries(groups)
+      .sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+    
+    entries.forEach(([gid, g]) => {
+      const memCount = (g.memberMatricules || []).length;
+      const opt = document.createElement('option');
+      opt.value = gid;
+      opt.textContent = '🎓 ' + (g.name || '—') + ' (' + memCount + ')';
+      opt.dataset.name = g.name || '';
+      opt.dataset.members = JSON.stringify(g.memberMatricules || []);
+      select.appendChild(opt);
+    });
+    
+    // Restaurer la sélection si elle existe encore
+    if (_selectedMyGroupId && groups[_selectedMyGroupId]) {
+      select.value = _selectedMyGroupId;
+    } else {
+      _selectedMyGroupId = null;
+      _selectedMyGroupName = null;
+      _selectedMyGroupMembers = null;
+    }
+    updateGroupInfoBadge();
+  } catch(e) {
+    console.warn('loadGroupsForLaunchSelect failed:', e);
+    // Si erreur de permissions, on laisse le select vide (rétrocompatibilité)
+  }
+}
+
+function onGroupSelectChange() {
+  const select = document.getElementById('td-group-select');
+  if (!select) return;
+  const opt = select.options[select.selectedIndex];
+  if (!opt || !opt.value) {
+    _selectedMyGroupId = null;
+    _selectedMyGroupName = null;
+    _selectedMyGroupMembers = null;
+  } else {
+    _selectedMyGroupId = opt.value;
+    _selectedMyGroupName = opt.dataset.name || '';
+    try {
+      _selectedMyGroupMembers = JSON.parse(opt.dataset.members || '[]');
+    } catch(e) {
+      _selectedMyGroupMembers = [];
+    }
+  }
+  updateGroupInfoBadge();
+}
+
+function updateGroupInfoBadge() {
+  const info = document.getElementById('td-group-info');
+  const count = document.getElementById('td-group-count');
+  if (!info || !count) return;
+  if (_selectedMyGroupId && _selectedMyGroupMembers) {
+    count.textContent = _selectedMyGroupMembers.length;
+    info.style.display = '';
+  } else {
+    info.style.display = 'none';
+  }
+}
+
 function whenFbReady(cb) {
   if (window.fb) cb();
   else window.addEventListener('firebase-ready', cb, { once: true });
@@ -3805,6 +4437,8 @@ async function createGame() {
     attempts++;
   }
   currentPin = pin;
+  // 🆕 LIVRAISON 2/3 : reset des alertes outsiders pour la nouvelle session
+  _alertedOutsiderIds = new Set();
   // 🆕 Charger les questions du QUIZ sélectionné (et non plus juste la leçon)
   const quizId = _selectedQuizId || 'default';
   await setQuestionsForQuiz(selectedLessonId, quizId);
@@ -3858,6 +4492,10 @@ async function createGame() {
       pin, lesson: selectedLessonId, quizId: quizId, quizName: quizMeta.name || '',
       groupName: groupName,                // 🆕 Nom de groupe auto-généré (Thème_Quiz_Date_Heure)
       themeName: themeMeta.name || '',     // 🆕 Nom lisible du thème
+      // 🆕 LIVRAISON 2/3 : groupe d'apprenants associé (optionnel)
+      myGroupId: _selectedMyGroupId || null,
+      myGroupName: _selectedMyGroupName || null,
+      myGroupMembers: _selectedMyGroupMembers || null,
       state: 'lobby',
       currentQuestion: 0, totalQuestions: QUESTIONS.length,
       timePerQuestion: timePerQ,
@@ -3871,6 +4509,18 @@ async function createGame() {
   // 🆕 Afficher le nom de groupe auto-généré dans le lobby
   const lobbyGroupEl = $('lobby-group-name');
   if (lobbyGroupEl) lobbyGroupEl.textContent = groupName;
+  
+  // 🆕 LIVRAISON 2/3 : afficher le badge du groupe sélectionné si applicable
+  const myGroupBadge = $('lobby-my-group-badge');
+  if (myGroupBadge) {
+    if (_selectedMyGroupId && _selectedMyGroupName) {
+      $('lobby-my-group-name').textContent = _selectedMyGroupName;
+      $('lobby-my-group-count').textContent = (_selectedMyGroupMembers || []).length;
+      myGroupBadge.style.display = 'inline-flex';
+    } else {
+      myGroupBadge.style.display = 'none';
+    }
+  }
   // 🔄 Construire l'URL dynamique de l'app (host + path, sans index.html)
   // Exemple : "stockdocumentunique-cyber.github.io/Quiz" ou "milk-learn.netlify.app"
   let joinUrl = window.location.host || '';
@@ -4078,6 +4728,9 @@ function updateSidebarStudents(players, qAns) {
     return;
   }
   
+  // 🆕 LIVRAISON 2/3 : détecter les nouveaux apprenants outsiders et alerter
+  detectOutsidersAndAlert(players);
+  
   // Tri ordre stable : par nom (PAS par soumission ni temps, sinon ça révèle qui a répondu en premier !)
   const arr = pids.map(pid => {
     const p = players[pid];
@@ -4085,8 +4738,10 @@ function updateSidebarStudents(players, qAns) {
     return {
       pid,
       name: p.name || '—',
+      matricule: p.matricule || '',  // 🆕 pour le bouton "Ajouter au groupe"
       submitted: !!ans,
-      time: ans ? (ans.time || 0) : null
+      time: ans ? (ans.time || 0) : null,
+      isOutsider: !!p.isOutsider  // 🆕
     };
   }).sort((a, b) => a.name.localeCompare(b.name));
   
@@ -4096,12 +4751,119 @@ function updateSidebarStudents(players, qAns) {
   list.innerHTML = arr.map(s => {
     const status = s.submitted ? '✓' : '⏳';
     const timeStr = s.submitted && s.time != null ? s.time.toFixed(1) + 's' : '';
-    return `<div class="sidebar-student ${s.submitted ? 'submitted' : ''}">
+    const outsiderBadge = s.isOutsider ? '<span class="outsider-badge" title="' + (t('outsider_tooltip') || 'Apprenant hors groupe') + '">⚠️</span>' : '';
+    // 🆕 Bouton "Ajouter au groupe" pour les outsiders (seulement si matricule + groupe actif)
+    const addBtn = (s.isOutsider && s.matricule) ?
+      `<button class="add-to-group-btn" onclick="event.stopPropagation();addOutsiderToGroup('${escapeAttr(s.pid)}','${escapeAttr(s.matricule)}','${escapeAttr(s.name)}')" title="${t('outsider_add_btn_title') || 'Ajouter cet apprenant au groupe'}">➕</button>` : '';
+    return `<div class="sidebar-student ${s.submitted ? 'submitted' : ''}${s.isOutsider ? ' is-outsider' : ''}" data-pid="${escapeAttr(s.pid)}">
+      ${outsiderBadge}
       <span class="student-name" title="${escapeAttr(s.name)}">${escapeHtml(s.name)}</span>
+      ${addBtn}
       ${timeStr ? '<span class="student-time">' + timeStr + '</span>' : ''}
       <span class="student-status">${status}</span>
     </div>`;
   }).join('');
+}
+
+// 🆕 LIVRAISON 2/3 : détecte les nouveaux apprenants outsiders et alerte le formateur (toast)
+let _alertedOutsiderIds = new Set();
+function detectOutsidersAndAlert(players) {
+  Object.entries(players).forEach(([pid, p]) => {
+    if (p.isOutsider && !_alertedOutsiderIds.has(pid)) {
+      _alertedOutsiderIds.add(pid);
+      // Toast d'alerte non bloquant
+      const msg = '⚠️ ' + (p.name || '—') + ' ' + (t('outsider_alert') || 'a rejoint la session mais ne fait pas partie du groupe sélectionné !');
+      toast(msg);
+    }
+  });
+}
+
+// 🆕 Ajouter un apprenant outsider au groupe (PERMANENT) — depuis sidebar pendant le quiz
+async function addOutsiderToGroup(pid, matricule, name) {
+  if (!currentPin || role !== 'teacher') return;
+  if (!matricule) {
+    toast('⚠️ ' + (t('outsider_no_matricule') || 'Pas de matricule, ajout impossible'));
+    return;
+  }
+  const fb = window.fb;
+  try {
+    const infoSnap = await fb.get(fb.ref(fb.db, 'games/' + currentPin + '/info'));
+    const info = infoSnap.val() || {};
+    const gid = info.myGroupId;
+    if (!gid) { toast('⚠️ ' + (t('outsider_no_group') || 'Aucun groupe actif')); return; }
+    if (!confirm((t('outsider_add_confirm') || 'Ajouter') + ' "' + name + '" ' + (t('outsider_add_confirm2') || 'au groupe (permanent) ?'))) return;
+    
+    const grpSnap = await fb.get(fb.ref(fb.db, 'myGroups/' + gid));
+    if (!grpSnap.exists()) { toast('⚠️ Groupe introuvable'); return; }
+    const grp = grpSnap.val();
+    const members = new Set((grp.memberMatricules || []).map(String));
+    if (members.has(String(matricule))) { toast('ℹ️ Déjà membre'); return; }
+    members.add(String(matricule));
+    
+    // 1) Maj du groupe (permanent)
+    await fb.update(fb.ref(fb.db, 'myGroups/' + gid), {
+      memberMatricules: Array.from(members),
+      updatedAt: Date.now()
+    });
+    
+    // 2) Maj de la session courante : retirer le marqueur outsider
+    const updates = {};
+    updates['players/' + pid + '/isOutsider'] = null;
+    updates['players/' + pid + '/outsiderReason'] = null;
+    updates['info/myGroupMembers'] = Array.from(members);
+    await fb.update(fb.ref(fb.db, 'games/' + currentPin), updates);
+    
+    _alertedOutsiderIds.delete(pid);
+    toast('✅ ' + name + ' ' + (t('outsider_added') || 'ajouté au groupe'));
+  } catch(e) {
+    console.error('addOutsiderToGroup error:', e);
+    toast('❌ ' + (e.message || 'Erreur'));
+  }
+}
+
+// 🆕 Ajouter un apprenant outsider au groupe — depuis l'écran final (par matricule)
+async function addOutsiderToGroupFromFinal(matricule, name) {
+  if (!currentPin || role !== 'teacher') return;
+  if (!matricule) { toast('⚠️ Pas de matricule'); return; }
+  const fb = window.fb;
+  try {
+    const infoSnap = await fb.get(fb.ref(fb.db, 'games/' + currentPin + '/info'));
+    const info = infoSnap.val() || {};
+    const gid = info.myGroupId;
+    if (!gid) { toast('⚠️ Aucun groupe actif'); return; }
+    if (!confirm((t('outsider_add_confirm') || 'Ajouter') + ' "' + name + '" ' + (t('outsider_add_confirm2') || 'au groupe (permanent) ?'))) return;
+    
+    const grpSnap = await fb.get(fb.ref(fb.db, 'myGroups/' + gid));
+    if (!grpSnap.exists()) { toast('⚠️ Groupe introuvable'); return; }
+    const grp = grpSnap.val();
+    const members = new Set((grp.memberMatricules || []).map(String));
+    if (members.has(String(matricule))) { toast('ℹ️ Déjà membre'); return; }
+    members.add(String(matricule));
+    
+    await fb.update(fb.ref(fb.db, 'myGroups/' + gid), {
+      memberMatricules: Array.from(members),
+      updatedAt: Date.now()
+    });
+    // Retirer aussi le isOutsider sur le player concerné dans la session courante
+    const playersSnap = await fb.get(fb.ref(fb.db, 'games/' + currentPin + '/players'));
+    const players = playersSnap.exists() ? playersSnap.val() : {};
+    const updates = {};
+    Object.entries(players).forEach(([ppid, pp]) => {
+      if (pp.matricule && String(pp.matricule) === String(matricule)) {
+        updates['players/' + ppid + '/isOutsider'] = null;
+        updates['players/' + ppid + '/outsiderReason'] = null;
+      }
+    });
+    updates['info/myGroupMembers'] = Array.from(members);
+    await fb.update(fb.ref(fb.db, 'games/' + currentPin), updates);
+    
+    toast('✅ ' + name + ' ' + (t('outsider_added') || 'ajouté au groupe'));
+    // Re-render écran final
+    if (typeof showFinal === 'function') await showFinal();
+  } catch(e) {
+    console.error('addOutsiderToGroupFromFinal error:', e);
+    toast('❌ ' + (e.message || 'Erreur'));
+  }
 }
 
 function resetSidebarStudents() {
@@ -4110,28 +4872,58 @@ function resetSidebarStudents() {
   if ($('sidebar-submitted-count')) $('sidebar-submitted-count').textContent = '0';
 }
 
-// 🆕 Bouton afficher/cacher noms dans la sidebar (anti-triche manuel)
-// État sauvé dans localStorage pour persister entre les sessions
-let _namesHidden = (localStorage.getItem('copag_names_hidden') === '1');
+// 🆕 Bouton afficher/cacher noms dans la sidebar (override anti-triche)
+// Par défaut : noms cachés pendant la question (anti-triche). Le bouton FORCE l'affichage.
+let _namesShown = (localStorage.getItem('copag_names_shown') === '1');
 
 function applyNamesVisibility() {
   const screen = document.getElementById('screen-quiz-teacher');
   if (!screen) return;
-  // 🔑 Note : la classe "spoiler-hidden" gère DÉJÀ le masquage pendant la question
-  // Ce toggle MANUEL force le masquage même APRÈS le reveal ou en dehors du quiz
-  screen.classList.toggle('names-force-hidden', _namesHidden);
+  // Ajoute la classe "names-force-shown" qui override la règle anti-triche
+  screen.classList.toggle('names-force-shown', _namesShown);
   const btn = document.getElementById('toggle-names-btn');
   if (btn) {
-    btn.textContent = _namesHidden ? '🙈' : '👁️‍🗨️';
-    btn.title = _namesHidden ? 'Afficher les noms' : 'Cacher les noms';
-    btn.style.background = _namesHidden ? '#fef3c7' : '#f3f4f6';
+    btn.textContent = _namesShown ? '👁️' : '🙈';
+    btn.title = _namesShown ? 'Cacher les noms (anti-triche)' : 'Afficher les noms';
+    btn.style.background = _namesShown ? '#dcfce7' : '#f3f4f6';
+    btn.style.borderColor = _namesShown ? '#86efac' : '#e5e7eb';
   }
 }
 
 function toggleNamesVisibility() {
-  _namesHidden = !_namesHidden;
-  localStorage.setItem('copag_names_hidden', _namesHidden ? '1' : '0');
+  _namesShown = !_namesShown;
+  localStorage.setItem('copag_names_shown', _namesShown ? '1' : '0');
   applyNamesVisibility();
+}
+
+// 🆕 UNIQUE TOGGLE : affiche/masque TOUTE la section détaillée (donut + distribution + résultats par apprenant)
+// Par défaut : CACHÉ (anti-triche). Le formateur clique pour révéler.
+let _revealStatsShown = false; // toujours caché à chaque nouvelle question
+
+function applyRevealStatsVisibility() {
+  const section = document.getElementById('reveal-stats-section');
+  const btn = document.getElementById('reveal-stats-toggle-btn');
+  const hint = document.querySelector('#reveal-stats-toggle-wrap p');
+  if (!section || !btn) return;
+  
+  section.style.display = _revealStatsShown ? 'grid' : 'none';
+  
+  if (_revealStatsShown) {
+    btn.textContent = LANG === 'ar' ? '🙈 إخفاء الإحصائيات التفصيلية' : '🙈 Masquer les statistiques détaillées';
+    btn.classList.remove('btn-primary');
+    btn.classList.add('btn-ghost');
+    if (hint) hint.style.display = 'none';
+  } else {
+    btn.textContent = LANG === 'ar' ? '📊 إظهار الإحصائيات التفصيلية' : '📊 Afficher les statistiques détaillées';
+    btn.classList.remove('btn-ghost');
+    btn.classList.add('btn-primary');
+    if (hint) hint.style.display = '';
+  }
+}
+
+function toggleRevealStatsVisibility() {
+  _revealStatsShown = !_revealStatsShown;
+  applyRevealStatsVisibility();
 }
 
 function showTeacherQuestion(info) {
@@ -4324,6 +5116,10 @@ async function revealAnswer() {
   $('reveal-stat-total3').textContent = totalPlayers;
   $('reveal-big-pct').textContent = pct + '%';
   
+  // 🆕 Compteur de suspense (X correct / Y apprenants) — visible AVANT révélation des stats
+  $('reveal-suspense-correct').textContent = correctCount;
+  $('reveal-suspense-total').textContent = totalPlayers;
+  
   // Big donut
   const bigDonut = $('reveal-big-donut');
   const bigCircle = $('reveal-donut-circle');
@@ -4385,7 +5181,12 @@ async function revealAnswer() {
     </div>`).join('');
   }
 
-  setTimeout(() => goTo('screen-answer-reveal'), 1200);
+  setTimeout(() => {
+    goTo('screen-answer-reveal');
+    // 🆕 Réinitialiser : à chaque nouvelle question, les stats sont CACHÉES (anti-triche)
+    _revealStatsShown = false;
+    applyRevealStatsVisibility();
+  }, 1200);
 }
 
 async function showLeaderboard() {
@@ -4452,6 +5253,40 @@ async function showFinal() {
   const players = playersSnap.val() || {};
   const info = infoSnap.val() || {};
   const answers = answersSnap.val() || {};
+  
+  // 🆕 Réafficher les éléments réservés au formateur (au cas où ils auraient été cachés)
+  document.querySelectorAll('#screen-final .teacher-only').forEach(el => {
+    el.style.display = '';
+  });
+  
+  // 🆕 LIVRAISON 3/3 BIS : Remplir le bandeau "outsiders détectés"
+  const outsidersCard = document.getElementById('final-outsiders-card');
+  const outsidersList = document.getElementById('final-outsiders-list');
+  if (outsidersCard && outsidersList) {
+    if (info.myGroupId && info.myGroupName) {
+      const outsiders = Object.entries(players).filter(([pid, p]) => p.isOutsider && p.matricule);
+      if (outsiders.length > 0) {
+        document.getElementById('final-outsiders-group-name').textContent = info.myGroupName;
+        outsidersList.innerHTML = outsiders.map(([pid, p]) => {
+          return `<div class="outsider-row" style="display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 14px; background:white; border-radius:10px; margin-bottom:6px;">
+            <div style="flex:1; min-width:0;">
+              <div style="font-weight:700; font-size:14px; color:#1f2937;">${escapeHtml(p.name || '—')}</div>
+              <div style="font-size:11px; color:#6b7280; font-family:monospace;">${escapeHtml(p.matricule)}</div>
+            </div>
+            <button class="btn btn-primary py-2 px-3 text-sm" onclick="addOutsiderToGroupFromFinal('${escapeAttr(p.matricule)}','${escapeAttr(p.name || '')}')">
+              ➕ <span data-i18n="outsider_add_btn">Ajouter au groupe</span>
+            </button>
+          </div>`;
+        }).join('');
+        outsidersCard.style.display = '';
+      } else {
+        outsidersCard.style.display = 'none';
+      }
+    } else {
+      outsidersCard.style.display = 'none';
+    }
+  }
+  
   // 🆕 Point 1 : tri par score DESC, puis par vitesse ASC
   const sorted = Object.values(players).sort((a, b) => {
     if ((b.score || 0) !== (a.score || 0)) return (b.score || 0) - (a.score || 0);
@@ -4538,6 +5373,9 @@ async function showFinal() {
       quizName: info.quizName || null,
       groupName: info.groupName || null,
       themeName: info.themeName || null,
+      // 🆕 LIVRAISON 3/3 FIX : sauvegarder myGroupId pour permettre l'analyse "Par groupe"
+      myGroupId: info.myGroupId || null,
+      myGroupName: info.myGroupName || null,
       startedAt: info.createdAt || Date.now(),
       endedAt: Date.now(),
       totalQuestions: actualQuestionsPlayed,
@@ -5140,6 +5978,18 @@ async function studentJoin() {
     if (matricule) {
       playerData.matricule = matricule;
     }
+    
+    // 🆕 LIVRAISON 2/3 : vérifier si l'apprenant appartient au groupe défini pour la session
+    // Si la session a un groupe et que le matricule n'en fait pas partie → marquer comme "outsider"
+    const gameInfo = (game && game.info) || {};
+    if (gameInfo.myGroupId && Array.isArray(gameInfo.myGroupMembers) && gameInfo.myGroupMembers.length > 0) {
+      const isMember = matricule && gameInfo.myGroupMembers.map(String).includes(String(matricule));
+      if (!isMember) {
+        playerData.isOutsider = true;
+        playerData.outsiderReason = 'not_in_group';
+      }
+    }
+    
     await fb.set(fb.ref(fb.db, 'games/' + pin + '/players/' + currentPlayerId), playerData);
     
     // If matricule provided, create/update employee record
@@ -5443,6 +6293,11 @@ async function showStudentFinal() {
     if ((b.score || 0) !== (a.score || 0)) return (b.score || 0) - (a.score || 0);
     return (a.totalTimeSession || 0) - (b.totalTimeSession || 0);
   });
+  
+  // 🆕 Cacher les éléments réservés au formateur (boutons "Nouveau quiz", "Clôturer la session")
+  document.querySelectorAll('#screen-final .teacher-only').forEach(el => {
+    el.style.display = 'none';
+  });
 
   const slots = [
     { rank: 1, h: 220, k: 'podium-1' },
@@ -5499,6 +6354,8 @@ function goToTeacher() {
     loadGlobalKPIs();
     // 🆕 Sessions d'aujourd'hui
     loadTodaySessions();
+    // 🆕 LIVRAISON 2/3 : charger les groupes pour le sélecteur
+    loadGroupsForLaunchSelect();
   } else {
     showAuthModal();
   }
@@ -8541,6 +9398,350 @@ let _groupsData = [];        // [{ theme, members: [inscrits], stats: {...} }]
 let _historyAll = [];        // toutes les sessions COPAG Academy (cache)
 let _employeesAll = {};      // tous les apprenants COPAG Academy (cache)
 
+// ============================================================
+// 🆕 MES GROUPES — Gestion manuelle des groupes d'apprenants
+// ============================================================
+let _myGroupsAll = {};  // cache des groupes
+let _mgSelectedMatricules = new Set(); // matricules sélectionnés dans le modal de création
+
+async function goToMyGroups() {
+  goTo('screen-my-groups');
+  await loadMyGroups();
+}
+
+async function loadMyGroups() {
+  const list = document.getElementById('my-groups-list');
+  if (!list) return;
+  list.innerHTML = '<div class="history-empty"><div class="icon">⏳</div><p>' + t('hist_loading') + '</p></div>';
+  
+  try {
+    const fb = window.fb;
+    const snap = await fb.get(fb.ref(fb.db, 'myGroups'));
+    _myGroupsAll = snap.exists() ? snap.val() : {};
+    
+    const groups = Object.entries(_myGroupsAll).sort((a, b) => (b[1].createdAt || 0) - (a[1].createdAt || 0));
+    
+    if (groups.length === 0) {
+      list.innerHTML = '<div class="history-empty" style="padding:50px 20px;">' +
+        '<div class="icon" style="font-size:48px;">🎓</div>' +
+        '<p style="margin-top:12px;font-size:16px;color:#6b7280;">' + t('mg_empty') + '</p>' +
+        '<p style="font-size:13px;color:#9ca3af;margin-top:6px;">' + t('mg_empty_hint') + '</p>' +
+        '</div>';
+      return;
+    }
+    
+    list.innerHTML = groups.map(([gid, g]) => {
+      const memberCount = (g.memberMatricules || []).length;
+      const dateStr = g.createdAt ? new Date(g.createdAt).toLocaleDateString(LANG === 'ar' ? 'ar' : 'fr') : '—';
+      return `<div class="mg-card" onclick="openGroupDetail('${gid}')">
+        <div class="mg-card-header">
+          <div class="mg-card-icon">🎓</div>
+          <div class="mg-card-info">
+            <div class="mg-card-name">${escapeHtml(g.name || '—')}</div>
+            ${g.description ? '<div class="mg-card-desc">' + escapeHtml(g.description) + '</div>' : ''}
+            <div class="mg-card-meta">
+              <span>👥 ${memberCount} ${t('mg_card_members')}</span>
+              <span>📅 ${dateStr}</span>
+            </div>
+          </div>
+          <div class="mg-card-actions" onclick="event.stopPropagation();">
+            <button class="btn btn-ghost py-1 px-3 text-xs" onclick="openEditGroupModal('${gid}')" title="${t('mg_edit')}">✏️</button>
+            <button class="btn btn-ghost py-1 px-3 text-xs" onclick="deleteGroup('${gid}')" title="${t('mg_delete')}" style="color:#dc2626;">🗑️</button>
+          </div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    console.error('loadMyGroups error:', e);
+    // 🆕 Détection erreur permissions Firebase
+    const errMsg = String(e && e.message || e);
+    const isPermErr = errMsg.toLowerCase().includes('permission') || errMsg.toLowerCase().includes('denied');
+    
+    if (isPermErr) {
+      list.innerHTML = `<div class="card p-6" style="background:#fef3c7;border:2px solid #fbbf24;">
+        <div class="flex items-start gap-3">
+          <div style="font-size:36px;">🔒</div>
+          <div style="flex:1;">
+            <h3 class="font-bold text-lg mb-2" style="color:#92400e;">Règles Firebase à mettre à jour</h3>
+            <p class="text-sm mb-3" style="color:#78350f;">Le chemin <code style="background:white;padding:2px 6px;border-radius:4px;">myGroups/</code> n'est pas autorisé dans tes règles Firebase. Va sur la console Firebase et ajoute la règle suivante :</p>
+            <pre style="background:white;padding:12px;border-radius:8px;font-size:12px;overflow-x:auto;color:#1f2937;">"myGroups": {
+  ".read": true,
+  ".write": true
+}</pre>
+            <p class="text-xs mt-2" style="color:#92400e;">📍 Console Firebase → ton projet → <strong>Realtime Database</strong> → onglet <strong>Règles</strong></p>
+          </div>
+        </div>
+      </div>`;
+    } else {
+      list.innerHTML = '<div class="history-empty"><div class="icon">⚠️</div><p>' + t('mg_load_error') + '</p><p class="text-xs text-gray-400 mt-2">' + escapeHtml(errMsg) + '</p></div>';
+    }
+  }
+}
+
+// ====== MODAL CRÉATION / ÉDITION ======
+async function openCreateGroupModal() {
+  document.getElementById('mg-modal-title').textContent = '🎓 ' + t('mg_create_title');
+  document.getElementById('mg-edit-id').value = '';
+  document.getElementById('mg-form-name').value = '';
+  document.getElementById('mg-form-desc').value = '';
+  document.getElementById('mg-search-input').value = '';
+  _mgSelectedMatricules = new Set();
+  await loadMgEmployeesList();
+  document.getElementById('mg-create-modal').classList.remove('hidden');
+}
+
+async function openEditGroupModal(gid) {
+  const g = _myGroupsAll[gid];
+  if (!g) return;
+  document.getElementById('mg-modal-title').textContent = '✏️ ' + t('mg_edit_title');
+  document.getElementById('mg-edit-id').value = gid;
+  document.getElementById('mg-form-name').value = g.name || '';
+  document.getElementById('mg-form-desc').value = g.description || '';
+  document.getElementById('mg-search-input').value = '';
+  _mgSelectedMatricules = new Set((g.memberMatricules || []).map(String));
+  await loadMgEmployeesList();
+  document.getElementById('mg-create-modal').classList.remove('hidden');
+}
+
+function closeCreateGroupModal() {
+  document.getElementById('mg-create-modal').classList.add('hidden');
+}
+
+async function loadMgEmployeesList() {
+  const listEl = document.getElementById('mg-employees-list');
+  if (!listEl) return;
+  listEl.innerHTML = '<div class="text-center text-gray-400 text-xs p-4">⏳ ' + t('hist_loading') + '</div>';
+  
+  try {
+    const fb = window.fb;
+    const snap = await fb.get(fb.ref(fb.db, 'employees'));
+    _employeesAll = snap.exists() ? snap.val() : {};
+    renderMgEmployeesList();
+  } catch(e) {
+    listEl.innerHTML = '<div class="text-center text-red-500 text-xs p-4">⚠️ Erreur de chargement</div>';
+  }
+}
+
+function renderMgEmployeesList() {
+  const listEl = document.getElementById('mg-employees-list');
+  const searchInp = document.getElementById('mg-search-input');
+  const query = (searchInp.value || '').trim().toLowerCase();
+  
+  const entries = Object.entries(_employeesAll || {})
+    .map(([matr, info]) => ({
+      matricule: String(matr),
+      name: (info && info.nom) ? String(info.nom) : ''
+    }))
+    .filter(e => {
+      if (!query) return true;
+      return e.matricule.toLowerCase().includes(query) || e.name.toLowerCase().includes(query);
+    })
+    .sort((a, b) => {
+      // Sélectionnés d'abord, puis alphabétique
+      const aSel = _mgSelectedMatricules.has(a.matricule);
+      const bSel = _mgSelectedMatricules.has(b.matricule);
+      if (aSel !== bSel) return aSel ? -1 : 1;
+      return a.name.localeCompare(b.name);
+    });
+  
+  if (entries.length === 0) {
+    listEl.innerHTML = '<div class="text-center text-gray-400 text-xs p-4">' + (query ? t('mg_no_match') : t('mg_no_employees')) + '</div>';
+    updateMgSelectedCount();
+    return;
+  }
+  
+  listEl.innerHTML = entries.map(e => {
+    const checked = _mgSelectedMatricules.has(e.matricule);
+    return `<label class="mg-emp-row ${checked ? 'selected' : ''}">
+      <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleMgEmployee('${e.matricule.replace(/'/g, "\\'")}')">
+      <span class="mg-emp-name">${escapeHtml(e.name || '—')}</span>
+      <span class="mg-emp-matr">${escapeHtml(e.matricule)}</span>
+    </label>`;
+  }).join('');
+  updateMgSelectedCount();
+}
+
+function toggleMgEmployee(matricule) {
+  if (_mgSelectedMatricules.has(matricule)) {
+    _mgSelectedMatricules.delete(matricule);
+  } else {
+    _mgSelectedMatricules.add(matricule);
+  }
+  updateMgSelectedCount();
+  // Mettre à jour visuellement la ligne sans rerender complet (préserve le scroll)
+  const labels = document.querySelectorAll('#mg-employees-list .mg-emp-row');
+  labels.forEach(l => {
+    const cb = l.querySelector('input[type="checkbox"]');
+    if (cb && cb.getAttribute('onchange') && cb.getAttribute('onchange').includes("'" + matricule.replace(/'/g, "\\'") + "'")) {
+      l.classList.toggle('selected', _mgSelectedMatricules.has(matricule));
+    }
+  });
+}
+
+function updateMgSelectedCount() {
+  const el = document.getElementById('mg-selected-count');
+  if (el) el.textContent = _mgSelectedMatricules.size;
+}
+
+function filterMgEmployees() {
+  renderMgEmployeesList();
+}
+
+function clearMgSelection() {
+  _mgSelectedMatricules = new Set();
+  renderMgEmployeesList();
+}
+
+async function saveGroup() {
+  const name = document.getElementById('mg-form-name').value.trim();
+  const desc = document.getElementById('mg-form-desc').value.trim();
+  const editId = document.getElementById('mg-edit-id').value.trim();
+  
+  if (!name) {
+    toast(t('mg_err_name'));
+    return;
+  }
+  if (_mgSelectedMatricules.size === 0) {
+    if (!confirm(t('mg_warn_no_members'))) return;
+  }
+  
+  const saveBtn = document.getElementById('mg-save-btn');
+  saveBtn.disabled = true;
+  saveBtn.textContent = '⏳ ' + t('mg_saving');
+  
+  try {
+    const fb = window.fb;
+    const groupId = editId || ('grp_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8));
+    const data = {
+      name,
+      description: desc || null,
+      memberMatricules: Array.from(_mgSelectedMatricules),
+      createdAt: editId ? (_myGroupsAll[editId] && _myGroupsAll[editId].createdAt) || Date.now() : Date.now(),
+      updatedAt: Date.now()
+    };
+    await fb.set(fb.ref(fb.db, 'myGroups/' + groupId), data);
+    toast(editId ? t('mg_updated') : t('mg_created'));
+    closeCreateGroupModal();
+    await loadMyGroups();
+  } catch(e) {
+    console.error('saveGroup error:', e);
+    toast('⚠️ ' + e.message);
+  } finally {
+    saveBtn.disabled = false;
+    saveBtn.textContent = '✅ ' + t('mg_save_btn');
+  }
+}
+
+async function deleteGroup(gid) {
+  const g = _myGroupsAll[gid];
+  if (!g) return;
+  if (!confirm(t('mg_delete_confirm') + ' "' + (g.name || '') + '" ?')) return;
+  
+  try {
+    const fb = window.fb;
+    await fb.remove(fb.ref(fb.db, 'myGroups/' + gid));
+    toast(t('mg_deleted'));
+    await loadMyGroups();
+  } catch(e) {
+    toast('⚠️ ' + e.message);
+  }
+}
+
+function openGroupDetail(gid) {
+  // Pour l'instant juste éditer. La vue détaillée arrivera en livraison 3/3 (graphes + matrice).
+  openEditGroupModal(gid);
+}
+
+// 🆕 LIVRAISON 3/3 FIX : Lier les anciennes sessions aux groupes existants
+// Pour chaque session sans myGroupId, trouver le groupe dont le plus d'apprenants étaient membres
+async function linkOldSessionsToGroups() {
+  if (!confirm(t('mg_link_old_confirm') || 'Lier automatiquement les anciennes sessions à leurs groupes ? (basé sur les apprenants ayant participé)')) return;
+  
+  const fb = window.fb;
+  toast('⏳ ' + (t('mg_link_processing') || 'Analyse des sessions...'));
+  
+  try {
+    // Charger tous les groupes
+    const groupsSnap = await fb.get(fb.ref(fb.db, 'myGroups'));
+    const groups = groupsSnap.exists() ? groupsSnap.val() : {};
+    const groupEntries = Object.entries(groups);
+    
+    if (groupEntries.length === 0) {
+      toast('⚠️ ' + (t('mg_link_no_groups') || 'Aucun groupe créé'));
+      return;
+    }
+    
+    // Charger tout l'historique
+    const histSnap = await fb.get(fb.ref(fb.db, 'history'));
+    const history = histSnap.exists() ? histSnap.val() : {};
+    
+    let linkedCount = 0;
+    let skippedCount = 0;
+    const updates = {};
+    
+    Object.entries(history).forEach(([sid, sess]) => {
+      // Ignorer les sessions déjà liées
+      if (sess.myGroupId) {
+        skippedCount++;
+        return;
+      }
+      
+      // Récupérer les matricules des apprenants de cette session
+      const sessionMatricules = new Set();
+      (sess.players || []).forEach(p => {
+        if (p.matricule) sessionMatricules.add(String(p.matricule));
+      });
+      
+      if (sessionMatricules.size === 0) {
+        skippedCount++;
+        return;
+      }
+      
+      // Pour chaque groupe, calculer combien d'apprenants matchent
+      let bestGroupId = null;
+      let bestGroupName = null;
+      let bestMatchCount = 0;
+      let bestMatchPct = 0;
+      
+      groupEntries.forEach(([gid, g]) => {
+        const memberSet = new Set((g.memberMatricules || []).map(String));
+        let matches = 0;
+        sessionMatricules.forEach(m => { if (memberSet.has(m)) matches++; });
+        const pct = sessionMatricules.size > 0 ? (matches / sessionMatricules.size) : 0;
+        
+        // On lie SI au moins 50% des apprenants de la session sont membres du groupe
+        // ET c'est le meilleur match
+        if (pct >= 0.5 && matches > bestMatchCount) {
+          bestGroupId = gid;
+          bestGroupName = g.name;
+          bestMatchCount = matches;
+          bestMatchPct = pct;
+        }
+      });
+      
+      if (bestGroupId) {
+        updates['history/' + sid + '/myGroupId'] = bestGroupId;
+        updates['history/' + sid + '/myGroupName'] = bestGroupName;
+        linkedCount++;
+      } else {
+        skippedCount++;
+      }
+    });
+    
+    if (linkedCount === 0) {
+      toast('ℹ️ ' + (t('mg_link_no_match') || 'Aucune session à lier (pas de correspondance trouvée)'));
+      return;
+    }
+    
+    // Appliquer toutes les liaisons d'un coup
+    await fb.update(fb.ref(fb.db), updates);
+    toast('✅ ' + linkedCount + ' ' + (t('mg_link_done') || 'sessions liées') + ' (' + skippedCount + ' ignorées)');
+  } catch(e) {
+    console.error('linkOldSessionsToGroups error:', e);
+    toast('❌ ' + (e.message || 'Erreur'));
+  }
+}
+
 async function goToGroups() {
   goTo('screen-groups');
   await loadGroupsData();
@@ -8847,6 +10048,26 @@ window.closeSettingsModal = closeSettingsModal;
 window.testPointageConnection = testPointageConnection;
 window.saveSettings = saveSettings;
 window.goToGroups = goToGroups;
+// 🆕 MES GROUPES
+window.goToMyGroups = goToMyGroups;
+window.openCreateGroupModal = openCreateGroupModal;
+window.openEditGroupModal = openEditGroupModal;
+window.closeCreateGroupModal = closeCreateGroupModal;
+window.saveGroup = saveGroup;
+window.deleteGroup = deleteGroup;
+window.openGroupDetail = openGroupDetail;
+window.toggleMgEmployee = toggleMgEmployee;
+window.filterMgEmployees = filterMgEmployees;
+window.clearMgSelection = clearMgSelection;
+// 🆕 LIVRAISON 2/3
+window.onGroupSelectChange = onGroupSelectChange;
+window.loadGroupsForLaunchSelect = loadGroupsForLaunchSelect;
+// 🆕 LIVRAISON 3/3
+window.showAnGroupDetail = showAnGroupDetail;
+window.closeAnGroupModal = closeAnGroupModal;
+window.linkOldSessionsToGroups = linkOldSessionsToGroups;
+window.addOutsiderToGroup = addOutsiderToGroup;
+window.addOutsiderToGroupFromFinal = addOutsiderToGroupFromFinal;
 window.loadGroupsData = loadGroupsData;
 window.showGroupDetail = showGroupDetail;
 window.closeGroupDetail = closeGroupDetail;
@@ -9004,6 +10225,12 @@ function setAnalysisTab(tab) {
 }
 
 function renderAnalysisCurrentTab() {
+  // 🆕 LIVRAISON 3/3 : l'onglet "Par groupe" peut s'afficher même sans sessions
+  // (on affiche la liste des groupes existants avec leur taux d'utilisation)
+  if (_anCurrentTab === 'groups') {
+    renderAnalysisByGroup();
+    return;
+  }
   if (_anFilteredSessions.length === 0) {
     $('an-container').innerHTML = '<div class="history-empty"><div class="icon">📭</div><p>' + t('an_no_data') + '</p></div>';
     return;
@@ -9564,6 +10791,353 @@ function renderAnalysisByQuiz() {
   container.innerHTML = html;
 }
 
+// ========== 🆕 LIVRAISON 3/3 : ONGLET 5 : PAR GROUPE ==========
+let _anMyGroupsCache = null;
+
+async function renderAnalysisByGroup() {
+  const container = $('an-container');
+  container.innerHTML = '<div class="history-empty"><div class="icon">⏳</div><p>' + t('hist_loading') + '</p></div>';
+  
+  // Charger les groupes
+  try {
+    const fb = window.fb;
+    const snap = await fb.get(fb.ref(fb.db, 'myGroups'));
+    _anMyGroupsCache = snap.exists() ? snap.val() : {};
+  } catch(e) {
+    _anMyGroupsCache = {};
+  }
+  
+  const groups = Object.entries(_anMyGroupsCache);
+  if (groups.length === 0) {
+    container.innerHTML = '<div class="history-empty" style="padding:50px 20px;">' +
+      '<div class="icon" style="font-size:48px;">🎓</div>' +
+      '<p style="margin-top:12px;font-size:16px;color:#6b7280;">' + t('an_grp_empty') + '</p>' +
+      '<p style="font-size:13px;color:#9ca3af;margin-top:6px;">' + t('an_grp_empty_hint') + '</p>' +
+      '<button class="btn btn-primary mt-4" onclick="goToMyGroups()">🎓 ' + t('mg_create_btn') + '</button>' +
+      '</div>';
+    return;
+  }
+  
+  // Pour chaque groupe, calculer ses stats à partir des sessions filtrées
+  // On garde TOUTES les sessions de l'historique (pas juste les filtrées) pour le groupe
+  // pour avoir l'historique complet du groupe
+  const allSessions = _anHistory || [];
+  
+  const cards = groups.map(([gid, g]) => {
+    const groupSessions = allSessions.filter(s => s.myGroupId === gid);
+    const memberCount = (g.memberMatricules || []).length;
+    
+    // Stats : nb sessions, score moyen, taux participation moyen
+    let totalScore = 0, scoreCount = 0;
+    let totalParticipationPct = 0, partCount = 0;
+    const datesSet = new Set();
+    
+    groupSessions.forEach(s => {
+      datesSet.add(new Date(s.endedAt || s.startedAt).toLocaleDateString('fr-FR'));
+      // Participation : combien de membres du groupe ont joué
+      const playedMatricules = new Set();
+      (s.players || []).forEach(p => {
+        if (p.matricule) playedMatricules.add(String(p.matricule));
+      });
+      const membersThatPlayed = (g.memberMatricules || []).filter(m => playedMatricules.has(String(m))).length;
+      if (memberCount > 0) {
+        totalParticipationPct += Math.round((membersThatPlayed / memberCount) * 100);
+        partCount++;
+      }
+      // Score moyen
+      (s.players || []).forEach(p => {
+        // Filtrer uniquement les membres du groupe
+        if (!p.matricule || !(g.memberMatricules || []).map(String).includes(String(p.matricule))) return;
+        const perQ = Array.isArray(p.perQuestion) ? p.perQuestion : [];
+        const correctN = perQ.filter(q => q && q.correct).length;
+        const playedN = perQ.filter(q => q && q.played !== false).length;
+        if (playedN > 0) {
+          totalScore += Math.round((correctN / playedN) * 100);
+          scoreCount++;
+        }
+      });
+    });
+    
+    const avgScore = scoreCount > 0 ? Math.round(totalScore / scoreCount) : 0;
+    const avgPart = partCount > 0 ? Math.round(totalParticipationPct / partCount) : 0;
+    const dayCount = datesSet.size;
+    
+    return `<div class="an-grp-card" onclick="showAnGroupDetail('${gid}')">
+      <div class="an-grp-icon">🎓</div>
+      <div class="an-grp-info">
+        <div class="an-grp-name">${escapeHtml(g.name || '—')}</div>
+        ${g.description ? '<div class="an-grp-desc">' + escapeHtml(g.description) + '</div>' : ''}
+        <div class="an-grp-meta">
+          <span>👥 ${memberCount} ${t('mg_card_members')}</span>
+          <span>📅 ${dayCount} ${t('an_grp_days')}</span>
+          <span>📝 ${groupSessions.length} ${t('an_grp_sessions')}</span>
+        </div>
+      </div>
+      <div class="an-grp-stats">
+        <div class="an-grp-stat-pill"><div class="l">${t('an_grp_avg_score')}</div><div class="v">${avgScore}%</div></div>
+        <div class="an-grp-stat-pill best"><div class="l">${t('an_grp_participation')}</div><div class="v">${avgPart}%</div></div>
+      </div>
+    </div>`;
+  }).join('');
+  
+  container.innerHTML = '<div class="text-sm text-gray-500 mb-3">' + t('an_grp_intro') + '</div>' + cards;
+}
+
+// ========== DETAIL D'UN GROUPE ==========
+async function showAnGroupDetail(gid) {
+  const g = (_anMyGroupsCache || {})[gid];
+  if (!g) return;
+  
+  // Sessions de ce groupe (utiliser TOUTE l'historique)
+  const allSessions = _anHistory || [];
+  const groupSessions = allSessions.filter(s => s.myGroupId === gid)
+    .sort((a, b) => (a.endedAt || a.startedAt || 0) - (b.endedAt || b.startedAt || 0));
+  
+  const memberMatricules = (g.memberMatricules || []).map(String);
+  
+  $('an-grp-modal-title').textContent = '🎓 ' + (g.name || '—');
+  
+  // ====== STATS GLOBALES ======
+  let body = `<div class="history-stats mb-4">
+    <div class="history-stat"><div class="v">${memberMatricules.length}</div><div class="l">${t('mg_card_members')}</div></div>
+    <div class="history-stat"><div class="v">${groupSessions.length}</div><div class="l">${t('an_grp_sessions')}</div></div>`;
+  
+  // Score moyen général
+  let totalSc = 0, countSc = 0;
+  groupSessions.forEach(s => {
+    (s.players || []).forEach(p => {
+      if (!p.matricule || !memberMatricules.includes(String(p.matricule))) return;
+      const perQ = Array.isArray(p.perQuestion) ? p.perQuestion : [];
+      const correctN = perQ.filter(q => q && q.correct).length;
+      const playedN = perQ.filter(q => q && q.played !== false).length;
+      if (playedN > 0) { totalSc += Math.round((correctN / playedN) * 100); countSc++; }
+    });
+  });
+  const avgScore = countSc > 0 ? Math.round(totalSc / countSc) : 0;
+  body += `<div class="history-stat"><div class="v">${avgScore}%</div><div class="l">🎯 ${t('an_grp_avg_score')}</div></div>`;
+  body += `</div>`;
+  
+  // ====== GRAPHIQUE DE PROGRESSION (par jour) ======
+  // Regrouper les sessions par jour
+  const byDay = {};  // 'YYYY-MM-DD' -> { date, sessions: [], scores: [] }
+  groupSessions.forEach(s => {
+    const ts = s.endedAt || s.startedAt;
+    const d = new Date(ts);
+    const dayKey = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    if (!byDay[dayKey]) byDay[dayKey] = { date: d, sessions: [], scores: [] };
+    byDay[dayKey].sessions.push(s);
+    
+    (s.players || []).forEach(p => {
+      if (!p.matricule || !memberMatricules.includes(String(p.matricule))) return;
+      const perQ = Array.isArray(p.perQuestion) ? p.perQuestion : [];
+      const correctN = perQ.filter(q => q && q.correct).length;
+      const playedN = perQ.filter(q => q && q.played !== false).length;
+      if (playedN > 0) byDay[dayKey].scores.push(Math.round((correctN / playedN) * 100));
+    });
+  });
+  
+  const days = Object.keys(byDay).sort();
+  if (days.length > 0) {
+    body += '<h4 class="font-bold text-sm mb-3 mt-5" style="color: var(--copag-navy);">📈 ' + t('an_grp_progression') + '</h4>';
+    body += '<div class="grp-progress-chart">';
+    
+    const maxScore = 100;
+    const chartHeight = 180;
+    
+    // Calculer points pour la ligne
+    const points = days.map((dayKey, idx) => {
+      const scores = byDay[dayKey].scores;
+      const avg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+      return { dayKey, avg, sessionCount: byDay[dayKey].sessions.length, idx };
+    });
+    
+    // Construire SVG du graphique
+    const w = Math.max(400, days.length * 80);
+    const h = chartHeight + 60;
+    const padL = 40, padR = 20, padT = 20, padB = 40;
+    const innerW = w - padL - padR;
+    const innerH = chartHeight;
+    
+    let svg = `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid meet" style="width:100%;max-width:${w}px;display:block;margin:0 auto;">`;
+    
+    // Grille horizontale (0%, 25%, 50%, 75%, 100%)
+    [0, 25, 50, 75, 100].forEach(pct => {
+      const y = padT + innerH - (pct / maxScore) * innerH;
+      svg += `<line x1="${padL}" y1="${y}" x2="${w - padR}" y2="${y}" stroke="#e5e7eb" stroke-width="1" stroke-dasharray="3,3" />`;
+      svg += `<text x="${padL - 6}" y="${y + 4}" text-anchor="end" font-size="10" fill="#9ca3af">${pct}%</text>`;
+    });
+    
+    // Ligne de tendance
+    if (points.length > 1) {
+      let path = '';
+      points.forEach((p, i) => {
+        const x = padL + (i / (points.length - 1)) * innerW;
+        const y = padT + innerH - (p.avg / maxScore) * innerH;
+        path += (i === 0 ? 'M' : 'L') + x + ',' + y + ' ';
+      });
+      svg += `<path d="${path}" fill="none" stroke="var(--copag-cyan)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round" />`;
+    }
+    
+    // Points (cercles)
+    points.forEach((p, i) => {
+      const x = points.length > 1 ? padL + (i / (points.length - 1)) * innerW : padL + innerW / 2;
+      const y = padT + innerH - (p.avg / maxScore) * innerH;
+      const color = p.avg >= 80 ? '#10b981' : (p.avg >= 50 ? '#f59e0b' : '#ef4444');
+      svg += `<circle cx="${x}" cy="${y}" r="6" fill="${color}" stroke="white" stroke-width="2" />`;
+      svg += `<text x="${x}" y="${y - 12}" text-anchor="middle" font-size="11" font-weight="900" fill="${color}">${p.avg}%</text>`;
+      
+      // Label date sous l'axe
+      const d = new Date(p.dayKey);
+      const dayLabel = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
+      svg += `<text x="${x}" y="${padT + innerH + 18}" text-anchor="middle" font-size="11" fill="#6b7280">${dayLabel}</text>`;
+      svg += `<text x="${x}" y="${padT + innerH + 32}" text-anchor="middle" font-size="9" fill="#9ca3af">${p.sessionCount} sess.</text>`;
+    });
+    
+    svg += '</svg>';
+    body += svg;
+    body += '</div>';
+  }
+  
+  // ====== GRILLE MATRICIELLE Membres × Sessions ======
+  if (groupSessions.length > 0 && memberMatricules.length > 0) {
+    body += '<h4 class="font-bold text-sm mb-3 mt-5" style="color: var(--copag-navy);">📊 ' + t('an_grp_matrix_title') + '</h4>';
+    body += '<p class="text-xs text-gray-500 mb-3">' + t('an_grp_matrix_hint') + '</p>';
+    
+    // Construire la matrice : matricule -> session -> score
+    const matrix = {};
+    memberMatricules.forEach(m => { matrix[m] = {}; });
+    
+    groupSessions.forEach((s, sIdx) => {
+      (s.players || []).forEach(p => {
+        if (!p.matricule) return;
+        const mat = String(p.matricule);
+        if (!matrix[mat]) return; // ignore outsiders
+        const perQ = Array.isArray(p.perQuestion) ? p.perQuestion : [];
+        const correctN = perQ.filter(q => q && q.correct).length;
+        const playedN = perQ.filter(q => q && q.played !== false).length;
+        const pct = playedN > 0 ? Math.round((correctN / playedN) * 100) : null;
+        matrix[mat][sIdx] = { pct, played: playedN, name: p.name || '' };
+      });
+    });
+    
+    // Récupérer les noms (essayer d'utiliser le nom le plus récent)
+    const memberNames = {};
+    memberMatricules.forEach(m => {
+      // Chercher le nom dans les sessions du groupe
+      for (let i = groupSessions.length - 1; i >= 0; i--) {
+        const p = (groupSessions[i].players || []).find(pl => pl.matricule && String(pl.matricule) === m);
+        if (p && p.name) { memberNames[m] = p.name; break; }
+      }
+      if (!memberNames[m]) memberNames[m] = '—';
+    });
+    
+    // Calculer score moyen par membre pour trier
+    const memberAvgs = memberMatricules.map(m => {
+      const scores = Object.values(matrix[m] || {}).filter(v => v && v.pct != null).map(v => v.pct);
+      const avg = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+      return { matricule: m, name: memberNames[m], avg, sessionsPlayed: scores.length };
+    }).sort((a, b) => {
+      if (a.avg == null && b.avg == null) return 0;
+      if (a.avg == null) return 1;
+      if (b.avg == null) return -1;
+      return b.avg - a.avg;
+    });
+    
+    body += '<div class="matrix-wrap">';
+    body += '<table class="matrix-table">';
+    
+    // Header avec dates
+    body += '<thead><tr>';
+    body += '<th class="matrix-name-col">' + t('mg_card_members') + '</th>';
+    groupSessions.forEach((s, idx) => {
+      const d = new Date(s.endedAt || s.startedAt);
+      const dateLbl = String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0');
+      // 🆕 Afficher : nom du quiz (court) + date — au lieu de "S1, S2"
+      const themeShort = s.themeName ? String(s.themeName).slice(0, 14) : '';
+      const quizShort = s.quizName ? String(s.quizName).slice(0, 18) : ('S' + (idx + 1));
+      const fullTitle = (s.themeName ? s.themeName + ' — ' : '') + (s.quizName || ('Session ' + (idx + 1))) + ' — ' + d.toLocaleString('fr-FR');
+      body += '<th class="matrix-q-col matrix-q-quiz" title="' + escapeAttr(fullTitle) + '">' +
+        '<div class="matrix-q-quiz-name">' + escapeHtml(quizShort) + '</div>' +
+        (themeShort ? '<div class="matrix-q-quiz-theme">' + escapeHtml(themeShort) + '</div>' : '') +
+        '<div class="matrix-q-quiz-date">' + dateLbl + '</div>' +
+        '</th>';
+    });
+    body += '<th class="matrix-score-col">' + t('an_grp_avg_score') + '</th>';
+    body += '</tr></thead>';
+    
+    // Rows
+    body += '<tbody>';
+    memberAvgs.forEach(m => {
+      body += '<tr>';
+      body += '<td class="matrix-name"><span class="matrix-name-text">' + escapeHtml(m.name) + '</span><br><span style="font-size:9px;color:#9ca3af;font-family:monospace;">' + escapeHtml(m.matricule) + '</span></td>';
+      groupSessions.forEach((s, idx) => {
+        const cell = (matrix[m.matricule] || {})[idx];
+        if (!cell || cell.pct == null) {
+          body += '<td class="matrix-cell skip" title="' + t('ar_s_skip') + '">—</td>';
+        } else {
+          let cls = 'matrix-cell-pct ';
+          if (cell.pct >= 80) cls += 'pct-high';
+          else if (cell.pct >= 50) cls += 'pct-mid';
+          else cls += 'pct-low';
+          body += '<td class="' + cls + '" title="' + escapeAttr(s.quizName || '') + '">' + cell.pct + '%</td>';
+        }
+      });
+      let avgCls = '';
+      if (m.avg == null) avgCls = '';
+      else if (m.avg >= 80) avgCls = 'pct-high';
+      else if (m.avg >= 50) avgCls = 'pct-mid';
+      else avgCls = 'pct-low';
+      body += '<td class="matrix-cell-pct ' + avgCls + '" style="background:#eef7fc;">' + (m.avg != null ? m.avg + '%' : '—') + '</td>';
+      body += '</tr>';
+    });
+    body += '</tbody></table></div>';
+    
+    // ====== APPRENANTS EN DIFFICULTÉ ======
+    const inTrouble = memberAvgs.filter(m => m.avg != null && m.avg < 50);
+    const noShow = memberAvgs.filter(m => m.avg == null);
+    
+    if (inTrouble.length > 0 || noShow.length > 0) {
+      body += '<h4 class="font-bold text-sm mb-3 mt-5" style="color: var(--copag-navy);">⚠️ ' + t('an_grp_attention') + '</h4>';
+      body += '<div class="grp-warn-section">';
+      
+      if (inTrouble.length > 0) {
+        body += '<div class="grp-warn-card grp-warn-low">';
+        body += '<div class="grp-warn-title">🔴 ' + t('an_grp_low_perf') + ' (' + inTrouble.length + ')</div>';
+        body += '<div class="grp-warn-list">';
+        inTrouble.forEach(m => {
+          body += '<div class="grp-warn-item"><span>' + escapeHtml(m.name) + '</span><span class="grp-warn-pct">' + m.avg + '%</span></div>';
+        });
+        body += '</div></div>';
+      }
+      
+      if (noShow.length > 0) {
+        body += '<div class="grp-warn-card grp-warn-absent">';
+        body += '<div class="grp-warn-title">🚫 ' + t('an_grp_absent') + ' (' + noShow.length + ')</div>';
+        body += '<div class="grp-warn-list">';
+        noShow.forEach(m => {
+          body += '<div class="grp-warn-item"><span>' + escapeHtml(m.name) + '</span><span class="grp-warn-pct" style="color:#6b7280;">—</span></div>';
+        });
+        body += '</div></div>';
+      }
+      
+      body += '</div>';
+    }
+  } else if (groupSessions.length === 0) {
+    body += '<div class="history-empty" style="padding:30px 20px;margin-top:20px;">' +
+      '<div class="icon" style="font-size:36px;">📭</div>' +
+      '<p style="margin-top:10px;font-size:14px;color:#6b7280;">' + t('an_grp_no_sessions') + '</p>' +
+      '<p style="font-size:12px;color:#9ca3af;">' + t('an_grp_no_sessions_hint') + '</p>' +
+      '</div>';
+  }
+  
+  $('an-grp-modal-body').innerHTML = body;
+  $('an-group-modal').classList.remove('hidden');
+}
+
+function closeAnGroupModal() {
+  $('an-group-modal').classList.add('hidden');
+}
+
 function showAnSessionDetail(sessionId) {
   const s = _anFilteredSessions.find(x => x.id === sessionId);
   if (!s) return;
@@ -9573,7 +11147,7 @@ function showAnSessionDetail(sessionId) {
   $('an-sess-modal-title').textContent = '📋 ' + lname + ' — ' + date.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' });
   
   const players = (s.players || []).slice().sort((a, b) => (b.score || 0) - (a.score || 0));
-  const qCount = s.totalQuestions || 0;
+  const qCount = s.totalQuestions || (s.questions || []).length || 0;
   
   let body = `<div class="history-stats mb-4">
     <div class="history-stat"><div class="v">${players.length}</div><div class="l">${t('an_sess_players')}</div></div>
@@ -9582,7 +11156,85 @@ function showAnSessionDetail(sessionId) {
     <div class="history-stat"><div class="v">${s.accuracy || 0}%</div><div class="l">🎯</div></div>
   </div>`;
   
-  body += '<h4 class="font-bold text-sm mb-3" style="color: var(--copag-navy);">🏆 Classement</h4>';
+  // 🆕 PHASE C : Grille matricielle Participant × Questions (style Wayground)
+  if (qCount > 0 && players.length > 0) {
+    body += '<h4 class="font-bold text-sm mb-2 mt-4" style="color: var(--copag-navy);">📊 ' + (t('an_matrix_title') || 'Vue d\'ensemble — Participants × Questions') + '</h4>';
+    body += '<p class="text-xs text-gray-500 mb-3">' + (t('an_matrix_hint') || '🟢 Correct · 🔴 Incorrect · ⚪ Non répondu') + '</p>';
+    body += '<div class="matrix-wrap">';
+    body += '<table class="matrix-table">';
+    
+    // En-tête : numéros de questions
+    body += '<thead><tr>';
+    body += '<th class="matrix-name-col">' + (t('an_matrix_apprenant') || 'Apprenant') + '</th>';
+    for (let q = 0; q < qCount; q++) {
+      body += '<th class="matrix-q-col" title="Question ' + (q+1) + '">Q' + (q+1) + '</th>';
+    }
+    body += '<th class="matrix-score-col">' + (t('an_matrix_score') || 'Score') + '</th>';
+    body += '</tr></thead>';
+    
+    // Lignes : un apprenant par ligne
+    body += '<tbody>';
+    players.forEach((p, idx) => {
+      const perQ = Array.isArray(p.perQuestion) ? p.perQuestion : [];
+      const correctN = perQ.filter(q => q && q.played !== false && q.correct).length;
+      const playedN = perQ.filter(q => q && q.played !== false).length;
+      const rank = idx + 1;
+      const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : '';
+      
+      body += '<tr>';
+      body += '<td class="matrix-name">' +
+        '<span class="matrix-rank">' + (medal || '#' + rank) + '</span> ' +
+        '<span class="matrix-name-text">' + escapeHtml(p.name || '—') + '</span>' +
+        '</td>';
+      
+      for (let q = 0; q < qCount; q++) {
+        const pq = perQ[q];
+        let cellClass, cellContent, cellTitle;
+        if (!pq || pq.played === false) {
+          cellClass = 'matrix-cell skip';
+          cellContent = '—';
+          cellTitle = 'Non répondu';
+        } else if (pq.correct) {
+          cellClass = 'matrix-cell correct';
+          cellContent = '✓';
+          cellTitle = 'Correct' + (pq.time != null ? ' (' + pq.time.toFixed(1) + 's)' : '');
+        } else {
+          cellClass = 'matrix-cell wrong';
+          cellContent = '✗';
+          cellTitle = 'Incorrect' + (pq.time != null ? ' (' + pq.time.toFixed(1) + 's)' : '');
+        }
+        body += '<td class="' + cellClass + '" title="' + cellTitle + '">' + cellContent + '</td>';
+      }
+      
+      body += '<td class="matrix-score">' + correctN + '/' + qCount + '</td>';
+      body += '</tr>';
+    });
+    body += '</tbody>';
+    
+    // Ligne footer : taux de réussite par question (utile pour identifier les questions difficiles)
+    body += '<tfoot><tr>';
+    body += '<td class="matrix-name" style="font-weight:900;">% ' + (t('an_matrix_correct') || 'corrects') + '</td>';
+    for (let q = 0; q < qCount; q++) {
+      let cnt = 0;
+      players.forEach(p => {
+        const pq = Array.isArray(p.perQuestion) ? p.perQuestion[q] : null;
+        if (pq && pq.correct) cnt++;
+      });
+      const pct = players.length > 0 ? Math.round((cnt / players.length) * 100) : 0;
+      let pctClass = 'pct-high';
+      if (pct < 50) pctClass = 'pct-low';
+      else if (pct < 80) pctClass = 'pct-mid';
+      body += '<td class="matrix-cell-pct ' + pctClass + '">' + pct + '%</td>';
+    }
+    body += '<td class="matrix-score"></td>';
+    body += '</tr></tfoot>';
+    
+    body += '</table>';
+    body += '</div>';
+  }
+  
+  // Classement détaillé (gardé)
+  body += '<h4 class="font-bold text-sm mb-3 mt-5" style="color: var(--copag-navy);">🏆 Classement</h4>';
   body += '<div>';
   players.forEach((p, idx) => {
     const correctN = (p.perQuestion || []).filter(q => q && q.played !== false && q.correct).length;
