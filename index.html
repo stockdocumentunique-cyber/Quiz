@@ -447,7 +447,34 @@
   }
   .grp-warn-pct { font-family: 'Outfit', sans-serif; font-weight: 900; color: #991b1b; }
   
-  /* 🆕 Headers de matrice "Par groupe" : nom du quiz + thème + date */
+  /* 🆕 IMAGES DES QUESTIONS */
+  .q-image-wrap {
+    background: white; border-radius: 16px;
+    padding: 8px; margin-bottom: 16px;
+    box-shadow: 0 4px 14px rgba(15,22,72,0.08);
+    text-align: center;
+    overflow: hidden;
+    max-width: 600px;
+    margin-left: auto; margin-right: auto;
+  }
+  .q-image {
+    max-width: 100%; max-height: 320px;
+    border-radius: 10px;
+    object-fit: contain;
+    display: inline-block;
+  }
+  @media (max-width: 768px) {
+    .q-image { max-height: 220px; }
+  }
+  /* Image en mode éditeur */
+  .q-edit-image-preview {
+    max-width: 100%; max-height: 180px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    margin-top: 6px;
+    display: block;
+  }
+
   .matrix-q-quiz { min-width: 110px; max-width: 140px; padding: 8px 6px !important; line-height: 1.3; }
   .matrix-q-quiz-name { font-size: 12px; font-weight: 800; color: var(--copag-navy); white-space: normal; word-break: break-word; }
   .matrix-q-quiz-theme { font-size: 9px; font-weight: 600; color: #9ca3af; font-style: italic; margin-top: 2px; }
@@ -702,6 +729,23 @@
   .qe-opt-row input[type="text"] { flex:1; padding: 10px 14px; border-radius: 10px; border: 2px solid #e5e7eb; font-family: inherit; font-size: 14px; }
   .qe-opt-row input[type="text"]:focus { border-color: var(--copag-cyan); outline: none; }
   .qe-opt-letter { font-weight: 800; color: var(--copag-navy); min-width: 18px; }
+  /* ACT/1 : mode sondage dans l'editeur */
+  .qe-poll-mode .qe-opt-row input[type="radio"] { display: none; }
+  .qe-poll-mode .qe-opt-row .qe-opt-letter { color: var(--copag-cyan); }
+  /* ACT/4 : Ordonner les etapes */
+  #student-answers-grid.order-list { display: block; }
+  .order-hint { font-size: 13px; color: #6b7280; text-align: center; margin-bottom: 10px; }
+  .order-step { display: flex; align-items: center; gap: 10px; background: #fff; border: 2px solid #e5e7eb; border-radius: 14px; padding: 12px; margin-bottom: 10px; box-shadow: 0 2px 6px rgba(0,0,0,.06); touch-action: none; }
+  .order-step.dragging { opacity: .6; border-color: var(--copag-cyan); }
+  .order-step .order-pos { flex: 0 0 28px; height: 28px; border-radius: 50%; background: var(--copag-navy); color: #fff; font-weight: 800; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .order-step .order-text { flex: 1; font-weight: 600; color: #1f2937; font-size: 15px; }
+  .order-step .order-arrows { display: flex; flex-direction: column; gap: 2px; }
+  .order-step .order-arrows button { width: 30px; height: 24px; border: none; background: #f1f5f9; border-radius: 6px; cursor: pointer; font-size: 12px; line-height: 1; }
+  .order-step .order-arrows button:active { background: #cbd5e1; }
+  .order-step .order-grip { flex: 0 0 auto; color: #9ca3af; font-size: 20px; cursor: grab; padding: 0 4px; touch-action: none; }
+  .order-validate-btn { width: 100%; margin-top: 6px; padding: 14px; border: none; border-radius: 14px; background: linear-gradient(135deg, var(--copag-navy), var(--copag-cyan)); color: #fff; font-weight: 800; font-size: 16px; cursor: pointer; }
+  #answers-grid-teacher.order-list-teacher { display: block; }
+  .order-step-ref { display:flex; align-items:center; gap:12px; background:#fff; border:2px solid #e5e7eb; border-radius:12px; padding:14px 18px; margin-bottom:10px; color:#1f2937; font-weight:700; font-size:18px; box-shadow:0 2px 6px rgba(0,0,0,.06); }
   
   .filter-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
   
@@ -1190,6 +1234,10 @@
         <button class="btn btn-ghost py-2 px-3 text-sm" onclick="openQuizEditModal(_qeCurrentQuiz)" data-i18n="qe_edit_quiz" id="qe-edit-quiz-btn">✏️ Éditer ce quiz</button>
         <button class="btn btn-ghost py-2 px-3 text-sm" onclick="askDeleteQuiz()" style="color:#dc2626;border-color:#fecaca;" data-i18n="qe_del_quiz" id="qe-del-quiz-btn">🗑️ Supprimer ce quiz</button>
         <button class="btn btn-ghost py-2 px-3 text-sm" onclick="askResetLesson()" style="color:#92400e;border-color:#fcd34d;" data-i18n="qe_reset_btn">🔄 Réinitialiser</button>
+        <!-- 🆕 Import Excel -->
+        <button class="btn btn-ghost py-2 px-3 text-sm" onclick="downloadQuestionsTemplate()" style="color:#7c3aed;border-color:#ddd6fe;" data-i18n="qe_dl_template">📄 Modèle Excel</button>
+        <button class="btn btn-ghost py-2 px-3 text-sm" onclick="document.getElementById('qe-import-file').click()" style="color:#059669;border-color:#a7f3d0;" data-i18n="qe_import_excel">📥 Importer Excel</button>
+        <input type="file" id="qe-import-file" accept=".xlsx,.xls" style="display:none;" onchange="handleExcelImportFile(event)">
       </div>
     </div>
 
@@ -1306,6 +1354,48 @@
 </div>
 
 <!-- QUIZ DELETE CONFIRM -->
+<!-- 🆕 IMPORT EXCEL : Modal de choix Ajouter/Remplacer -->
+<div id="excel-import-choice-modal" class="auth-overlay hidden" onclick="if(event.target===this)closeExcelImportModals()">
+  <div class="auth-modal" style="max-width: 520px;">
+    <div class="text-center mb-4">
+      <div class="text-5xl mb-3">📥</div>
+      <h3 class="display-fr text-2xl mb-2" data-i18n="xls_choice_title">Importer le fichier Excel</h3>
+      <p class="text-sm text-gray-600">
+        <span data-i18n="xls_choice_file">Fichier détecté :</span> <strong id="xls-choice-filename">—</strong><br>
+        <span data-i18n="xls_choice_count">Questions valides :</span> <strong id="xls-choice-valid">—</strong>
+        <span id="xls-choice-errors-wrap" style="display:none;">
+          (<span data-i18n="xls_choice_errors">avec erreurs :</span> <strong id="xls-choice-errors">—</strong>)
+        </span>
+      </p>
+    </div>
+    <div class="mb-4 p-3 rounded-lg" style="background:#f3f4f6;">
+      <p class="text-sm" data-i18n="xls_choice_question">Que veux-tu faire des questions actuellement dans ce quiz ?</p>
+      <p class="text-xs text-gray-500 mt-1"><span id="xls-choice-existing">0</span> <span data-i18n="xls_choice_existing">questions existantes dans ce quiz</span></p>
+    </div>
+    <div class="flex flex-col gap-2">
+      <button class="btn btn-primary py-3" onclick="confirmExcelImport('append')" data-i18n="xls_choice_append">➕ Ajouter aux questions existantes</button>
+      <button class="btn btn-ghost py-3" onclick="confirmExcelImport('replace')" style="color:#dc2626;border-color:#fecaca;" data-i18n="xls_choice_replace">🔄 Remplacer toutes les questions</button>
+      <button class="btn btn-ghost py-2" onclick="closeExcelImportModals()" data-i18n="cancel">Annuler</button>
+    </div>
+  </div>
+</div>
+
+<!-- 🆕 IMPORT EXCEL : Modal de rapport -->
+<div id="excel-import-report-modal" class="auth-overlay hidden" onclick="if(event.target===this)closeExcelImportModals()">
+  <div class="auth-modal" style="max-width: 720px;">
+    <div class="text-center mb-4">
+      <div class="text-5xl mb-3" id="xls-report-icon">✅</div>
+      <h3 class="display-fr text-2xl mb-2" id="xls-report-title">Import terminé</h3>
+      <p class="text-sm text-gray-600" id="xls-report-summary">—</p>
+    </div>
+    <div id="xls-report-errors" style="max-height: 280px; overflow-y: auto; background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:12px; margin-bottom:12px; display:none;">
+      <h4 class="font-bold text-sm mb-2" style="color:#991b1b;">⚠️ <span data-i18n="xls_report_errors_title">Lignes ignorées :</span></h4>
+      <ul id="xls-report-errors-list" style="margin:0; padding-left:20px; font-size:12px; color:#7f1d1d;"></ul>
+    </div>
+    <button class="btn btn-primary w-full" onclick="closeExcelImportModals()" data-i18n="xls_report_ok">✅ OK, fermer</button>
+  </div>
+</div>
+
 <div id="quiz-delete-modal" class="auth-overlay hidden" onclick="if(event.target===this)closeQuizDeleteModal()">
   <div class="auth-modal" style="max-width: 440px;">
     <div class="text-center mb-4">
@@ -1331,6 +1421,30 @@
     </div>
 
     <div style="padding: 0 4px;">
+      <!-- 🆕 ACT/1 : Type de question -->
+      <div class="mb-4 p-3 rounded-xl" style="background:#f0f9ff;border:1px solid #bae6fd;">
+        <label class="block text-sm font-bold mb-2" data-i18n="act_type_label">🧩 Type de question</label>
+        <select id="qe-q-type" onchange="onQeTypeChange()" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-family:inherit; font-size:14px; background:white;">
+          <option value="mcq" data-i18n="act_type_mcq">❓ QCM (1 bonne réponse)</option>
+          <option value="poll" data-i18n="act_type_poll">📊 Sondage (sans bonne réponse)</option>
+          <option value="order" data-i18n="act_type_order">🔢 Ordonner les étapes</option>
+        </select>
+        <div id="qe-poll-scoring-wrap" class="mt-3" style="display:none;">
+          <label class="block text-sm font-bold mb-2" data-i18n="act_poll_scoring_label">🏆 Points pour ce sondage</label>
+          <select id="qe-poll-scoring" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-family:inherit; font-size:14px; background:white;">
+            <option value="none" data-i18n="act_poll_scoring_none">0 point (juste un vote)</option>
+            <option value="participation" data-i18n="act_poll_scoring_part">+1 à chaque votant (participation)</option>
+          </select>
+        </div>
+      </div>
+      <!-- 🆕 IMG/1 : URL de l'image (optionnel) -->
+      <div class="mb-4">
+        <label class="block text-sm font-bold mb-2" data-i18n="qe_q_image">🖼️ Image (URL) <span style="color:#9ca3af; font-weight:normal; font-size:12px;">— optionnel</span></label>
+        <input type="text" id="qe-q-image" placeholder="https://exemple.com/image.jpg ou laisser vide" oninput="updateImagePreview()" style="width:100%; padding: 10px 14px; border-radius: 10px; border: 2px solid #e5e7eb; font-family: inherit; font-size: 13px;">
+        <p class="text-xs text-gray-500 mt-1" data-i18n="qe_q_image_hint">Colle l'URL d'une image (Imgur, GitHub, Drive public...). Elle sera affichée au-dessus des options.</p>
+        <img id="qe-q-image-preview" class="q-edit-image-preview" style="display:none;" onerror="this.style.display='none'">
+      </div>
+
       <!-- Question FR -->
       <div class="mb-4">
         <label class="block text-sm font-bold mb-2"><span data-i18n="qe_q_fr">Question (FR)</span> <span style="color:#dc2626">*</span></label>
@@ -1598,6 +1712,7 @@
           <input type="date" id="an-date-to" onchange="onAnalysisFilterChange()" style="padding: 8px 12px; border-radius: 10px; border: 2px solid #e5e7eb; font-size: 13px;">
         </div>
         <button class="btn btn-ghost py-2 px-3 text-xs" onclick="resetAnalysisFilters()" data-i18n="an_reset">🔄 Reset</button>
+        <button class="btn btn-primary py-2 px-3 text-xs" onclick="exportFullAnalysisToExcel()" data-i18n="an_export_excel" title="Exporter toute la synthèse en Excel">📥 Exporter Excel</button>
         <div style="flex:1;"></div>
         <span class="badge" id="an-count-badge">0 sessions</span>
       </div>
@@ -2208,6 +2323,10 @@
     <div class="card p-5 mb-5 text-center" style="background: linear-gradient(135deg, var(--blue-700), var(--blue-900)); color: white;">
       <p class="text-lg font-bold" id="student-q-text">—</p>
     </div>
+    <!-- 🆕 Image de la question côté apprenant -->
+    <div id="q-image-student-wrap" class="q-image-wrap mb-4" style="display:none;">
+      <img id="q-image-student" src="" alt="Image" class="q-image" onerror="this.parentElement.style.display='none'">
+    </div>
     <div class="grid grid-cols-2 gap-3" id="student-answers-grid"></div>
     <div id="student-answer-waiting" class="text-center py-8 hidden">
       <div class="text-5xl mb-3">✅</div>
@@ -2277,6 +2396,11 @@
               </div>
             </div>
           </div>
+        </div>
+        
+        <!-- 🆕 Image de la question (si présente) -->
+        <div id="q-image-teacher-wrap" class="q-image-wrap" style="display:none;">
+          <img id="q-image-teacher" src="" alt="Image" class="q-image" onerror="this.parentElement.style.display='none'">
         </div>
         
         <!-- Grille des tuiles (avec barres de distribution intégrées) -->
@@ -2843,6 +2967,11 @@ const I18N = {
     quiz_desc_ar: "Description (AR)",
     quiz_time: "⏱️ Temps par question (secondes)",
     quiz_del_title: "Supprimer ce quiz ?",
+    quiz_del_last: "⚠️ Impossible : ce thème n'a qu'un seul quiz. Crée d'abord un autre quiz, puis supprime celui-ci.",
+    quiz_del_default_warn: "⚠️ Tu es sur le point de supprimer le QUIZ PAR DÉFAUT.\n\nCe quiz peut contenir des questions de référence. Continuer ?",
+    theme_del_last_default: "⚠️ Impossible : c'est le dernier thème par défaut. Garde-le comme référence.",
+    theme_del_default_confirm: "Supprimer le thème par défaut",
+    theme_del_default_warn: "Cette action est définitive. Tous les quiz et questions de ce thème seront supprimés.",
     quiz_del_sub: "Toutes les questions de ce quiz seront supprimées.",
     an_title: "📊 Évaluation des acquis",
     an_sub: "Analyse complète par apprenant, par session et par question",
@@ -2850,6 +2979,10 @@ const I18N = {
     an_date_from: "📅 Du",
     an_date_to: "📅 Au",
     an_reset: "🔄 Reset",
+    an_export_excel: "📥 Exporter Excel",
+    an_export_processing: "Préparation de l'export...",
+    an_export_no_data: "Aucune donnée à exporter",
+    an_export_done: "Export Excel généré",
     an_all_lessons: "Tous les thèmes",
     an_tab_table: "📋 Tableau",
     an_tab_questions: "❓ Par question",
@@ -2926,12 +3059,42 @@ const I18N = {
     qe_questions: "questions",
     qe_add_btn: "+ Ajouter une question",
     qe_reset_btn: "🔄 Réinitialiser",
+    qe_dl_template: "📄 Modèle Excel",
+    qe_import_excel: "📥 Importer Excel",
+    xls_template_done: "Modèle téléchargé",
+    xls_no_quiz: "Sélectionne d'abord un thème et un quiz.",
+    xls_parsing: "Lecture du fichier...",
+    xls_no_sheet: "Aucune feuille trouvée",
+    xls_empty: "Fichier vide",
+    xls_no_questions: "Aucune question trouvée dans le fichier",
+    xls_importing: "Import en cours...",
+    xls_choice_title: "Importer le fichier Excel",
+    xls_choice_file: "Fichier détecté :",
+    xls_choice_count: "Questions valides :",
+    xls_choice_errors: "avec erreurs :",
+    xls_choice_question: "Que veux-tu faire des questions actuellement dans ce quiz ?",
+    xls_choice_existing: "questions existantes dans ce quiz",
+    xls_choice_append: "➕ Ajouter aux questions existantes",
+    xls_choice_replace: "🔄 Remplacer toutes les questions",
+    xls_report_done: "Import terminé !",
+    xls_report_no_valid: "Aucune question valide",
+    xls_report_added: "questions ajoutées au quiz",
+    xls_report_mode: "Mode",
+    xls_report_file: "Fichier",
+    xls_mode_replace: "Remplacement complet",
+    xls_mode_append: "Ajout aux existantes",
+    xls_mode_none: "Aucun import",
+    xls_report_errors_title: "Lignes ignorées :",
+    xls_report_ok: "✅ OK, fermer",
     qe_modal_add: "✨ Ajouter une question",
     qe_modal_edit: "✏️ Modifier la question",
     qe_q_fr: "Question (FR)",
     qe_q_ar: "Question (AR)",
     qe_options_fr: "Réponses (FR) — cocher la bonne réponse :",
     qe_options_ar: "Réponses (AR) :",
+    qe_q_image: "🖼️ Image (URL)",
+    qe_q_image_hint: "Colle l'URL d'une image (Imgur, GitHub, Drive public...). Elle sera affichée au-dessus des options.",
+    qe_has_image: "Cette question contient une image",
     qe_ar_section: "🌐 Version arabe (optionnel)",
     qe_save: "✅ Enregistrer",
     qe_badge_default: "Par défaut",
@@ -2999,7 +3162,26 @@ const I18N = {
     stop_title: "Arrêter le quiz ?",
     stop_desc: "La partie sera terminée immédiatement. Le classement final sera affiché et les résultats sauvegardés dans l'historique.",
     stop_confirm: "🛑 Oui, arrêter",
-    stop_stopped: "Quiz arrêté"
+    stop_stopped: "Quiz arrêté",
+    act_type_label: "🧩 Type de question",
+    act_type_mcq: "❓ QCM (1 bonne réponse)",
+    act_type_poll: "📊 Sondage (sans bonne réponse)",
+    act_poll_scoring_label: "🏆 Points pour ce sondage",
+    act_poll_scoring_none: "0 point (juste un vote)",
+    act_poll_scoring_part: "+1 à chaque votant (participation)",
+    act_poll_badge: "Sondage",
+    poll_voted: "Vote enregistré !",
+    poll_not_voted: "Pas de vote",
+    poll_thanks: "Merci pour ton avis 👍",
+    poll_results: "Résultats du vote",
+    live_votes: "Votes",
+    act_type_order: "🔢 Ordonner les étapes",
+    act_order_badge: "Ordre",
+    order_validate: "✅ Valider mon classement",
+    order_drag_hint: "Glisse les étapes ou utilise ▲▼ pour les ordonner",
+    order_correct_title: "Ordre correct",
+    order_well_placed: "bien placées",
+    live_answers: "Réponses"
   },
   ar: {
     live_mode: "وضع الوقت الحقيقي",
@@ -3344,6 +3526,11 @@ const I18N = {
     quiz_desc_ar: "الوصف (عربية)",
     quiz_time: "⏱️ الوقت لكل سؤال (ثواني)",
     quiz_del_title: "حذف هذا الاختبار ؟",
+    quiz_del_last: "⚠️ غير ممكن : هذا الموضوع يحتوي على اختبار واحد فقط. أنشئ اختباراً آخر أولاً.",
+    quiz_del_default_warn: "⚠️ أنت على وشك حذف الاختبار الافتراضي.\n\nقد يحتوي على أسئلة مرجعية. هل تريد المتابعة ؟",
+    theme_del_last_default: "⚠️ غير ممكن : هذا آخر موضوع افتراضي. احتفظ به كمرجع.",
+    theme_del_default_confirm: "حذف الموضوع الافتراضي",
+    theme_del_default_warn: "هذا الإجراء نهائي. ستُحذف جميع الاختبارات والأسئلة المرتبطة بهذا الموضوع.",
     quiz_del_sub: "سيتم حذف جميع أسئلة هذا الاختبار.",
     an_title: "📊 تقييم المكتسبات",
     an_sub: "تحليل شامل حسب المتدرب، الجلسة والسؤال",
@@ -3351,6 +3538,10 @@ const I18N = {
     an_date_from: "📅 من",
     an_date_to: "📅 إلى",
     an_reset: "🔄 إعادة تعيين",
+    an_export_excel: "📥 تصدير إلى Excel",
+    an_export_processing: "تحضير التصدير...",
+    an_export_no_data: "لا توجد بيانات للتصدير",
+    an_export_done: "تم إنشاء التصدير",
     an_all_lessons: "جميع المواضيع",
     an_tab_table: "📋 الجدول",
     an_tab_questions: "❓ حسب السؤال",
@@ -3427,12 +3618,42 @@ const I18N = {
     qe_questions: "أسئلة",
     qe_add_btn: "+ إضافة سؤال",
     qe_reset_btn: "🔄 إعادة التعيين",
+    qe_dl_template: "📄 نموذج Excel",
+    qe_import_excel: "📥 استيراد Excel",
+    xls_template_done: "تم تحميل النموذج",
+    xls_no_quiz: "اختر أولاً موضوعاً واختباراً.",
+    xls_parsing: "قراءة الملف...",
+    xls_no_sheet: "لا توجد ورقة",
+    xls_empty: "الملف فارغ",
+    xls_no_questions: "لم يتم العثور على أسئلة في الملف",
+    xls_importing: "جاري الاستيراد...",
+    xls_choice_title: "استيراد ملف Excel",
+    xls_choice_file: "الملف المختار :",
+    xls_choice_count: "الأسئلة الصالحة :",
+    xls_choice_errors: "مع أخطاء :",
+    xls_choice_question: "ماذا تريد أن تفعل بالأسئلة الموجودة حالياً في هذا الاختبار ؟",
+    xls_choice_existing: "أسئلة موجودة في هذا الاختبار",
+    xls_choice_append: "➕ إضافة للأسئلة الموجودة",
+    xls_choice_replace: "🔄 استبدال جميع الأسئلة",
+    xls_report_done: "اكتمل الاستيراد !",
+    xls_report_no_valid: "لا توجد أسئلة صالحة",
+    xls_report_added: "سؤال تمت إضافته للاختبار",
+    xls_report_mode: "الوضع",
+    xls_report_file: "الملف",
+    xls_mode_replace: "استبدال كامل",
+    xls_mode_append: "إضافة للموجود",
+    xls_mode_none: "لا استيراد",
+    xls_report_errors_title: "الأسطر المتجاهلة :",
+    xls_report_ok: "✅ موافق، إغلاق",
     qe_modal_add: "✨ إضافة سؤال",
     qe_modal_edit: "✏️ تعديل السؤال",
     qe_q_fr: "السؤال (فرنسية)",
     qe_q_ar: "السؤال (عربية)",
     qe_options_fr: "الأجوبة (فرنسية) — حدد الجواب الصحيح :",
     qe_options_ar: "الأجوبة (عربية) :",
+    qe_q_image: "🖼️ صورة (رابط)",
+    qe_q_image_hint: "الصق رابط صورة (Imgur، GitHub، Drive عام...). ستُعرض فوق الخيارات.",
+    qe_has_image: "هذا السؤال يحتوي على صورة",
     qe_ar_section: "🌐 النسخة العربية (اختياري)",
     qe_save: "✅ حفظ",
     qe_badge_default: "افتراضي",
@@ -3500,7 +3721,26 @@ const I18N = {
     stop_title: "إيقاف اللعبة ؟",
     stop_desc: "ستنتهي اللعبة فوراً. سيُعرض الترتيب النهائي وتُحفظ النتائج في السجل.",
     stop_confirm: "🛑 نعم، أوقف",
-    stop_stopped: "تم إيقاف اللعبة"
+    stop_stopped: "تم إيقاف اللعبة",
+    act_type_label: "🧩 نوع السؤال",
+    act_type_mcq: "❓ اختيار من متعدد (جواب صحيح واحد)",
+    act_type_poll: "📊 استطلاع (بدون جواب صحيح)",
+    act_poll_scoring_label: "🏆 النقاط لهذا الاستطلاع",
+    act_poll_scoring_none: "0 نقطة (مجرد تصويت)",
+    act_poll_scoring_part: "+1 لكل مصوّت (مشاركة)",
+    act_poll_badge: "استطلاع",
+    poll_voted: "تم تسجيل صوتك!",
+    poll_not_voted: "لم تصوّت",
+    poll_thanks: "شكرا على رأيك 👍",
+    poll_results: "نتائج التصويت",
+    live_votes: "أصوات",
+    act_type_order: "🔢 ترتيب المراحل",
+    act_order_badge: "ترتيب",
+    order_validate: "✅ تأكيد الترتيب",
+    order_drag_hint: "اسحب المراحل أو استعمل ▲▼ لترتيبها",
+    order_correct_title: "الترتيب الصحيح",
+    order_well_placed: "في مكانها",
+    live_answers: "إجابات"
   }
 };
 
@@ -3688,8 +3928,11 @@ async function setQuestionsForLesson(lessonId) {
         if (oa !== ob) return oa - ob;
         return (a.createdAt || 0) - (b.createdAt || 0);
       });
-      // Convertir vers le format attendu par le quiz : { fr: {q, options, correct}, ar: {...} }
+      // Convertir vers le format attendu par le quiz : { fr: {q, options, correct}, ar: {...}, imageUrl }
       QUESTIONS = list.map(q => ({
+        imageUrl: q.imageUrl || '',
+        type: q.type || 'mcq',
+        pollScoring: q.pollScoring || 'none',
         fr: {
           q: q.qFr || '',
           options: q.optionsFr || ['', '', '', ''],
@@ -3833,6 +4076,9 @@ async function setQuestionsForQuiz(themeId, quizId) {
         return (a.createdAt || 0) - (b.createdAt || 0);
       });
       QUESTIONS = list.map(q => ({
+        imageUrl: q.imageUrl || '',
+        type: q.type || 'mcq',
+        pollScoring: q.pollScoring || 'none',
         fr: {
           q: q.qFr || '',
           options: q.optionsFr || ['', '', '', ''],
@@ -4478,6 +4724,9 @@ async function createGame() {
   
   // Stocker la séquence du quiz dans Firebase (pour les apprenants)
   const quizDataArr = QUESTIONS.map(q => ({
+    imageUrl: q.imageUrl || '',
+    type: q.type || 'mcq',
+    pollScoring: q.pollScoring || 'none',
     qFr: q.fr.q,
     qAr: q.ar.q,
     optionsFr: q.fr.options,
@@ -4660,14 +4909,20 @@ function refreshTeacherLiveView(players, allAnswers) {
   // === B3 : Donut de précision live ===
   // 🔧 FIX : Précision = correct / TOTAL APPRENANTS (pas / submittedCount)
   try {
-    const q = QUESTIONS[_currentQ] ? QUESTIONS[_currentQ][LANG] : null;
-    if (q && totalPlayers > 0) {
-      const correctIdx = q.correct;
-      const correctCount = counts[correctIdx] || 0;
-      const pct = Math.round((correctCount / totalPlayers) * 100);
-      updateLiveDonut(pct);
+    const tpQ = QUESTIONS[_currentQ] ? (QUESTIONS[_currentQ].type || 'mcq') : 'mcq';
+    if (tpQ === 'poll' || tpQ === 'order') {
+      const part = totalPlayers > 0 ? Math.round((submittedIds.length / totalPlayers) * 100) : null;
+      updateLiveDonut(part);
     } else {
-      updateLiveDonut(null);
+      const q = QUESTIONS[_currentQ] ? QUESTIONS[_currentQ][LANG] : null;
+      if (q && totalPlayers > 0) {
+        const correctIdx = q.correct;
+        const correctCount = counts[correctIdx] || 0;
+        const pct = Math.round((correctCount / totalPlayers) * 100);
+        updateLiveDonut(pct);
+      } else {
+        updateLiveDonut(null);
+      }
     }
   } catch(e) { /* ignore */ }
   
@@ -4940,10 +5195,30 @@ function showTeacherQuestion(info) {
   $('q-total-teacher').textContent = QUESTIONS.length;
   $('q-text-teacher').textContent = q.q;
   
-  // 🆕 ANTI-SPOIL : pendant la question, cacher tous les indices qui pourraient aider à tricher
-  // (donut %, distribution bars, count badges, noms dans sidebar)
+  // 🆕 IMG/1 : Afficher l'image de la question (si présente)
+  const imgUrl = (QUESTIONS[qIdx].imageUrl || '').trim();
+  const imgWrap = document.getElementById('q-image-teacher-wrap');
+  const imgEl = document.getElementById('q-image-teacher');
+  if (imgWrap && imgEl) {
+    if (imgUrl) {
+      imgEl.src = imgUrl;
+      imgWrap.style.display = '';
+    } else {
+      imgEl.src = '';
+      imgWrap.style.display = 'none';
+    }
+  }
+  
+  // 🆕 ACT/1 : un sondage AFFICHE les votes en direct (pas de triche possible). QCM = anti-spoil.
+  const typeQ = QUESTIONS[qIdx].type || 'mcq';
+  const isPollQ = typeQ === 'poll';
+  const isOrderQ = typeQ === 'order';
   const screen = document.getElementById('screen-quiz-teacher');
-  if (screen) screen.classList.add('spoiler-hidden');
+  if (screen) screen.classList.toggle('spoiler-hidden', !isPollQ);
+  const ldLabel = document.querySelector('#live-donut .ld-label');
+  if (ldLabel) ldLabel.textContent = isPollQ ? (t('live_votes')||'Votes') : (isOrderQ ? (t('live_answers')||'Réponses') : t('live_precision'));
+  const arCorrectLbl = document.querySelector('#screen-answer-reveal [data-i18n="ar_correct"]');
+  if (arCorrectLbl) arCorrectLbl.textContent = isPollQ ? (t('poll_results')||'Résultats du vote') : (isOrderQ ? (t('order_correct_title')||'Ordre correct') : t('ar_correct'));
 
   const fb = window.fb;
   fb.get(fb.ref(fb.db, 'games/' + currentPin + '/players')).then(s => {
@@ -4953,6 +5228,14 @@ function showTeacherQuestion(info) {
 
   const grid = $('answers-grid-teacher');
   grid.innerHTML = '';
+  if (QUESTIONS[qIdx].type === 'order') {
+    grid.className = 'order-list-teacher mb-5';
+    const sidx = q.options.map((_, i) => i);
+    for (let i = sidx.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const tmp = sidx[i]; sidx[i] = sidx[j]; sidx[j] = tmp; }
+    grid.innerHTML = sidx.map(o => '<div class="order-step-ref">' + escapeHtml(q.options[o]) + '</div>').join('');
+    $('answers-received').textContent = '0';
+  } else {
+  grid.className = 'grid md:grid-cols-2 gap-4 mb-5';
   // 🆕 B2+B4 : Tuiles Kahoot avec barre de distribution + badge count
   const shapes = ['▲','◆','●','■'];
   const tileClasses = ['tile-blue', 'tile-teal', 'tile-orange', 'tile-pink'];
@@ -4969,6 +5252,7 @@ function showTeacherQuestion(info) {
     grid.appendChild(btn);
   });
   $('answers-received').textContent = '0';
+  }
   
   // 🆕 B3 : Reset du donut de précision live
   resetLiveDonut();
@@ -5028,6 +5312,8 @@ async function revealAnswer() {
   if (window._revealedQ === qIdx) return;
   window._revealedQ = qIdx;
   const q = QUESTIONS[qIdx][LANG];
+  if (QUESTIONS[qIdx].type === 'poll') { await revealPoll(qIdx, q); return; }
+  if (QUESTIONS[qIdx].type === 'order') { await revealOrder(qIdx, q); return; }
   const correctIdx = q.correct;
 
   const [playersSnap, answersSnap, infoSnap] = await Promise.all([
@@ -5189,6 +5475,218 @@ async function revealAnswer() {
   }, 1200);
 }
 
+async function revealOrder(qIdx, q) {
+  const fb = window.fb;
+  const [playersSnap, answersSnap] = await Promise.all([
+    fb.get(fb.ref(fb.db, 'games/' + currentPin + '/players')),
+    fb.get(fb.ref(fb.db, 'games/' + currentPin + '/answers/' + qIdx))
+  ]);
+  const players = playersSnap.val() || {};
+  const answers = answersSnap.val() || {};
+  const N = q.options.length;
+  const updates = {};
+  let sumCorrect = 0, votedCount = 0, perfect = 0;
+  Object.keys(players).forEach(pid => {
+    const ans = answers[pid];
+    if (ans && Array.isArray(ans.order)) {
+      votedCount++;
+      let cc = 0;
+      ans.order.forEach((orig, pos) => { if (orig === pos) cc++; });
+      sumCorrect += cc;
+      if (cc === N) perfect++;
+      if (cc > 0) updates['players/' + pid + '/score'] = (players[pid].score || 0) + cc;
+      updates['players/' + pid + '/streak'] = (cc === N) ? ((players[pid].streak || 0) + 1) : 0;
+      updates['answers/' + qIdx + '/' + pid + '/orderCorrect'] = cc;
+      updates['answers/' + qIdx + '/' + pid + '/pointsGained'] = cc;
+      updates['answers/' + qIdx + '/' + pid + '/isOrder'] = true;
+    } else {
+      updates['players/' + pid + '/streak'] = 0;
+    }
+  });
+  updates['info/state'] = 'reveal';
+  updates['info/correctAnswer'] = -1;
+  await fb.update(fb.ref(fb.db, 'games/' + currentPin), updates);
+
+  const screen = document.getElementById('screen-quiz-teacher');
+  if (screen) screen.classList.remove('spoiler-hidden');
+
+  const totalPlayers = Object.keys(players).length;
+  const avgPct = (totalPlayers > 0 && N > 0) ? Math.round((sumCorrect / (totalPlayers * N)) * 100) : 0;
+
+  $('reveal-correct').textContent = '🔢 ' + (t('order_correct_title') || 'Ordre correct');
+  $('reveal-explanation').textContent = q.explanation || '';
+  $('stat-correct').textContent = perfect;
+  $('stat-wrong').textContent = totalPlayers - perfect;
+  $('stat-fastest').textContent = '—';
+  $('stat-rate').textContent = avgPct;
+  $('reveal-stat-correct').textContent = perfect;
+  $('reveal-stat-wrong').textContent = votedCount - perfect;
+  $('reveal-stat-skip').textContent = totalPlayers - votedCount;
+  $('reveal-stat-total').textContent = totalPlayers;
+  $('reveal-stat-total2').textContent = totalPlayers;
+  $('reveal-stat-total3').textContent = totalPlayers;
+  $('reveal-big-pct').textContent = avgPct + '%';
+  $('reveal-suspense-correct').textContent = perfect;
+  $('reveal-suspense-total').textContent = totalPlayers;
+
+  const bigDonut = $('reveal-big-donut');
+  const bigCircle = $('reveal-donut-circle');
+  if (bigDonut && bigCircle) {
+    bigCircle.style.strokeDashoffset = 263.9 * (1 - avgPct / 100);
+    bigDonut.classList.toggle('precision-mid', avgPct >= 50 && avgPct < 80);
+    bigDonut.classList.toggle('precision-low', avgPct < 50);
+  }
+
+  const optsList = $('reveal-options-list');
+  if (optsList) {
+    optsList.innerHTML = q.options.map((opt, i) => '<div class="reveal-option-row is-correct">'
+      + '<div class="shape-mark" style="background:var(--copag-navy);">' + (i + 1) + '</div>'
+      + '<div class="opt-text">' + escapeHtml(opt) + '</div>'
+      + '<div class="check">&#10003;</div></div>').join('');
+  }
+
+  const studList = $('reveal-students-list');
+  if (studList) {
+    const arr = Object.keys(players).map(pid => {
+      const ans = answers[pid];
+      let cc = -1;
+      if (ans && Array.isArray(ans.order)) { cc = 0; ans.order.forEach((orig, pos) => { if (orig === pos) cc++; }); }
+      return { name: players[pid].name || '—', cc: cc, time: ans ? ans.time : null };
+    }).sort((a, b) => (b.cc - a.cc) || ((a.time != null && b.time != null) ? a.time - b.time : 0));
+    studList.innerHTML = arr.map(s => {
+      const cls = s.cc < 0 ? 'skip' : (s.cc === N ? 'correct' : 'wrong');
+      const status = s.cc < 0 ? '—' : (s.cc + '/' + N);
+      return '<div class="reveal-student-row ' + cls + '">'
+        + '<span class="sn-name">' + escapeHtml(s.name) + '</span>'
+        + (s.time != null ? '<span class="sn-time">' + s.time.toFixed(1) + 's</span>' : '')
+        + '<span class="sn-status">' + status + '</span></div>';
+    }).join('');
+  }
+
+  setTimeout(() => {
+    goTo('screen-answer-reveal');
+    _revealStatsShown = false;
+    applyRevealStatsVisibility();
+  }, 1200);
+}
+window.revealOrder = revealOrder;
+
+async function revealPoll(qIdx, q) {
+  const fb = window.fb;
+  const scoreMode = QUESTIONS[qIdx].pollScoring || 'none';
+  const [playersSnap, answersSnap, infoSnap] = await Promise.all([
+    fb.get(fb.ref(fb.db, 'games/' + currentPin + '/players')),
+    fb.get(fb.ref(fb.db, 'games/' + currentPin + '/answers/' + qIdx)),
+    fb.get(fb.ref(fb.db, 'games/' + currentPin + '/info'))
+  ]);
+  const players = playersSnap.val() || {};
+  const answers = answersSnap.val() || {};
+  const info = infoSnap.val() || {};
+  const updates = {};
+  let votedCount = 0;
+  Object.keys(players).forEach(pid => {
+    const ans = answers[pid];
+    const fullTime = (info.timePerQuestion || 30);
+    updates['players/' + pid + '/totalTimeSession'] = (players[pid].totalTimeSession || 0) + (ans ? (ans.time || 0) : fullTime);
+    if (ans) {
+      votedCount++;
+      const pts = (scoreMode === 'participation') ? 1 : 0;
+      if (pts) updates['players/' + pid + '/score'] = (players[pid].score || 0) + pts;
+      updates['answers/' + qIdx + '/' + pid + '/pointsGained'] = pts;
+      updates['answers/' + qIdx + '/' + pid + '/isPoll'] = true;
+    }
+  });
+  updates['info/state'] = 'reveal';
+  updates['info/correctAnswer'] = -1;
+  await fb.update(fb.ref(fb.db, 'games/' + currentPin), updates);
+
+  const screen = document.getElementById('screen-quiz-teacher');
+  if (screen) screen.classList.remove('spoiler-hidden');
+
+  const counts = [0,0,0,0];
+  Object.values(answers || {}).forEach(a => {
+    if (typeof a.choice === 'number' && a.choice >= 0 && a.choice < 4) counts[a.choice]++;
+  });
+  const totalPlayers = Object.keys(players).length;
+  const maxCnt = Math.max(counts[0], counts[1], counts[2], counts[3]);
+  const winnerIdx = maxCnt > 0 ? counts.indexOf(maxCnt) : -1;
+  const partPct = totalPlayers > 0 ? Math.round((votedCount / totalPlayers) * 100) : 0;
+
+  document.querySelectorAll('#answers-grid-teacher .kahoot-tile').forEach((btn, idx) => {
+    btn.classList.remove('disabled');
+    if (idx === winnerIdx) { btn.style.outline = '5px solid white'; btn.style.outlineOffset = '-5px'; }
+  });
+
+  $('reveal-correct').textContent = '📊 ' + (t('poll_results') || 'Résultats du vote');
+  $('reveal-explanation').textContent = q.explanation || (t('poll_thanks') || 'Merci pour ton avis 👍');
+
+  $('stat-correct').textContent = votedCount;
+  $('stat-wrong').textContent = totalPlayers - votedCount;
+  $('stat-fastest').textContent = '—';
+  $('stat-rate').textContent = partPct;
+
+  $('reveal-stat-correct').textContent = votedCount;
+  $('reveal-stat-wrong').textContent = totalPlayers - votedCount;
+  $('reveal-stat-skip').textContent = totalPlayers - votedCount;
+  $('reveal-stat-total').textContent = totalPlayers;
+  $('reveal-stat-total2').textContent = totalPlayers;
+  $('reveal-stat-total3').textContent = totalPlayers;
+  $('reveal-big-pct').textContent = partPct + '%';
+  $('reveal-suspense-correct').textContent = votedCount;
+  $('reveal-suspense-total').textContent = totalPlayers;
+
+  const bigDonut = $('reveal-big-donut');
+  const bigCircle = $('reveal-donut-circle');
+  if (bigDonut && bigCircle) {
+    bigCircle.style.strokeDashoffset = 263.9 * (1 - partPct / 100);
+    bigDonut.classList.remove('precision-mid', 'precision-low');
+  }
+
+  const shapes = ['▲','◆','●','■'];
+  const tileColors = ['#3b82f6', '#14b8a6', '#fb923c', '#ec4899'];
+  const optsList = $('reveal-options-list');
+  if (optsList) {
+    optsList.innerHTML = q.options.map((opt, idx) => {
+      const isWinner = (idx === winnerIdx);
+      const cnt = counts[idx];
+      const optPct = totalPlayers > 0 ? Math.round((cnt / totalPlayers) * 100) : 0;
+      return `<div class="reveal-option-row ${isWinner ? 'is-correct' : ''}">
+        <div class="shape-mark" style="background:${tileColors[idx]};">${shapes[idx]}</div>
+        <div class="opt-text">${escapeHtml(opt)}</div>
+        <div class="opt-count">${cnt} (${optPct}%)</div>
+        ${isWinner ? '<div class="check">★</div>' : ''}
+      </div>`;
+    }).join('');
+  }
+
+  const studList = $('reveal-students-list');
+  if (studList) {
+    const arr = Object.keys(players).map(pid => {
+      const p = players[pid];
+      const ans = (answers || {})[pid];
+      const voted = !!ans;
+      const letter = (voted && ans.choice != null && ans.choice >= 0) ? String.fromCharCode(65 + ans.choice) : '—';
+      return { name: p.name || '—', voted, status: letter, statusClass: voted ? 'correct' : 'skip', time: voted ? ans.time : null };
+    }).sort((a, b) => {
+      if (a.voted !== b.voted) return a.voted ? -1 : 1;
+      if (a.time != null && b.time != null) return a.time - b.time;
+      return a.name.localeCompare(b.name);
+    });
+    studList.innerHTML = arr.map(s => `<div class="reveal-student-row ${s.statusClass}">
+      <span class="sn-name">${escapeHtml(s.name)}</span>
+      ${s.time != null ? '<span class="sn-time">' + s.time.toFixed(1) + 's</span>' : ''}
+      <span class="sn-status">${s.status}</span>
+    </div>`).join('');
+  }
+
+  setTimeout(() => {
+    goTo('screen-answer-reveal');
+    _revealStatsShown = false;
+    applyRevealStatsVisibility();
+  }, 1200);
+}
+window.revealPoll = revealPoll;
+
 async function showLeaderboard() {
   const fb = window.fb;
   await fb.update(fb.ref(fb.db, 'games/' + currentPin + '/info'), { state: 'leaderboard' });
@@ -5305,9 +5803,16 @@ async function showFinal() {
     for (let i = 0; i < totalQ; i++) {
       questionsData.push({
         idx: i,
+        type: QUESTIONS[i].type || 'mcq',
+        pollScoring: QUESTIONS[i].pollScoring || 'none',
         correctIdx: QUESTIONS[i].fr.correct,
         questionFr: QUESTIONS[i].fr.q,
-        questionAr: QUESTIONS[i].ar.q
+        questionAr: QUESTIONS[i].ar.q,
+        // 🆕 Sauvegarder les options pour pouvoir afficher dans l'export Excel
+        optionsFr: QUESTIONS[i].fr.options || [],
+        optionsAr: QUESTIONS[i].ar.options || [],
+        explanationFr: (QUESTIONS[i].fr.explanation) || '',
+        explanationAr: (QUESTIONS[i].ar.explanation) || ''
       });
     }
     
@@ -5325,13 +5830,20 @@ async function showFinal() {
     
     for (let qIdx = 0; qIdx < totalQ; qIdx++) {
       const qAns = answers[qIdx] || {};
+      const qType_ = questionsData[qIdx] ? (questionsData[qIdx].type || 'mcq') : 'mcq';
+      const qIsPoll = qType_ === 'poll';
+      const qIsOrder = qType_ === 'order';
       Object.entries(qAns).forEach(([pid, aData]) => {
         if (playerIdMap[pid]) {
           playerIdMap[pid].answersByQuestion[qIdx] = {
             choice: aData.choice,
-            correct: aData.correct === true
+            correct: aData.correct === true,
+            poll: qIsPoll,
+            order: qIsOrder,
+            orderCorrect: (aData.orderCorrect != null ? aData.orderCorrect : null)
           };
         }
+        if (qIsPoll || qIsOrder) return;
         totalAnswers++;
         if (aData.correct === true) totalCorrect++;
       });
@@ -5397,10 +5909,18 @@ async function showFinal() {
           const ans = detail ? detail.answersByQuestion[qIdx] : null;
           if (ans) {
             // Apprenant a répondu : vert si correct, rouge si incorrect
+            const qTypeP = questionsData[qIdx] ? (questionsData[qIdx].type || 'mcq') : 'mcq';
+            const qIsPollP = qTypeP === 'poll';
+            const qIsOrderP = qTypeP === 'order';
+            const stepsN = (questionsData[qIdx] && questionsData[qIdx].optionsFr) ? questionsData[qIdx].optionsFr.length : 4;
             perQuestion.push({
               qIdx,
               choice: ans.choice,
-              correct: ans.correct,
+              correct: (qIsPollP || qIsOrderP) ? null : ans.correct,
+              poll: qIsPollP || undefined,
+              order: qIsOrderP || undefined,
+              orderCorrect: qIsOrderP ? (ans.orderCorrect != null ? ans.orderCorrect : 0) : undefined,
+              stepsN: qIsOrderP ? stepsN : undefined,
               played: true
             });
           } else {
@@ -5725,6 +6245,8 @@ async function launchNextQuiz(newQuizId) {
       return;
     }
     const newQuizDataArr = QUESTIONS.map(q => ({
+      type: q.type || 'mcq',
+      pollScoring: q.pollScoring || 'none',
       qFr: q.fr.q, qAr: q.ar.q,
       optionsFr: q.fr.options, optionsAr: q.ar.options,
       correctIdx: q.fr.correct,
@@ -5782,26 +6304,42 @@ async function restartFromHome() {
 
 let currentMatricule = null;
 
-// 🆕 Phase 2A : Persistance de session apprenant (sessionStorage = par onglet)
-//    Permet à un apprenant qui rafraîchit la page de reprendre automatiquement
+// 🆕 Phase 2A+ : Persistance de session apprenant en localStorage (survit à la fermeture du navigateur)
+//    L'apprenant reprend auto même après avoir fermé l'onglet/navigateur, tant que la partie est ouverte.
+//    Expiration de sécurité : 6h (évite de reconnecter à une vieille partie).
 const STUDENT_SESSION_KEY = 'copag_student_session';
+const STUDENT_SESSION_MAX_AGE = 6 * 60 * 60 * 1000; // 6h
 function saveStudentSession(data) {
-  try { sessionStorage.setItem(STUDENT_SESSION_KEY, JSON.stringify(data)); } catch(e) {}
+  try { localStorage.setItem(STUDENT_SESSION_KEY, JSON.stringify({ ...data, savedAt: Date.now() })); } catch(e) {}
 }
 function getStudentSession() {
   try {
-    const raw = sessionStorage.getItem(STUDENT_SESSION_KEY);
-    return raw ? JSON.parse(raw) : null;
+    const raw = localStorage.getItem(STUDENT_SESSION_KEY);
+    if (!raw) return null;
+    const data = JSON.parse(raw);
+    if (data.savedAt && (Date.now() - data.savedAt) > STUDENT_SESSION_MAX_AGE) {
+      localStorage.removeItem(STUDENT_SESSION_KEY);
+      return null;
+    }
+    return data;
   } catch(e) { return null; }
 }
 function clearStudentSession() {
-  try { sessionStorage.removeItem(STUDENT_SESSION_KEY); } catch(e) {}
+  try { localStorage.removeItem(STUDENT_SESSION_KEY); } catch(e) {}
 }
 
 // Tente une reconnexion silencieuse à partir des infos sauvegardées
 async function tryAutoReconnectStudent() {
   const saved = getStudentSession();
   if (!saved || !saved.pin || !saved.playerId) return false;
+  // 🆕 Appareil partagé : si l'URL porte un matricule différent, ne pas reconnecter l'ancien stagiaire
+  try {
+    const urlMat = new URLSearchParams(window.location.search).get('matricule');
+    if (urlMat && saved.matricule && urlMat.trim().toUpperCase() !== String(saved.matricule).toUpperCase()) {
+      clearStudentSession();
+      return false;
+    }
+  } catch(e) {}
   try {
     const fb = window.fb;
     const gameSnap = await fb.get(fb.ref(fb.db, 'games/' + saved.pin));
@@ -6089,6 +6627,9 @@ function watchGameAsStudent() {
       if (snap.exists()) {
         const arr = snap.val();
         QUESTIONS = arr.map(q => ({
+          imageUrl: q.imageUrl || '',  // 🆕 IMG/1 : transmettre l'URL d'image côté apprenant
+          type: q.type || 'mcq',
+          pollScoring: q.pollScoring || 'none',
           fr: { q: q.qFr || '', options: q.optionsFr || ['','','',''], correct: q.correctIdx != null ? q.correctIdx : 0, explanation: q.explanationFr || '' },
           ar: { q: q.qAr || q.qFr || '', options: q.optionsAr || q.optionsFr || ['','','',''], correct: q.correctIdx != null ? q.correctIdx : 0, explanation: q.explanationAr || q.explanationFr || '' }
         }));
@@ -6181,11 +6722,29 @@ function showStudentQuestion(info) {
   $('student-q-num').textContent = qIdx + 1;
   $('student-q-total').textContent = QUESTIONS.length;
   $('student-q-text').textContent = q.q;
+  
+  // 🆕 IMG/1 : Afficher l'image de la question (côté apprenant)
+  const sImgUrl = (QUESTIONS[qIdx].imageUrl || '').trim();
+  const sImgWrap = document.getElementById('q-image-student-wrap');
+  const sImgEl = document.getElementById('q-image-student');
+  if (sImgWrap && sImgEl) {
+    if (sImgUrl) {
+      sImgEl.src = sImgUrl;
+      sImgWrap.style.display = '';
+    } else {
+      sImgEl.src = '';
+      sImgWrap.style.display = 'none';
+    }
+  }
 
   const grid = $('student-answers-grid');
   $('student-answer-waiting').classList.add('hidden');
   grid.classList.remove('hidden');
   grid.innerHTML = '';
+  if (QUESTIONS[qIdx].type === 'order') {
+    renderStudentOrder(qIdx, q, info);
+  } else {
+  grid.className = 'grid grid-cols-2 gap-3';
   // 🆕 B2 : Tuiles Kahoot côté apprenant
   const shapes = ['▲','◆','●','■'];
   const tileClasses = ['tile-blue', 'tile-teal', 'tile-orange', 'tile-pink'];
@@ -6199,6 +6758,7 @@ function showStudentQuestion(info) {
     btn.onclick = () => studentAnswer(idx, info);
     grid.appendChild(btn);
   });
+  }
 
   const startTs = info.questionStartTime;
   const total = info.timePerQuestion || 30;
@@ -6220,6 +6780,7 @@ function showStudentQuestion(info) {
       clearInterval(timerInterval);
       if (stuBadgeEl) stuBadgeEl.classList.remove('timer-urgent-badge');
       playTimeUpSound(); // 🆕 son de fin
+      if (QUESTIONS[qIdx] && QUESTIONS[qIdx].type === 'order' && !_orderSubmitted) submitOrder(info, true);
     }
   };
   update();
@@ -6227,6 +6788,95 @@ function showStudentQuestion(info) {
 
   goTo('screen-student-question');
 }
+
+let _orderSubmitted = false;
+
+function renderStudentOrder(qIdx, q, info) {
+  _orderSubmitted = false;
+  const grid = $('student-answers-grid');
+  grid.className = 'order-list';
+  const idxs = q.options.map((_, i) => i);
+  for (let i = idxs.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const tmp = idxs[i]; idxs[i] = idxs[j]; idxs[j] = tmp; }
+  if (idxs.length > 1 && idxs.every((v, p) => v === p)) { const tmp = idxs[0]; idxs[0] = idxs[1]; idxs[1] = tmp; }
+  grid.innerHTML = '<div class="order-hint">' + (t('order_drag_hint') || 'Glisse ou utilise les flèches') + '</div>'
+    + idxs.map(orig => '<div class="order-step" data-orig="' + orig + '" draggable="true">'
+        + '<span class="order-pos"></span>'
+        + '<span class="order-text">' + escapeHtml(q.options[orig]) + '</span>'
+        + '<span class="order-arrows"><button type="button" class="order-up">▲</button><button type="button" class="order-down">▼</button></span>'
+        + '<span class="order-grip">&#9783;</span>'
+      + '</div>').join('')
+    + '<button type="button" class="order-validate-btn" id="order-validate-btn">' + (t('order_validate') || 'Valider') + '</button>';
+  renumberOrderSteps();
+  bindOrderInteractions(info);
+}
+
+function renumberOrderSteps() {
+  document.querySelectorAll('#student-answers-grid .order-step').forEach((el, i) => {
+    const pos = el.querySelector('.order-pos'); if (pos) pos.textContent = (i + 1);
+  });
+}
+
+function moveOrderStep(stepEl, dir) {
+  if (!stepEl) return;
+  const list = stepEl.parentElement;
+  const prev = stepEl.previousElementSibling, next = stepEl.nextElementSibling;
+  if (dir < 0 && prev && prev.classList.contains('order-step')) list.insertBefore(stepEl, prev);
+  else if (dir > 0 && next && next.classList.contains('order-step')) list.insertBefore(next, stepEl);
+  renumberOrderSteps();
+}
+
+function bindOrderInteractions(info) {
+  const grid = $('student-answers-grid');
+  grid.querySelectorAll('.order-up').forEach(b => b.onclick = (e) => { e.stopPropagation(); moveOrderStep(b.closest('.order-step'), -1); });
+  grid.querySelectorAll('.order-down').forEach(b => b.onclick = (e) => { e.stopPropagation(); moveOrderStep(b.closest('.order-step'), 1); });
+  const vb = $('order-validate-btn'); if (vb) vb.onclick = () => submitOrder(info, false);
+  let dragEl = null;
+  grid.querySelectorAll('.order-step').forEach(step => {
+    step.addEventListener('dragstart', () => { dragEl = step; step.classList.add('dragging'); });
+    step.addEventListener('dragend', () => { step.classList.remove('dragging'); dragEl = null; renumberOrderSteps(); });
+    step.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      if (!dragEl || dragEl === step) return;
+      const r = step.getBoundingClientRect();
+      const after = (e.clientY - r.top) > r.height / 2;
+      step.parentElement.insertBefore(dragEl, after ? step.nextElementSibling : step);
+    });
+    const grip = step.querySelector('.order-grip');
+    if (grip) {
+      grip.addEventListener('touchstart', (e) => { e.preventDefault(); step.classList.add('dragging'); }, { passive: false });
+      grip.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const tch = e.touches[0];
+        const el = document.elementFromPoint(tch.clientX, tch.clientY);
+        const over = el ? el.closest('.order-step') : null;
+        if (over && over !== step) {
+          const r = over.getBoundingClientRect();
+          const after = (tch.clientY - r.top) > r.height / 2;
+          over.parentElement.insertBefore(step, after ? over.nextElementSibling : over);
+          renumberOrderSteps();
+        }
+      }, { passive: false });
+      grip.addEventListener('touchend', () => { step.classList.remove('dragging'); renumberOrderSteps(); });
+    }
+  });
+}
+
+async function submitOrder(info, isAuto) {
+  if (_orderSubmitted) return;
+  _orderSubmitted = true;
+  const fb = window.fb;
+  const qIdx = info.currentQuestion;
+  const time = (serverNow() - info.questionStartTime) / 1000;
+  const order = Array.from(document.querySelectorAll('#student-answers-grid .order-step')).map(el => parseInt(el.dataset.orig, 10));
+  await fb.set(fb.ref(fb.db, 'games/' + currentPin + '/answers/' + qIdx + '/' + currentPlayerId), {
+    choice: -1, order: order, time: time, name: currentPlayerName
+  });
+  $('student-answers-grid').classList.add('hidden');
+  $('student-answer-waiting').classList.remove('hidden');
+}
+window.renderStudentOrder = renderStudentOrder;
+window.moveOrderStep = moveOrderStep;
+window.submitOrder = submitOrder;
 
 async function studentAnswer(idx, info) {
   const fb = window.fb;
@@ -6265,6 +6915,34 @@ async function showStudentResult(info) {
 
   const card = $('student-result-card');
   card.classList.remove('correct','wrong');
+  card.style.background = '';
+  if (QUESTIONS[qIdx].type === 'poll') {
+    card.style.background = 'linear-gradient(135deg, var(--copag-navy), var(--copag-cyan))';
+    $('student-result-icon').textContent = ans ? '📊' : '⏳';
+    $('student-result-title').textContent = ans ? (t('poll_voted')||'Vote enregistré !') : (t('poll_not_voted')||'Pas de vote');
+    $('student-result-explanation').textContent = q.explanation || (t('poll_thanks')||'Merci pour ton avis 👍');
+    $('student-score').textContent = me ? (me.score || 0) : 0;
+    const sortedP = Object.entries(allPlayers).sort((a,b) => (b[1].score||0) - (a[1].score||0));
+    const rankP = sortedP.findIndex(([id]) => id === currentPlayerId) + 1;
+    $('student-rank').textContent = rankP || '—';
+    goTo('screen-student-result');
+    return;
+  }
+  if (QUESTIONS[qIdx].type === 'order') {
+    const N = q.options.length;
+    let cc = 0;
+    if (ans && Array.isArray(ans.order)) ans.order.forEach((orig, pos) => { if (orig === pos) cc++; });
+    const allGood = cc === N;
+    card.classList.add(allGood ? 'correct' : 'wrong');
+    $('student-result-icon').textContent = allGood ? '🏆' : '🔢';
+    $('student-result-title').textContent = cc + '/' + N + ' ' + (t('order_well_placed') || 'bien placées') + ' (+' + cc + ')';
+    $('student-result-explanation').textContent = q.explanation || '';
+    $('student-score').textContent = me ? (me.score || 0) : 0;
+    const sO = Object.entries(allPlayers).sort((a, b) => (b[1].score || 0) - (a[1].score || 0));
+    $('student-rank').textContent = (sO.findIndex(([id]) => id === currentPlayerId) + 1) || '—';
+    goTo('screen-student-result');
+    return;
+  }
   if (ans && ans.choice === q.correct) {
     card.classList.add('correct');
     $('student-result-icon').textContent = '✅';
@@ -7334,7 +8012,9 @@ async function buildExcelWorkbook(title, sessions) {
     const qCount = s.totalQuestions || 0;
     for (let q = 0; q < maxQ; q++) {
       if (q < qCount && qs[q]) {
-        corRow[col++] = String.fromCharCode(65 + qs[q].correctIdx);
+        corRow[col++] = (qs[q].type === 'poll') ? '📊'
+          : (qs[q].type === 'order') ? '🔢'
+          : (qs[q].correctIdx != null && qs[q].correctIdx >= 0 ? String.fromCharCode(65 + qs[q].correctIdx) : '—');
       } else {
         corRow[col++] = '—';  // Not played
       }
@@ -7361,7 +8041,13 @@ async function buildExcelWorkbook(title, sessions) {
         for (let q = 0; q < maxQ; q++) {
           if (q < qCount) {
             const pq = player.perQuestion[q];
-            if (pq && pq.played !== false) {
+            if (pq && pq.poll === true) {
+              playerRow[col++] = (pq.choice != null && pq.choice >= 0) ? String.fromCharCode(65 + pq.choice) : '•';
+            } else if (pq && pq.order === true) {
+              const oc = pq.orderCorrect != null ? pq.orderCorrect : 0;
+              playerRow[col++] = oc;
+              quizTotal += oc;
+            } else if (pq && pq.played !== false) {
               const val = pq.correct ? 1 : 0;
               playerRow[col++] = val;
               quizTotal += val;
@@ -8743,12 +9429,14 @@ function renderQuestionsList() {
     card.className = 'qe-card ' + (q.isDefault ? 'default' : 'custom');
     const qText = LANG === 'ar' ? (q.qAr || q.qFr) : (q.qFr || q.qAr);
     const opts = LANG === 'ar' ? (q.optionsAr || q.optionsFr) : (q.optionsFr || q.optionsAr);
+    const isPoll = q.type === 'poll';
+    const isOrder = q.type === 'order';
     const correctIdx = q.correctIdx != null ? q.correctIdx : 0;
     const badgeText = q.isDefault ? t('qe_badge_default') : t('qe_badge_custom');
     const badgeClass = q.isDefault ? 'default' : 'custom';
     
     const choicesHtml = (opts || ['', '', '', '']).map((opt, i) => {
-      const isCorrect = i === correctIdx;
+      const isCorrect = !isPoll && !isOrder && i === correctIdx;
       const letter = String.fromCharCode(65 + i);
       return `<div class="qe-choice ${isCorrect ? 'correct' : ''}">
         <span style="font-weight:700;">${letter})</span>
@@ -8760,7 +9448,9 @@ function renderQuestionsList() {
     card.innerHTML = `
       <div class="qe-card-top">
         <div class="qe-q-num">Q${idx + 1}</div>
-        <div class="qe-q-text">${escapeHtml(qText || '—')}</div>
+        <div class="qe-q-text">${q.imageUrl ? '<span title="' + escapeAttr(t('qe_has_image') || 'Cette question contient une image') + '" style="margin-right:6px;">🖼️</span>' : ''}${escapeHtml(qText || '—')}</div>
+        ${isPoll ? '<span class="qe-badge" style="background:#dbeafe;color:#1e40af;">📊 ' + (t('act_poll_badge')||'Sondage') + '</span>' : ''}
+        ${isOrder ? '<span class="qe-badge" style="background:#fef3c7;color:#92400e;">🔢 ' + (t('act_order_badge')||'Ordre') + '</span>' : ''}
         <span class="qe-badge ${badgeClass}">${badgeText}</span>
       </div>
       <div class="qe-choices">${choicesHtml}</div>
@@ -8812,6 +9502,9 @@ function openQuestionEditModal(questionId) {
   $('qe-modal-title').textContent = q ? t('qe_modal_edit') : t('qe_modal_add');
   $('qe-q-fr').value = q ? (q.qFr || '') : '';
   $('qe-q-ar').value = q ? (q.qAr || '') : '';
+  // 🆕 IMG/1 : charger l'URL d'image existante
+  $('qe-q-image').value = q ? (q.imageUrl || '') : '';
+  updateImagePreview();
   
   const optionsFr = q ? (q.optionsFr || ['', '', '', '']) : ['', '', '', ''];
   const optionsAr = q ? (q.optionsAr || ['', '', '', '']) : ['', '', '', ''];
@@ -8820,6 +9513,9 @@ function openQuestionEditModal(questionId) {
   buildOptionInputs('qe-options-fr-container', 'fr', optionsFr, correctIdx);
   buildOptionInputs('qe-options-ar-container', 'ar', optionsAr, correctIdx);
   
+  $('qe-q-type').value = q ? (q.type || 'mcq') : 'mcq';
+  $('qe-poll-scoring').value = q ? (q.pollScoring || 'none') : 'none';
+  onQeTypeChange();
   $('qe-form-err').classList.add('hidden');
   $('question-edit-modal').classList.remove('hidden');
   setTimeout(() => $('qe-q-fr').focus(), 100);
@@ -8830,10 +9526,46 @@ function closeQuestionEditModal() {
   _qeEditingId = null;
 }
 
+// 🆕 IMG/1 : mettre à jour l'aperçu de l'image au fil de la saisie
+function updateImagePreview() {
+  const url = ($('qe-q-image').value || '').trim();
+  const img = $('qe-q-image-preview');
+  if (!img) return;
+  if (url) {
+    img.src = url;
+    img.style.display = '';
+  } else {
+    img.src = '';
+    img.style.display = 'none';
+  }
+}
+
+function onQeTypeChange() {
+  const type = $('qe-q-type').value || 'mcq';
+  const isPoll = type === 'poll';
+  const isOrder = type === 'order';
+  const sw = $('qe-poll-scoring-wrap');
+  if (sw) sw.style.display = isPoll ? '' : 'none';
+  ['qe-options-fr-container','qe-options-ar-container'].forEach(id => {
+    const c = $(id); if (c) c.classList.toggle('qe-poll-mode', isPoll || isOrder);
+  });
+  const frLabel = document.querySelector('label[data-i18n="qe_options_fr"]');
+  if (frLabel) {
+    if (isOrder) frLabel.textContent = (LANG==='ar' ? 'المراحل بالترتيب الصحيح (من الأعلى للأسفل):' : 'Étapes dans le BON ordre (haut → bas) :');
+    else if (isPoll) frLabel.textContent = (LANG==='ar' ? 'خيارات التصويت (بدون جواب صحيح):' : 'Options du vote (sans bonne réponse) :');
+    else frLabel.textContent = t('qe_options_fr');
+  }
+}
+window.onQeTypeChange = onQeTypeChange;
+
 async function saveQuestion() {
   const qFr = $('qe-q-fr').value.trim();
   const qAr = $('qe-q-ar').value.trim();
   const errEl = $('qe-form-err');
+  const qType = $('qe-q-type').value || 'mcq';
+  const pollScoring = $('qe-poll-scoring').value || 'none';
+  const isPoll = qType === 'poll';
+  const isOrder = qType === 'order';
   
   // Récupérer options FR + AR
   const frInputs = document.querySelectorAll('#qe-options-fr-container input[type="text"]');
@@ -8857,14 +9589,18 @@ async function saveQuestion() {
     errEl.classList.remove('hidden');
     return;
   }
-  if (correctIdx < 0) {
+  if (!isPoll && !isOrder && correctIdx < 0) {
     errEl.textContent = t('qe_err_correct');
     errEl.classList.remove('hidden');
     return;
   }
+  const finalCorrectIdx = (isPoll || isOrder) ? -1 : correctIdx;
   
   // Synchroniser correctIdx entre FR et AR : on prend la valeur du dernier coché (en cas d'incohérence)
   // Le radio FR et AR doivent rester synchronisés. On force le sync au moment du save.
+  
+  // 🆕 IMG/1 : récupérer l'URL d'image
+  const imageUrl = ($('qe-q-image').value || '').trim();
   
   const fb = window.fb;
   const basePath = getCurrentQuestionsPath();
@@ -8877,7 +9613,10 @@ async function saveQuestion() {
         ...existing,
         qFr, qAr,
         optionsFr, optionsAr,
-        correctIdx,
+        correctIdx: finalCorrectIdx,
+        type: qType,
+        pollScoring,
+        imageUrl,
         updatedAt: Date.now()
       };
       delete payload._id;
@@ -8889,7 +9628,10 @@ async function saveQuestion() {
       const payload = {
         qFr, qAr,
         optionsFr, optionsAr,
-        correctIdx,
+        correctIdx: finalCorrectIdx,
+        type: qType,
+        pollScoring,
+        imageUrl,
         isDefault: false,
         order: maxOrder + 1,
         createdAt: Date.now()
@@ -9083,14 +9825,25 @@ async function saveTheme() {
 
 function askDeleteTheme(themeId) {
   const themes = _themesCache || [];
-  const t = themes.find(x => x.id === themeId);
-  if (!t) return;
-  if (t.isDefault) {
-    toast('⚠️ Les thèmes par défaut ne peuvent pas être supprimés');
-    return;
+  const th = themes.find(x => x.id === themeId);
+  if (!th) return;
+  
+  // 🆕 Garde-fou : si c'est un thème par défaut et le DERNIER thème par défaut restant → bloquer
+  // (pour garder au moins 1 thème de référence)
+  if (th.isDefault) {
+    const defaultCount = themes.filter(x => x.isDefault).length;
+    if (defaultCount <= 1) {
+      toast('⚠️ ' + (t('theme_del_last_default') || 'Impossible : c\'est le dernier thème par défaut. Garde-le comme référence.'));
+      return;
+    }
+    // Confirmation simple avant suppression (avec alert oui/non)
+    if (!confirm((t('theme_del_default_confirm') || 'Supprimer le thème par défaut') + ' "' + (th.icon || '') + ' ' + th.name + '" ?\n\n' + (t('theme_del_default_warn') || 'Cette action est définitive. Tous les quiz et questions de ce thème seront supprimés.'))) {
+      return;
+    }
   }
+  
   _themeDeletingId = themeId;
-  $('theme-del-name').textContent = (t.icon || '') + ' ' + t.name;
+  $('theme-del-name').textContent = (th.icon || '') + ' ' + th.name;
   $('theme-delete-modal').classList.remove('hidden');
 }
 
@@ -9233,13 +9986,24 @@ async function saveQuiz() {
 }
 
 async function askDeleteQuiz() {
-  if (_qeCurrentQuiz === 'default') {
-    toast('⚠️ Le Quiz 1 par défaut ne peut pas être supprimé. Utilise "🔄 Réinitialiser" à la place.');
+  const quizzes = await loadQuizzesForTheme(_qeCurrentLesson);
+  
+  // 🆕 Garde-fou : si c'est le SEUL quiz du thème, on bloque (le thème serait inutilisable)
+  if (quizzes.length <= 1) {
+    toast('⚠️ ' + (t('quiz_del_last') || 'Impossible : ce thème n\'a qu\'un seul quiz. Crée d\'abord un autre quiz, puis supprime celui-ci.'));
     return;
   }
-  const quizzes = await loadQuizzesForTheme(_qeCurrentLesson);
+  
   const q = quizzes.find(x => x.id === _qeCurrentQuiz);
   if (!q) return;
+  
+  // 🆕 Avertir si c'est le quiz par défaut
+  if (_qeCurrentQuiz === 'default') {
+    if (!confirm((t('quiz_del_default_warn') || '⚠️ Tu es sur le point de supprimer le QUIZ PAR DÉFAUT.\n\nCe quiz contient peut-être des questions de référence. Continuer ?'))) {
+      return;
+    }
+  }
+  
   _quizDeletingId = _qeCurrentQuiz;
   $('quiz-del-name').textContent = q.name;
   $('quiz-delete-modal').classList.remove('hidden');
@@ -9254,15 +10018,24 @@ async function confirmDeleteQuiz() {
   if (!_quizDeletingId) return;
   const fb = window.fb;
   const themeId = _qeCurrentLesson;
+  const wasDeleted = _quizDeletingId;
   try {
     await Promise.all([
-      fb.remove(fb.ref(fb.db, 'theme_quizzes/' + themeId + '/' + _quizDeletingId)),
-      fb.remove(fb.ref(fb.db, 'quiz_questions/' + themeId + '_' + _quizDeletingId))
+      fb.remove(fb.ref(fb.db, 'theme_quizzes/' + themeId + '/' + wasDeleted)),
+      fb.remove(fb.ref(fb.db, 'quiz_questions/' + themeId + '_' + wasDeleted))
     ]);
     toast('🗑️ Quiz supprimé');
     closeQuizDeleteModal();
     delete _quizzesCache[themeId];
-    _qeCurrentQuiz = 'default';  // Revenir au quiz par défaut
+    
+    // 🆕 Récupérer la nouvelle liste de quiz du thème pour choisir lequel sélectionner
+    const newQuizzes = await loadQuizzesForTheme(themeId);
+    if (newQuizzes && newQuizzes.length > 0) {
+      _qeCurrentQuiz = newQuizzes[0].id;
+    } else {
+      _qeCurrentQuiz = 'default';
+    }
+    
     await refreshQuizSelectForEditor();
     await refreshQuizSelectForDashboard();
     await loadQuestionsForEditor(_qeCurrentLesson, _qeCurrentQuiz);
@@ -9272,9 +10045,546 @@ async function confirmDeleteQuiz() {
   }
 }
 
+// =====================================================
+// 🆕 IMPORT EXCEL — Gestion d'import en masse de questions
+// =====================================================
+let _xlsImportPendingRows = null;  // Les questions valides en attente d'import
+let _xlsImportPendingGroups = null; // 🆕 Groupes (themeFr+quizName -> données)
+let _xlsImportErrors = null;        // Les erreurs détectées
+
+// 📄 Génère et télécharge le modèle Excel (format COPAG : 18 colonnes)
+function downloadQuestionsTemplate() {
+  try {
+    const wb = XLSX.utils.book_new();
+    
+    // 18 colonnes selon le format COPAG + 1 colonne IMAGE_URL (optionnelle)
+    const headers = [
+      'Theme_FR', 'Theme_AR', 'Theme_Icon',
+      'Quiz_Name', 'Quiz_Time',
+      'Question_FR', 'A_FR', 'B_FR', 'C_FR', 'D_FR',
+      'Question_AR', 'A_AR', 'B_AR', 'C_AR', 'D_AR',
+      'Correct', 'Explanation_FR', 'Explanation_AR',
+      'Image_URL'
+    ];
+    
+    // Lignes d'exemple inspirées du fichier COPAG
+    const exampleRows = [
+      [
+        'Fondamentaux du lait', 'أساسيات الحليب', '🥛',
+        'Quiz 1 - Bases', 30,
+        'Quelle est la température idéale de stockage du lait frais ?',
+        '0 - 2°C', '4 - 6°C', '8 - 10°C', '12 - 15°C',
+        'ما هي درجة الحرارة المثالية لتخزين الحليب الطازج ؟',
+        '0 - 2°C', '4 - 6°C', '8 - 10°C', '12 - 15°C',
+        'B',
+        'Le lait frais doit être conservé entre 4 et 6°C pour préserver sa qualité.',
+        'يجب حفظ الحليب الطازج بين 4 و 6 درجات مئوية.',
+        ''
+      ],
+      [
+        'Fondamentaux du lait', 'أساسيات الحليب', '🥛',
+        'Quiz 1 - Bases', 30,
+        'Quel est le pH normal du lait frais ?',
+        '5.5 - 5.9', '6.0 - 6.4', '6.6 - 6.8', '7.0 - 7.4',
+        'ما هو الـ pH العادي للحليب الطازج ؟',
+        '5.5 - 5.9', '6.0 - 6.4', '6.6 - 6.8', '7.0 - 7.4',
+        'C',
+        'Le pH normal du lait frais se situe entre 6.6 et 6.8.',
+        'الـ pH العادي للحليب الطازج بين 6.6 و 6.8.',
+        'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/PH_scale_2.svg/200px-PH_scale_2.svg.png'
+      ],
+      [
+        '(Nom du thème)', '(اسم الموضوع)', '🎯',
+        '(Nom du quiz)', 30,
+        '(Texte de la question)',
+        '(Option A)', '(Option B)', '(Option C)', '(Option D)',
+        '', '', '', '', '',
+        'A',
+        '(Explication optionnelle)', '',
+        '(URL image optionnelle)'
+      ]
+    ];
+    
+    const aoa = [headers].concat(exampleRows);
+    const ws = XLSX.utils.aoa_to_sheet(aoa);
+    
+    // Largeurs colonnes optimisées
+    ws['!cols'] = [
+      { wch: 25 }, { wch: 22 }, { wch: 10 },           // Theme
+      { wch: 28 }, { wch: 10 },                         // Quiz
+      { wch: 45 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 },  // FR
+      { wch: 45 }, { wch: 18 }, { wch: 18 }, { wch: 18 }, { wch: 18 },  // AR
+      { wch: 10 },                                       // Correct
+      { wch: 40 }, { wch: 40 },                         // Explanations
+      { wch: 45 }                                        // Image_URL
+    ];
+    ws['!rows'] = [{ hpx: 32 }];
+    
+    // Style header (ligne 0) - bleu marine COPAG
+    const hdrStyle = {
+      font: { bold: true, color: { rgb: "FFFFFF" }, sz: 11 },
+      fill: { fgColor: { rgb: "1E2A78" } },
+      alignment: { horizontal: "center", vertical: "center", wrapText: true },
+      border: {
+        top: { style: "thin", color: { rgb: "1E2A78" } },
+        bottom: { style: "thin", color: { rgb: "1E2A78" } },
+        left: { style: "thin", color: { rgb: "1E2A78" } },
+        right: { style: "thin", color: { rgb: "1E2A78" } }
+      }
+    };
+    for (let c = 0; c < headers.length; c++) {
+      const ref = XLSX.utils.encode_cell({ r: 0, c });
+      if (ws[ref]) ws[ref].s = hdrStyle;
+    }
+    
+    // Style exemples (lignes 1-3)
+    for (let r = 1; r <= exampleRows.length; r++) {
+      for (let c = 0; c < headers.length; c++) {
+        const ref = XLSX.utils.encode_cell({ r, c });
+        if (!ws[ref]) ws[ref] = { v: '', t: 's' };
+        ws[ref].s = {
+          alignment: { vertical: "center", wrapText: true },
+          fill: { fgColor: { rgb: r === 3 ? "FEF3C7" : "F9FAFB" } },
+          border: {
+            top: { style: "thin", color: { rgb: "E5E7EB" } },
+            bottom: { style: "thin", color: { rgb: "E5E7EB" } },
+            left: { style: "thin", color: { rgb: "E5E7EB" } },
+            right: { style: "thin", color: { rgb: "E5E7EB" } }
+          }
+        };
+        // Colonne "Correct" (index 15) en vert
+        if (c === 15) {
+          ws[ref].s.fill = { fgColor: { rgb: "D1FAE5" } };
+          ws[ref].s.font = { bold: true, color: { rgb: "065F46" } };
+          ws[ref].s.alignment.horizontal = "center";
+        }
+        // Colonnes thème (0-2) en bleu très clair
+        if (c <= 2) {
+          ws[ref].s.fill = { fgColor: { rgb: r === 3 ? "FEF3C7" : "EFF6FF" } };
+        }
+        // Colonnes quiz (3-4) en violet très clair
+        if (c === 3 || c === 4) {
+          ws[ref].s.fill = { fgColor: { rgb: r === 3 ? "FEF3C7" : "F5F3FF" } };
+        }
+      }
+    }
+    XLSX.utils.book_append_sheet(wb, ws, 'Questions');
+    
+    // Feuille 2 : Instructions
+    const instructions = [
+      ['📖 INSTRUCTIONS POUR IMPORTER DES QUESTIONS — Format COPAG'],
+      [''],
+      ['🎯 OBJECTIF'],
+      ['Ce modèle te permet d\'importer plusieurs thèmes, quiz et questions EN UN SEUL fichier.'],
+      ['Le système créera AUTOMATIQUEMENT les thèmes et quiz qui n\'existent pas encore.'],
+      [''],
+      ['📝 LES 18 COLONNES'],
+      [''],
+      ['1-3 : THÈME'],
+      ['  • Theme_FR : Nom du thème en français (OBLIGATOIRE, clé unique)'],
+      ['  • Theme_AR : Nom du thème en arabe (optionnel)'],
+      ['  • Theme_Icon : Emoji du thème, ex: 🥛 🌍 🧀 🌡️ (optionnel)'],
+      [''],
+      ['4-5 : QUIZ'],
+      ['  • Quiz_Name : Nom du quiz (OBLIGATOIRE)'],
+      ['  • Quiz_Time : Durée par question en secondes (défaut: 30)'],
+      [''],
+      ['6-10 : QUESTION EN FRANÇAIS'],
+      ['  • Question_FR : Texte de la question (OBLIGATOIRE)'],
+      ['  • A_FR, B_FR, C_FR, D_FR : 4 options en français (OBLIGATOIRES)'],
+      [''],
+      ['11-15 : QUESTION EN ARABE'],
+      ['  • Question_AR : Texte en arabe (optionnel)'],
+      ['  • A_AR, B_AR, C_AR, D_AR : 4 options en arabe (optionnel)'],
+      ['    Si vide → utilise la version FR'],
+      [''],
+      ['16-18 : RÉPONSE ET EXPLICATIONS'],
+      ['  • Correct : Lettre A, B, C ou D (OBLIGATOIRE)'],
+      ['  • Explanation_FR : Explication en français (optionnel)'],
+      ['  • Explanation_AR : Explication en arabe (optionnel)'],
+      [''],
+      ['⚠️ POINTS IMPORTANTS'],
+      ['1. La première ligne (les en-têtes) NE DOIT PAS être modifiée'],
+      ['2. La colonne "Correct" DOIT être A, B, C ou D'],
+      ['3. Tu peux avoir PLUSIEURS thèmes et quiz dans un même fichier'],
+      ['4. Le système GROUPE les lignes par (Theme_FR + Quiz_Name)'],
+      ['5. Si un thème existe déjà → utilisé (pas de doublon)'],
+      ['6. Si un quiz existe déjà → questions ajoutées au quiz existant'],
+      ['7. Les lignes commençant par "(" sont ignorées (exemples)'],
+      [''],
+      ['🚀 COMMENT IMPORTER'],
+      ['1. Remplis ce fichier avec tes questions'],
+      ['2. Sauvegarde (format .xlsx)'],
+      ['3. Dans COPAG Academy → Gérer les questions'],
+      ['4. Clique sur "📥 Importer Excel" et choisis ce fichier'],
+      ['5. Choisis Ajouter ou Remplacer si le quiz existe déjà'],
+      ['6. Voilà ! ✅'],
+      [''],
+      ['💡 ASTUCE'],
+      ['Pour créer 10 thèmes × 5 quiz × 20 questions en 1 seul import, fais juste un fichier avec'],
+      ['1000 lignes en répétant le Theme_FR / Quiz_Name selon le besoin. Le système gère tout.']
+    ];
+    const wsInstr = XLSX.utils.aoa_to_sheet(instructions);
+    wsInstr['!cols'] = [{ wch: 95 }];
+    if (wsInstr['A1']) wsInstr['A1'].s = { font: { bold: true, sz: 14, color: { rgb: "1E2A78" } } };
+    XLSX.utils.book_append_sheet(wb, wsInstr, 'Instructions');
+    
+    XLSX.writeFile(wb, 'modele_questions_copag.xlsx');
+    toast('✅ ' + (t('xls_template_done') || 'Modèle téléchargé'));
+  } catch(e) {
+    console.error('downloadQuestionsTemplate:', e);
+    toast('❌ ' + e.message);
+  }
+}
+
+// 📥 Gère le fichier Excel choisi par l'utilisateur (format COPAG 18 colonnes)
+async function handleExcelImportFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  
+  // Reset input pour pouvoir réimporter le même fichier
+  event.target.value = '';
+  
+  try {
+    toast('⏳ ' + (t('xls_parsing') || 'Lecture du fichier...'));
+    const data = await file.arrayBuffer();
+    const wb = XLSX.read(data, { type: 'array' });
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    if (!ws) { toast('❌ ' + (t('xls_no_sheet') || 'Aucune feuille trouvée')); return; }
+    
+    const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+    if (!rows || rows.length < 2) { toast('❌ ' + (t('xls_empty') || 'Fichier vide')); return; }
+    
+    // Parser chaque ligne avec le nouveau format à 18 colonnes
+    const validRows = [];
+    const errors = [];
+    
+    for (let i = 1; i < rows.length; i++) {
+      const row = rows[i];
+      if (!row || row.every(c => !c || String(c).trim() === '')) continue; // ligne vide
+      
+      // Mapping des 18 colonnes selon le format COPAG
+      const themeFr = String(row[0] || '').trim();
+      const themeAr = String(row[1] || '').trim();
+      const themeIcon = String(row[2] || '').trim();
+      const quizName = String(row[3] || '').trim();
+      const quizTime = parseInt(row[4], 10) || 30;
+      const qFr = String(row[5] || '').trim();
+      const optAFr = String(row[6] || '').trim();
+      const optBFr = String(row[7] || '').trim();
+      const optCFr = String(row[8] || '').trim();
+      const optDFr = String(row[9] || '').trim();
+      const qAr = String(row[10] || '').trim();
+      const optAAr = String(row[11] || '').trim();
+      const optBAr = String(row[12] || '').trim();
+      const optCAr = String(row[13] || '').trim();
+      const optDAr = String(row[14] || '').trim();
+      const correctRaw = String(row[15] || '').trim().toUpperCase();
+      const explFr = String(row[16] || '').trim();
+      const explAr = String(row[17] || '').trim();
+      const imageUrl = String(row[18] || '').trim();  // 🆕 IMG/1
+      
+      // Ignorer les lignes d'exemple "(...)"
+      if (qFr.startsWith('(') && qFr.endsWith(')')) continue;
+      if (themeFr.startsWith('(') && themeFr.endsWith(')')) continue;
+      
+      // Validations
+      if (!themeFr) { errors.push('Ligne ' + (i + 1) + ' : Theme_FR manquant'); continue; }
+      if (!quizName) { errors.push('Ligne ' + (i + 1) + ' : Quiz_Name manquant'); continue; }
+      if (!qFr) { errors.push('Ligne ' + (i + 1) + ' : Question_FR manquante'); continue; }
+      if (!optAFr || !optBFr || !optCFr || !optDFr) {
+        errors.push('Ligne ' + (i + 1) + ' : 4 options FR requises (A_FR, B_FR, C_FR, D_FR)');
+        continue;
+      }
+      if (!correctRaw) { errors.push('Ligne ' + (i + 1) + ' : Correct manquant'); continue; }
+      
+      // Parser la bonne réponse
+      let correctIdx = -1;
+      if (correctRaw === 'A' || correctRaw === '1') correctIdx = 0;
+      else if (correctRaw === 'B' || correctRaw === '2') correctIdx = 1;
+      else if (correctRaw === 'C' || correctRaw === '3') correctIdx = 2;
+      else if (correctRaw === 'D' || correctRaw === '4') correctIdx = 3;
+      else { errors.push('Ligne ' + (i + 1) + ' : Correct "' + correctRaw + '" invalide (A, B, C ou D)'); continue; }
+      
+      // Construire l'objet question + meta thème/quiz
+      const hasAr = !!(qAr || optAAr);
+      validRows.push({
+        // Meta thème
+        themeFr, themeAr: themeAr || themeFr, themeIcon: themeIcon || '📚',
+        // Meta quiz
+        quizName, quizTime,
+        // Question
+        questionData: {
+          questionFr: qFr,
+          questionAr: hasAr ? qAr : qFr,
+          optionsFr: [optAFr, optBFr, optCFr, optDFr],
+          optionsAr: hasAr ? [optAAr || optAFr, optBAr || optBFr, optCAr || optCFr, optDAr || optDFr] : [optAFr, optBFr, optCFr, optDFr],
+          correctIdx: correctIdx,
+          explanationFr: explFr,
+          explanationAr: explAr || explFr,
+          imageUrl: imageUrl  // 🆕 IMG/1
+        }
+      });
+    }
+    
+    if (validRows.length === 0 && errors.length === 0) {
+      toast('⚠️ ' + (t('xls_no_questions') || 'Aucune question trouvée dans le fichier'));
+      return;
+    }
+    
+    // Grouper par (themeFr, quizName)
+    const groups = {};  // key = themeFr + '|||' + quizName
+    validRows.forEach(r => {
+      const key = r.themeFr + '|||' + r.quizName;
+      if (!groups[key]) {
+        groups[key] = {
+          themeFr: r.themeFr,
+          themeAr: r.themeAr,
+          themeIcon: r.themeIcon,
+          quizName: r.quizName,
+          quizTime: r.quizTime,
+          questions: []
+        };
+      }
+      groups[key].questions.push(r.questionData);
+    });
+    
+    // Sauvegarder pour utilisation après modal
+    _xlsImportPendingRows = validRows;
+    _xlsImportPendingGroups = groups;
+    _xlsImportErrors = errors;
+    
+    // Si pas de questions valides, montrer directement le rapport d'erreurs
+    if (validRows.length === 0) {
+      showExcelImportReport(0, errors, file.name, 'none', 0, 0);
+      return;
+    }
+    
+    // Afficher modal de récapitulatif avant import
+    const themeCount = new Set(validRows.map(r => r.themeFr)).size;
+    const quizCount = Object.keys(groups).length;
+    
+    document.getElementById('xls-choice-filename').textContent = file.name;
+    document.getElementById('xls-choice-valid').textContent = validRows.length + ' question(s) — ' + themeCount + ' thème(s), ' + quizCount + ' quiz';
+    document.getElementById('xls-choice-existing').textContent = '—';
+    if (errors.length > 0) {
+      document.getElementById('xls-choice-errors').textContent = errors.length;
+      document.getElementById('xls-choice-errors-wrap').style.display = '';
+    } else {
+      document.getElementById('xls-choice-errors-wrap').style.display = 'none';
+    }
+    document.getElementById('excel-import-choice-modal').classList.remove('hidden');
+  } catch(e) {
+    console.error('handleExcelImportFile:', e);
+    toast('❌ ' + (e.message || 'Erreur de lecture'));
+  }
+}
+
+// Compte les questions actuelles du quiz (pour info)
+async function getCurrentQuizQuestionCount() {
+  try {
+    const fb = window.fb;
+    const path = 'quiz_questions/' + _qeCurrentLesson + '_' + _qeCurrentQuiz;
+    const snap = await fb.get(fb.ref(fb.db, path));
+    return snap.exists() ? Object.keys(snap.val()).length : 0;
+  } catch(e) {
+    return 0;
+  }
+}
+
+// 🆕 Helper : génère un ID propre à partir d'un nom (pour Firebase keys)
+function _slugifyForFirebase(name) {
+  return String(name || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9\u0600-\u06FF]+/g, '_')  // garde lettres latines + arabes + chiffres
+    .replace(/^_+|_+$/g, '')
+    .slice(0, 40) || ('item_' + Date.now());
+}
+
+// Confirmer l'import : avec auto-création des thèmes/quiz
+async function confirmExcelImport(mode) {
+  if (!_xlsImportPendingGroups) return;
+  document.getElementById('excel-import-choice-modal').classList.add('hidden');
+  
+  const fileName = document.getElementById('xls-choice-filename').textContent;
+  
+  try {
+    toast('⏳ ' + (t('xls_importing') || 'Import en cours...'));
+    const fb = window.fb;
+    
+    // 1. Charger tous les thèmes existants
+    const themesSnap = await fb.get(fb.ref(fb.db, 'themes'));
+    const existingThemes = themesSnap.exists() ? themesSnap.val() : {};
+    
+    // Construire un map nom_lowercase -> themeId
+    const themeNameToId = {};
+    Object.entries(existingThemes).forEach(([tid, t]) => {
+      const nameKey = (t.name || '').toLowerCase().trim();
+      if (nameKey) themeNameToId[nameKey] = tid;
+    });
+    
+    let themesCreated = 0;
+    let quizzesCreated = 0;
+    let questionsAdded = 0;
+    
+    const groups = _xlsImportPendingGroups;
+    
+    // 2. Pour chaque groupe (Theme+Quiz), traiter
+    for (const key of Object.keys(groups)) {
+      const grp = groups[key];
+      
+      // 2a. Récupérer ou créer le thème
+      const themeNameKey = grp.themeFr.toLowerCase().trim();
+      let themeId = themeNameToId[themeNameKey];
+      
+      if (!themeId) {
+        // Créer le thème
+        themeId = _slugifyForFirebase(grp.themeFr) + '_' + Date.now().toString(36);
+        const themeData = {
+          name: grp.themeFr,
+          nameFr: grp.themeFr,
+          nameAr: grp.themeAr || grp.themeFr,
+          icon: grp.themeIcon || '📚',
+          isDefault: false,
+          createdAt: Date.now()
+        };
+        await fb.set(fb.ref(fb.db, 'themes/' + themeId), themeData);
+        themeNameToId[themeNameKey] = themeId;
+        themesCreated++;
+      }
+      
+      // 2b. Récupérer ou créer le quiz
+      const quizzesSnap = await fb.get(fb.ref(fb.db, 'theme_quizzes/' + themeId));
+      const existingQuizzes = quizzesSnap.exists() ? quizzesSnap.val() : {};
+      
+      let quizId = null;
+      Object.entries(existingQuizzes).forEach(([qid, q]) => {
+        if ((q.name || '').toLowerCase().trim() === grp.quizName.toLowerCase().trim()) {
+          quizId = qid;
+        }
+      });
+      
+      if (!quizId) {
+        // Créer le quiz
+        quizId = _slugifyForFirebase(grp.quizName) + '_' + Date.now().toString(36);
+        const quizData = {
+          name: grp.quizName,
+          timePerQuestion: grp.quizTime || 30,
+          isDefault: false,
+          createdAt: Date.now()
+        };
+        await fb.set(fb.ref(fb.db, 'theme_quizzes/' + themeId + '/' + quizId), quizData);
+        quizzesCreated++;
+      }
+      
+      // 2c. Gérer les questions selon le mode
+      const questionsPath = 'quiz_questions/' + themeId + '_' + quizId;
+      let nextOrder = 0;
+      
+      if (mode === 'replace') {
+        // Effacer toutes les questions actuelles de ce quiz
+        await fb.remove(fb.ref(fb.db, questionsPath));
+      } else {
+        // Append : récupérer le prochain order
+        const qSnap = await fb.get(fb.ref(fb.db, questionsPath));
+        if (qSnap.exists()) {
+          Object.values(qSnap.val()).forEach(q => {
+            if (q.order != null && q.order >= nextOrder) nextOrder = q.order + 1;
+          });
+        }
+      }
+      
+      // 2d. Ajouter les questions
+      const updates = {};
+      grp.questions.forEach((q, i) => {
+        const qid = 'imp_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6) + '_' + i;
+        updates[qid] = {
+          questionFr: q.questionFr,
+          questionAr: q.questionAr,
+          optionsFr: q.optionsFr,
+          optionsAr: q.optionsAr,
+          correctIdx: q.correctIdx,
+          explanationFr: q.explanationFr || '',
+          explanationAr: q.explanationAr || '',
+          imageUrl: q.imageUrl || '',  // 🆕 IMG/1
+          order: nextOrder + i,
+          createdAt: Date.now()
+        };
+        questionsAdded++;
+      });
+      await fb.update(fb.ref(fb.db, questionsPath), updates);
+    }
+    
+    // 3. Rafraîchir l'interface : thèmes + questions
+    if (typeof loadThemesIntoDashboard === 'function') await loadThemesIntoDashboard();
+    if (typeof loadThemesForQuestionEditor === 'function') await loadThemesForQuestionEditor();
+    if (typeof loadQuestionsForEditor === 'function' && _qeCurrentLesson && _qeCurrentQuiz) {
+      await loadQuestionsForEditor(_qeCurrentLesson, _qeCurrentQuiz);
+    }
+    
+    // 4. Afficher le rapport
+    showExcelImportReport(questionsAdded, _xlsImportErrors || [], fileName, mode, themesCreated, quizzesCreated);
+    
+    _xlsImportPendingRows = null;
+    _xlsImportPendingGroups = null;
+    _xlsImportErrors = null;
+  } catch(e) {
+    console.error('confirmExcelImport:', e);
+    toast('❌ ' + (e.message || 'Erreur d\'import'));
+  }
+}
+
+// Affiche le rapport d'import
+function showExcelImportReport(addedCount, errors, fileName, mode, themesCreated, quizzesCreated) {
+  const modal = document.getElementById('excel-import-report-modal');
+  const icon = document.getElementById('xls-report-icon');
+  const title = document.getElementById('xls-report-title');
+  const summary = document.getElementById('xls-report-summary');
+  const errorsBlock = document.getElementById('xls-report-errors');
+  const errorsList = document.getElementById('xls-report-errors-list');
+  
+  if (addedCount === 0) {
+    icon.textContent = '⚠️';
+    title.textContent = t('xls_report_no_valid') || 'Aucune question valide';
+  } else {
+    icon.textContent = '✅';
+    title.textContent = t('xls_report_done') || 'Import terminé !';
+  }
+  
+  const modeLabel = mode === 'replace' ? (t('xls_mode_replace') || 'Remplacement complet') :
+                    mode === 'append' ? (t('xls_mode_append') || 'Ajout aux existantes') :
+                    (t('xls_mode_none') || 'Aucun import');
+  
+  let summaryHtml = '';
+  if (themesCreated > 0) summaryHtml += '🆕 <strong>' + themesCreated + '</strong> nouveau(x) thème(s) créé(s)<br>';
+  if (quizzesCreated > 0) summaryHtml += '🆕 <strong>' + quizzesCreated + '</strong> nouveau(x) quiz créé(s)<br>';
+  summaryHtml += '✅ <strong>' + addedCount + '</strong> ' + (t('xls_report_added') || 'questions ajoutées') + '<br>';
+  summaryHtml += (t('xls_report_mode') || 'Mode') + ' : ' + modeLabel + '<br>';
+  summaryHtml += (t('xls_report_file') || 'Fichier') + ' : ' + fileName;
+  summary.innerHTML = summaryHtml;
+  
+  if (errors && errors.length > 0) {
+    errorsList.innerHTML = errors.map(e => '<li>' + e + '</li>').join('');
+    errorsBlock.style.display = '';
+  } else {
+    errorsBlock.style.display = 'none';
+  }
+  
+  modal.classList.remove('hidden');
+}
+
+function closeExcelImportModals() {
+  document.getElementById('excel-import-choice-modal').classList.add('hidden');
+  document.getElementById('excel-import-report-modal').classList.add('hidden');
+  _xlsImportPendingRows = null;
+  _xlsImportPendingGroups = null;
+  _xlsImportErrors = null;
+}
+
 window.goToQuestionEditor = goToQuestionEditor;
 window.onQeLessonChange = onQeLessonChange;
 window.openQuestionEditModal = openQuestionEditModal;
+window.updateImagePreview = updateImagePreview;
 window.closeQuestionEditModal = closeQuestionEditModal;
 window.saveQuestion = saveQuestion;
 window.askDeleteQuestion = askDeleteQuestion;
@@ -9302,6 +10612,11 @@ window.closeQuizDeleteModal = closeQuizDeleteModal;
 window.confirmDeleteQuiz = confirmDeleteQuiz;
 window.onQeQuizChange = onQeQuizChange;
 window.onQuizSelectChange = onQuizSelectChange;
+// 🆕 Import Excel
+window.downloadQuestionsTemplate = downloadQuestionsTemplate;
+window.handleExcelImportFile = handleExcelImportFile;
+window.confirmExcelImport = confirmExcelImport;
+window.closeExcelImportModals = closeExcelImportModals;
 window.refreshQuizSelectForDashboard = refreshQuizSelectForDashboard;
 
 
@@ -10216,6 +11531,731 @@ function resetAnalysisFilters() {
   applyAnalysisFilters();
 }
 
+// ============================================================
+// 🆕 EXPORT EXCEL COMPLET — 9 feuilles (Livraisons 1+2+3)
+// ============================================================
+
+// Helpers de style Excel
+const _xlsHdrStyle = {
+  font: { bold: true, color: { rgb: "FFFFFF" }, sz: 11 },
+  fill: { fgColor: { rgb: "1E2A78" } },
+  alignment: { horizontal: "center", vertical: "center", wrapText: true },
+  border: {
+    top: { style: "thin", color: { rgb: "1E2A78" } },
+    bottom: { style: "thin", color: { rgb: "1E2A78" } },
+    left: { style: "thin", color: { rgb: "1E2A78" } },
+    right: { style: "thin", color: { rgb: "1E2A78" } }
+  }
+};
+const _xlsTitleStyle = {
+  font: { bold: true, sz: 14, color: { rgb: "1E2A78" } },
+  alignment: { horizontal: "center" }
+};
+const _xlsBorderThin = {
+  top: { style: "thin", color: { rgb: "D1D5DB" } },
+  bottom: { style: "thin", color: { rgb: "D1D5DB" } },
+  left: { style: "thin", color: { rgb: "D1D5DB" } },
+  right: { style: "thin", color: { rgb: "D1D5DB" } }
+};
+
+// Style conditionnel score : vert si ≥80%, jaune 50-79%, rouge <50%
+function _xlsScoreStyle(pct) {
+  let bg = "FFFFFF";
+  let color = "1F2937";
+  if (typeof pct === 'number') {
+    if (pct >= 80) { bg = "D1FAE5"; color = "065F46"; }
+    else if (pct >= 50) { bg = "FEF3C7"; color = "92400E"; }
+    else { bg = "FEE2E2"; color = "991B1B"; }
+  }
+  return {
+    font: { bold: true, color: { rgb: color } },
+    fill: { fgColor: { rgb: bg } },
+    alignment: { horizontal: "center" },
+    border: _xlsBorderThin
+  };
+}
+function _xlsCellStyle() {
+  return {
+    alignment: { vertical: "center", wrapText: true },
+    border: _xlsBorderThin
+  };
+}
+
+// Crée une feuille à partir d'un tableau de header + lignes, avec styles
+function _xlsBuildSheet(headers, rows, scoreColIndices) {
+  const aoa = [headers].concat(rows);
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  
+  // Largeurs auto colonnes
+  const colWidths = headers.map((h, ci) => {
+    let maxLen = String(h).length;
+    rows.forEach(r => {
+      const cell = r[ci];
+      const len = cell != null ? String(cell).length : 0;
+      if (len > maxLen) maxLen = len;
+    });
+    return { wch: Math.min(50, Math.max(10, maxLen + 2)) };
+  });
+  ws['!cols'] = colWidths;
+  
+  // Style header
+  for (let c = 0; c < headers.length; c++) {
+    const ref = XLSX.utils.encode_cell({ r: 0, c });
+    if (!ws[ref]) ws[ref] = { v: headers[c], t: 's' };
+    ws[ref].s = _xlsHdrStyle;
+  }
+  // Style cellules + couleur score
+  const scoreSet = new Set(scoreColIndices || []);
+  for (let r = 1; r <= rows.length; r++) {
+    for (let c = 0; c < headers.length; c++) {
+      const ref = XLSX.utils.encode_cell({ r, c });
+      if (!ws[ref]) continue;
+      if (scoreSet.has(c)) {
+        // Extraire le % si présent
+        const v = ws[ref].v;
+        let pct = null;
+        if (typeof v === 'number') pct = v;
+        else if (typeof v === 'string') {
+          const m = v.match(/(\d+)\s*%/);
+          if (m) pct = parseInt(m[1], 10);
+        }
+        ws[ref].s = _xlsScoreStyle(pct);
+      } else {
+        ws[ref].s = _xlsCellStyle();
+      }
+    }
+  }
+  // Hauteur de la première ligne (header)
+  ws['!rows'] = [{ hpx: 32 }];
+  
+  return ws;
+}
+
+async function exportFullAnalysisToExcel() {
+  try {
+    toast('⏳ ' + (t('an_export_processing') || 'Préparation de l\'export...'));
+    
+    // Charger tout : history, employees, myGroups, themes
+    const fb = window.fb;
+    const [histSnap, empSnap, grpSnap, themeSnap] = await Promise.all([
+      fb.get(fb.ref(fb.db, 'history')),
+      fb.get(fb.ref(fb.db, 'employees')),
+      fb.get(fb.ref(fb.db, 'myGroups')),
+      fb.get(fb.ref(fb.db, 'themes'))
+    ]);
+    const allHistory = histSnap.exists() ? histSnap.val() : {};
+    const employees = empSnap.exists() ? empSnap.val() : {};
+    const groups = grpSnap.exists() ? grpSnap.val() : {};
+    const themes = themeSnap.exists() ? themeSnap.val() : {};
+    
+    // Convertir history en tableau (avec id)
+    const sessions = Object.entries(allHistory).map(([sid, s]) => Object.assign({ _sid: sid }, s));
+    // Filtrer sessions vides
+    const validSessions = sessions.filter(s => s.players && s.players.length > 0);
+    
+    if (validSessions.length === 0) {
+      toast('⚠️ ' + (t('an_export_no_data') || 'Aucune donnée à exporter'));
+      return;
+    }
+    
+    const wb = XLSX.utils.book_new();
+    
+    // ====================================================
+    // FEUILLE 1 : Synthèse globale (KPI)
+    // ====================================================
+    const allMatricules = new Set();
+    let totalCorrect = 0, totalAnswers = 0, totalQuestionsPlayed = 0;
+    const themeSet = new Set();
+    const quizSet = new Set();
+    
+    validSessions.forEach(s => {
+      totalQuestionsPlayed += (s.totalQuestions || 0) * (s.players || []).length;
+      (s.players || []).forEach(p => {
+        if (p.matricule) allMatricules.add(String(p.matricule));
+        (p.perQuestion || []).forEach(q => {
+          if (q && q.played !== false) {
+            totalAnswers++;
+            if (q.correct) totalCorrect++;
+          }
+        });
+      });
+      if (s.themeName) themeSet.add(s.themeName);
+      if (s.quizName) quizSet.add(s.quizName);
+    });
+    
+    const globalAccuracy = totalAnswers > 0 ? Math.round((totalCorrect / totalAnswers) * 100) : 0;
+    const exportDate = new Date().toLocaleString('fr-FR');
+    
+    const sheet1Rows = [
+      ['Indicateur', 'Valeur'],
+      ['Date de l\'export', exportDate],
+      ['Nombre de sessions', validSessions.length],
+      ['Apprenants uniques', allMatricules.size],
+      ['Groupes créés', Object.keys(groups).length],
+      ['Thèmes joués', themeSet.size],
+      ['Quiz joués (distincts)', quizSet.size],
+      ['Réponses totales données', totalAnswers],
+      ['Réponses correctes', totalCorrect],
+      ['Précision globale', globalAccuracy + '%']
+    ];
+    const ws1 = XLSX.utils.aoa_to_sheet(sheet1Rows);
+    ws1['!cols'] = [{ wch: 30 }, { wch: 30 }];
+    // Style header (ligne 0)
+    ['A1', 'B1'].forEach(ref => {
+      if (!ws1[ref]) ws1[ref] = { v: '', t: 's' };
+      ws1[ref].s = _xlsHdrStyle;
+    });
+    // Style données
+    for (let r = 1; r < sheet1Rows.length; r++) {
+      ['A', 'B'].forEach(col => {
+        const ref = col + (r + 1);
+        if (!ws1[ref]) return;
+        if (col === 'A') {
+          ws1[ref].s = { font: { bold: true }, border: _xlsBorderThin, fill: { fgColor: { rgb: "F3F4F6" } } };
+        } else {
+          // Cellule "Précision globale" : couleur conditionnelle
+          if (sheet1Rows[r][0] === 'Précision globale') {
+            ws1[ref].s = _xlsScoreStyle(globalAccuracy);
+          } else {
+            ws1[ref].s = _xlsCellStyle();
+          }
+        }
+      });
+    }
+    ws1['!rows'] = [{ hpx: 32 }];
+    XLSX.utils.book_append_sheet(wb, ws1, '🏠 Synthèse');
+    
+    // ====================================================
+    // FEUILLE 2 : Par apprenant
+    // ====================================================
+    // Calculer stats par apprenant
+    const byApprenant = {};  // matricule -> { name, sessions:[], scores:[], bestScore, totalCorrect, totalAnswers }
+    validSessions.forEach(s => {
+      (s.players || []).forEach(p => {
+        const key = p.matricule || ('NOMATR_' + (p.name || '').toUpperCase());
+        if (!byApprenant[key]) {
+          byApprenant[key] = {
+            name: p.name || '—',
+            matricule: p.matricule || '',
+            sessions: 0,
+            scoreSum: 0,
+            bestScore: 0,
+            totalCorrect: 0,
+            totalAnswers: 0,
+            themes: new Set(),
+            groups: new Set()
+          };
+        }
+        const a = byApprenant[key];
+        a.sessions++;
+        if ((p.score || 0) > a.bestScore) a.bestScore = (p.score || 0);
+        a.scoreSum += (p.score || 0);
+        if (s.themeName) a.themes.add(s.themeName);
+        if (s.myGroupName) a.groups.add(s.myGroupName);
+        (p.perQuestion || []).forEach(q => {
+          if (q && q.played !== false) {
+            a.totalAnswers++;
+            if (q.correct) a.totalCorrect++;
+          }
+        });
+        // Garde le nom le plus récent
+        if (p.name && (!a.name || a.name === '—')) a.name = p.name;
+      });
+    });
+    
+    const sheet2Headers = ['Nom', 'Matricule', 'Nb sessions jouées', 'Score moyen (pts)', 'Meilleur score (pts)', 'Précision (%)', 'Thèmes joués', 'Groupes'];
+    const sheet2Rows = Object.values(byApprenant)
+      .sort((a, b) => (b.totalAnswers > 0 ? (b.totalCorrect / b.totalAnswers) : 0) - (a.totalAnswers > 0 ? (a.totalCorrect / a.totalAnswers) : 0))
+      .map(a => {
+        const avgSc = a.sessions > 0 ? Math.round(a.scoreSum / a.sessions) : 0;
+        const acc = a.totalAnswers > 0 ? Math.round((a.totalCorrect / a.totalAnswers) * 100) : 0;
+        return [
+          a.name,
+          a.matricule || '—',
+          a.sessions,
+          avgSc,
+          a.bestScore,
+          acc + '%',
+          Array.from(a.themes).join(', ') || '—',
+          Array.from(a.groups).join(', ') || '—'
+        ];
+      });
+    const ws2 = _xlsBuildSheet(sheet2Headers, sheet2Rows, [5]);  // colonne "Précision" colorée
+    XLSX.utils.book_append_sheet(wb, ws2, '👤 Par apprenant');
+    
+    // ====================================================
+    // FEUILLE 3 : Par groupe
+    // ====================================================
+    const sheet3Headers = ['Nom du groupe', 'Description', 'Nb membres', 'Nb sessions', 'Score moyen (%)', 'Participation (%)', 'Membres (matricules)'];
+    const sheet3Rows = Object.entries(groups).map(([gid, g]) => {
+      const memberMatricules = (g.memberMatricules || []).map(String);
+      const groupSessions = validSessions.filter(s => s.myGroupId === gid);
+      
+      let scTotal = 0, scCount = 0;
+      let partTotal = 0, partCount = 0;
+      groupSessions.forEach(s => {
+        const sessionMatricules = new Set();
+        (s.players || []).forEach(p => {
+          if (p.matricule) sessionMatricules.add(String(p.matricule));
+        });
+        const partN = memberMatricules.filter(m => sessionMatricules.has(m)).length;
+        if (memberMatricules.length > 0) {
+          partTotal += Math.round((partN / memberMatricules.length) * 100);
+          partCount++;
+        }
+        (s.players || []).forEach(p => {
+          if (!p.matricule || !memberMatricules.includes(String(p.matricule))) return;
+          const perQ = p.perQuestion || [];
+          const c = perQ.filter(q => q && q.correct).length;
+          const pl = perQ.filter(q => q && q.played !== false).length;
+          if (pl > 0) { scTotal += Math.round((c / pl) * 100); scCount++; }
+        });
+      });
+      const avgSc = scCount > 0 ? Math.round(scTotal / scCount) : 0;
+      const avgPart = partCount > 0 ? Math.round(partTotal / partCount) : 0;
+      
+      return [
+        g.name || '—',
+        g.description || '—',
+        memberMatricules.length,
+        groupSessions.length,
+        avgSc + '%',
+        avgPart + '%',
+        memberMatricules.join(', ')
+      ];
+    });
+    
+    if (sheet3Rows.length === 0) {
+      sheet3Rows.push(['(Aucun groupe créé)', '', 0, 0, '—', '—', '']);
+    }
+    const ws3 = _xlsBuildSheet(sheet3Headers, sheet3Rows, [4, 5]);
+    XLSX.utils.book_append_sheet(wb, ws3, '🎓 Par groupe');
+    
+    // ====================================================
+    // FEUILLE 6 : Par session
+    // ====================================================
+    const sheet6Headers = ['Date', 'Heure', 'Thème', 'Quiz', 'Groupe', 'Nb apprenants', 'Nb questions', 'Score moyen (pts)', 'Précision (%)', 'PIN'];
+    const sheet6Rows = validSessions
+      .slice()
+      .sort((a, b) => (b.endedAt || b.startedAt || 0) - (a.endedAt || a.startedAt || 0))
+      .map(s => {
+        const d = new Date(s.endedAt || s.startedAt);
+        let scTotal = 0, scCount = 0;
+        let cor = 0, ans = 0;
+        (s.players || []).forEach(p => {
+          scTotal += (p.score || 0); scCount++;
+          (p.perQuestion || []).forEach(q => {
+            if (q && q.played !== false) { ans++; if (q.correct) cor++; }
+          });
+        });
+        const avgSc = scCount > 0 ? Math.round(scTotal / scCount) : 0;
+        const acc = ans > 0 ? Math.round((cor / ans) * 100) : 0;
+        return [
+          d.toLocaleDateString('fr-FR'),
+          d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+          s.themeName || '—',
+          s.quizName || '—',
+          s.myGroupName || '—',
+          (s.players || []).length,
+          s.totalQuestions || 0,
+          avgSc,
+          acc + '%',
+          s.pin || '—'
+        ];
+      });
+    const ws6 = _xlsBuildSheet(sheet6Headers, sheet6Rows, [8]);
+    XLSX.utils.book_append_sheet(wb, ws6, '📝 Par session');
+    
+    // Stocker les données pour les feuilles 4, 5, 7, 8, 9 (livraisons suivantes)
+    window._exportContext = { validSessions, byApprenant, groups, employees, themes };
+    
+    // Ajouter les autres feuilles (livraisons 2+3 — voir fonctions ci-dessous)
+    _exportSheets_4_5_9(wb, validSessions);
+    _exportSheets_7_8(wb, validSessions);
+    
+    // SAUVEGARDE
+    const fileName = 'COPAG_Synthese_' + new Date().toISOString().slice(0, 10) + '.xlsx';
+    XLSX.writeFile(wb, fileName);
+    toast('✅ ' + (t('an_export_done') || 'Export Excel généré') + ' (' + fileName + ')');
+  } catch(e) {
+    console.error('exportFullAnalysisToExcel error:', e);
+    toast('❌ Export: ' + (e.message || 'Erreur'));
+  }
+}
+
+// 🆕 Feuilles 4 (Par thème), 5 (Thème+Quiz), 9 (Apprenants en difficulté)
+function _exportSheets_4_5_9(wb, validSessions) {
+  
+  // ====================================================
+  // FEUILLE 4 : Par thème
+  // ====================================================
+  const byTheme = {};  // themeName -> { sessions, players (matricule set), scores, quizzes, dates }
+  validSessions.forEach(s => {
+    const theme = s.themeName || '(Sans thème)';
+    if (!byTheme[theme]) {
+      byTheme[theme] = {
+        name: theme,
+        sessionCount: 0,
+        matricules: new Set(),
+        scoreSum: 0,
+        scoreCount: 0,
+        correct: 0,
+        answers: 0,
+        quizzes: new Set(),
+        dates: new Set()
+      };
+    }
+    const t = byTheme[theme];
+    t.sessionCount++;
+    if (s.quizName) t.quizzes.add(s.quizName);
+    const d = new Date(s.endedAt || s.startedAt);
+    t.dates.add(d.toLocaleDateString('fr-FR'));
+    (s.players || []).forEach(p => {
+      if (p.matricule) t.matricules.add(String(p.matricule));
+      const perQ = p.perQuestion || [];
+      const c = perQ.filter(q => q && q.correct).length;
+      const pl = perQ.filter(q => q && q.played !== false).length;
+      if (pl > 0) { t.scoreSum += Math.round((c / pl) * 100); t.scoreCount++; }
+      t.correct += c;
+      t.answers += pl;
+    });
+  });
+  
+  const sheet4Headers = ['Thème', 'Nb sessions', 'Nb quiz distincts', 'Nb apprenants uniques', 'Score moyen (%)', 'Précision globale (%)', 'Jours de formation', 'Quiz joués'];
+  const sheet4Rows = Object.values(byTheme)
+    .sort((a, b) => b.sessionCount - a.sessionCount)
+    .map(t => {
+      const avgSc = t.scoreCount > 0 ? Math.round(t.scoreSum / t.scoreCount) : 0;
+      const acc = t.answers > 0 ? Math.round((t.correct / t.answers) * 100) : 0;
+      return [
+        t.name,
+        t.sessionCount,
+        t.quizzes.size,
+        t.matricules.size,
+        avgSc + '%',
+        acc + '%',
+        t.dates.size,
+        Array.from(t.quizzes).join(', ') || '—'
+      ];
+    });
+  const ws4 = _xlsBuildSheet(sheet4Headers, sheet4Rows, [4, 5]);
+  XLSX.utils.book_append_sheet(wb, ws4, '📚 Par thème');
+  
+  // ====================================================
+  // FEUILLE 5 : Thème + Quiz (combinaison)
+  // ====================================================
+  const byThemeQuiz = {};  // theme + ' >>> ' + quiz -> stats
+  validSessions.forEach(s => {
+    const theme = s.themeName || '(Sans thème)';
+    const quiz = s.quizName || '(Sans quiz)';
+    const key = theme + ' >>> ' + quiz;
+    if (!byThemeQuiz[key]) {
+      byThemeQuiz[key] = {
+        theme, quiz,
+        sessionCount: 0,
+        matricules: new Set(),
+        scoreSum: 0,
+        scoreCount: 0,
+        correct: 0,
+        answers: 0,
+        // Pour trouver la question la plus difficile
+        questionStats: {}  // qIdx -> { correct, total, qText }
+      };
+    }
+    const tq = byThemeQuiz[key];
+    tq.sessionCount++;
+    (s.players || []).forEach(p => {
+      if (p.matricule) tq.matricules.add(String(p.matricule));
+      const perQ = p.perQuestion || [];
+      perQ.forEach((q, qIdx) => {
+        if (!q || q.played === false) return;
+        if (!tq.questionStats[qIdx]) tq.questionStats[qIdx] = { correct: 0, total: 0 };
+        tq.questionStats[qIdx].total++;
+        if (q.correct) tq.questionStats[qIdx].correct++;
+      });
+      const c = perQ.filter(q => q && q.correct).length;
+      const pl = perQ.filter(q => q && q.played !== false).length;
+      if (pl > 0) { tq.scoreSum += Math.round((c / pl) * 100); tq.scoreCount++; }
+      tq.correct += c;
+      tq.answers += pl;
+    });
+  });
+  
+  const sheet5Headers = ['Thème', 'Quiz', 'Nb sessions', 'Nb apprenants uniques', 'Score moyen (%)', 'Précision globale (%)', 'Question la plus difficile (n°)', 'Taux réussite Q difficile'];
+  const sheet5Rows = Object.values(byThemeQuiz)
+    .sort((a, b) => {
+      if (a.theme !== b.theme) return a.theme.localeCompare(b.theme);
+      return a.quiz.localeCompare(b.quiz);
+    })
+    .map(tq => {
+      const avgSc = tq.scoreCount > 0 ? Math.round(tq.scoreSum / tq.scoreCount) : 0;
+      const acc = tq.answers > 0 ? Math.round((tq.correct / tq.answers) * 100) : 0;
+      
+      // Trouver la question la plus difficile (taux de réussite le plus bas)
+      let hardestQ = null, hardestPct = 999;
+      Object.entries(tq.questionStats).forEach(([qIdx, st]) => {
+        if (st.total === 0) return;
+        const pct = Math.round((st.correct / st.total) * 100);
+        if (pct < hardestPct) { hardestPct = pct; hardestQ = qIdx; }
+      });
+      
+      return [
+        tq.theme,
+        tq.quiz,
+        tq.sessionCount,
+        tq.matricules.size,
+        avgSc + '%',
+        acc + '%',
+        hardestQ !== null ? ('Q' + (parseInt(hardestQ, 10) + 1)) : '—',
+        hardestQ !== null ? (hardestPct + '%') : '—'
+      ];
+    });
+  const ws5 = _xlsBuildSheet(sheet5Headers, sheet5Rows, [4, 5, 7]);
+  XLSX.utils.book_append_sheet(wb, ws5, '📌 Thème + Quiz');
+  
+  // ====================================================
+  // FEUILLE 9 : Apprenants en difficulté (précision < 50%)
+  // ====================================================
+  const byApprenant = {};
+  validSessions.forEach(s => {
+    (s.players || []).forEach(p => {
+      const key = p.matricule || ('NOMATR_' + (p.name || '').toUpperCase());
+      if (!byApprenant[key]) {
+        byApprenant[key] = {
+          name: p.name || '—',
+          matricule: p.matricule || '',
+          sessions: 0,
+          totalCorrect: 0,
+          totalAnswers: 0,
+          weakThemes: {},  // theme -> { c, a }
+          lastSessionDate: 0
+        };
+      }
+      const a = byApprenant[key];
+      a.sessions++;
+      const sessDate = s.endedAt || s.startedAt || 0;
+      if (sessDate > a.lastSessionDate) a.lastSessionDate = sessDate;
+      const perQ = p.perQuestion || [];
+      const c = perQ.filter(q => q && q.correct).length;
+      const pl = perQ.filter(q => q && q.played !== false).length;
+      a.totalCorrect += c;
+      a.totalAnswers += pl;
+      
+      // Stats par thème pour identifier le thème faible
+      const theme = s.themeName || '(Sans thème)';
+      if (!a.weakThemes[theme]) a.weakThemes[theme] = { c: 0, a: 0 };
+      a.weakThemes[theme].c += c;
+      a.weakThemes[theme].a += pl;
+      
+      if (p.name && (!a.name || a.name === '—')) a.name = p.name;
+    });
+  });
+  
+  const sheet9Headers = ['Nom', 'Matricule', 'Précision globale (%)', 'Nb sessions', 'Réponses correctes / Total', 'Thème le plus faible', 'Score thème faible (%)', 'Dernière session', '🚨 Niveau d\'alerte'];
+  const sheet9Rows = Object.values(byApprenant)
+    .map(a => {
+      const acc = a.totalAnswers > 0 ? Math.round((a.totalCorrect / a.totalAnswers) * 100) : 0;
+      let weakTheme = '—', weakThemePct = 100;
+      Object.entries(a.weakThemes).forEach(([th, st]) => {
+        if (st.a === 0) return;
+        const pct = Math.round((st.c / st.a) * 100);
+        if (pct < weakThemePct) { weakThemePct = pct; weakTheme = th; }
+      });
+      return {
+        ...a,
+        accuracy: acc,
+        weakTheme,
+        weakThemePct
+      };
+    })
+    .filter(a => a.accuracy < 50 && a.totalAnswers > 0)
+    .sort((a, b) => a.accuracy - b.accuracy)  // pire en haut
+    .map(a => {
+      const lastDate = a.lastSessionDate ? new Date(a.lastSessionDate).toLocaleDateString('fr-FR') : '—';
+      let alertLevel = '🟡 Surveillance';
+      if (a.accuracy < 25) alertLevel = '🔴 Urgence — Échec';
+      else if (a.accuracy < 40) alertLevel = '🟠 Critique';
+      return [
+        a.name,
+        a.matricule || '—',
+        a.accuracy + '%',
+        a.sessions,
+        a.totalCorrect + ' / ' + a.totalAnswers,
+        a.weakTheme,
+        a.weakThemePct + '%',
+        lastDate,
+        alertLevel
+      ];
+    });
+  
+  if (sheet9Rows.length === 0) {
+    // Aucun apprenant en difficulté = bonne nouvelle
+    sheet9Rows.push(['🎉 Aucun apprenant en difficulté (précision < 50%)', '', '', '', '', '', '', '', '']);
+  }
+  
+  const ws9 = _xlsBuildSheet(sheet9Headers, sheet9Rows, [2, 6]);
+  XLSX.utils.book_append_sheet(wb, ws9, '⚠️ En difficulté');
+}
+
+// 🆕 Feuilles 7 (Q&R Synthèse), 8 (Q&R Détail)
+function _exportSheets_7_8(wb, validSessions) {
+  
+  // Helper : convertir index choice en lettre (A/B/C/D)
+  function _idxToLetter(idx) {
+    if (idx == null || idx < 0) return '—';
+    return String.fromCharCode(65 + idx); // 65 = 'A'
+  }
+  function _shortenText(txt, maxLen) {
+    if (!txt) return '—';
+    const s = String(txt);
+    if (s.length <= maxLen) return s;
+    return s.slice(0, maxLen - 1) + '…';
+  }
+  
+  // ====================================================
+  // FEUILLE 7 : Q&R Synthèse (1 ligne par question avec stats agrégées)
+  // ====================================================
+  const sheet7Headers = ['Date', 'Thème', 'Quiz', 'Q#', 'Question', 'Réponse correcte (lettre)', 'Texte réponse correcte', 'Nb total apprenants', 'Nb corrects', 'Nb incorrects', 'Nb non répondu', 'Taux réussite (%)'];
+  const sheet7Rows = [];
+  
+  validSessions.forEach(s => {
+    const date = new Date(s.endedAt || s.startedAt);
+    const dateStr = date.toLocaleDateString('fr-FR');
+    const questions = s.questions || [];
+    const players = s.players || [];
+    
+    questions.forEach((q, qIdx) => {
+      let nbCorrect = 0, nbWrong = 0, nbSkip = 0;
+      players.forEach(p => {
+        const pq = (p.perQuestion || [])[qIdx];
+        if (!pq || pq.played === false || pq.absent) { nbSkip++; }
+        else if (pq.correct) { nbCorrect++; }
+        else { nbWrong++; }
+      });
+      const total = players.length;
+      const pct = total > 0 ? Math.round((nbCorrect / total) * 100) : 0;
+      const correctIdx = q.correctIdx;
+      const correctText = (q.optionsFr && q.optionsFr[correctIdx]) || '—';
+      
+      sheet7Rows.push([
+        dateStr,
+        s.themeName || '—',
+        s.quizName || '—',
+        'Q' + (qIdx + 1),
+        _shortenText(q.questionFr, 100),
+        _idxToLetter(correctIdx),
+        _shortenText(correctText, 60),
+        total,
+        nbCorrect,
+        nbWrong,
+        nbSkip,
+        pct + '%'
+      ]);
+    });
+  });
+  
+  if (sheet7Rows.length === 0) {
+    sheet7Rows.push(['(Aucune donnée)', '', '', '', '', '', '', 0, 0, 0, 0, '—']);
+  }
+  
+  const ws7 = _xlsBuildSheet(sheet7Headers, sheet7Rows, [11]);
+  XLSX.utils.book_append_sheet(wb, ws7, '❓ Q&R Synthèse');
+  
+  // ====================================================
+  // FEUILLE 8 : Q&R Détail (1 ligne par apprenant × question)
+  // ====================================================
+  const sheet8Headers = ['Date', 'Heure', 'Thème', 'Quiz', 'Groupe', 'Apprenant', 'Matricule', 'Q#', 'Question', 'Réponse correcte', 'Réponse donnée', 'Résultat', 'Temps (s)'];
+  const sheet8Rows = [];
+  
+  validSessions.forEach(s => {
+    const date = new Date(s.endedAt || s.startedAt);
+    const dateStr = date.toLocaleDateString('fr-FR');
+    const timeStr = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const questions = s.questions || [];
+    const players = s.players || [];
+    
+    players.forEach(p => {
+      questions.forEach((q, qIdx) => {
+        const pq = (p.perQuestion || [])[qIdx];
+        const correctIdx = q.correctIdx;
+        const correctText = (q.optionsFr && q.optionsFr[correctIdx]) || '—';
+        const correctDisplay = _idxToLetter(correctIdx) + ' — ' + _shortenText(correctText, 40);
+        
+        let givenDisplay = '—';
+        let resultDisplay = '— Non répondu';
+        let timeDisplay = '—';
+        
+        if (pq && pq.played !== false && !pq.absent) {
+          const givenIdx = pq.choice;
+          if (givenIdx != null && givenIdx >= 0) {
+            const givenText = (q.optionsFr && q.optionsFr[givenIdx]) || '?';
+            givenDisplay = _idxToLetter(givenIdx) + ' — ' + _shortenText(givenText, 40);
+          }
+          resultDisplay = pq.correct ? '✅ Correct' : '❌ Incorrect';
+          if (pq.time != null) timeDisplay = pq.time.toFixed(1) + 's';
+        } else if (pq && pq.absent) {
+          resultDisplay = '⚪ Absent';
+        }
+        
+        sheet8Rows.push([
+          dateStr,
+          timeStr,
+          s.themeName || '—',
+          s.quizName || '—',
+          s.myGroupName || '—',
+          p.name || '—',
+          p.matricule || '—',
+          'Q' + (qIdx + 1),
+          _shortenText(q.questionFr, 80),
+          correctDisplay,
+          givenDisplay,
+          resultDisplay,
+          timeDisplay
+        ]);
+      });
+    });
+  });
+  
+  if (sheet8Rows.length === 0) {
+    sheet8Rows.push(['(Aucune donnée détaillée)', '', '', '', '', '', '', '', '', '', '', '', '']);
+  }
+  
+  // La colonne "Résultat" n'est pas un % mais on met une coloration manuelle après
+  const ws8 = _xlsBuildSheet(sheet8Headers, sheet8Rows, []);
+  
+  // Style spécifique pour la colonne "Résultat" (index 11) : vert si Correct, rouge si Incorrect
+  for (let r = 1; r <= sheet8Rows.length; r++) {
+    const ref = XLSX.utils.encode_cell({ r, c: 11 });
+    if (!ws8[ref]) continue;
+    const v = String(ws8[ref].v || '');
+    if (v.includes('✅')) {
+      ws8[ref].s = {
+        font: { bold: true, color: { rgb: "065F46" } },
+        fill: { fgColor: { rgb: "D1FAE5" } },
+        alignment: { horizontal: "center" },
+        border: _xlsBorderThin
+      };
+    } else if (v.includes('❌')) {
+      ws8[ref].s = {
+        font: { bold: true, color: { rgb: "991B1B" } },
+        fill: { fgColor: { rgb: "FEE2E2" } },
+        alignment: { horizontal: "center" },
+        border: _xlsBorderThin
+      };
+    } else {
+      ws8[ref].s = {
+        font: { color: { rgb: "6B7280" } },
+        fill: { fgColor: { rgb: "F3F4F6" } },
+        alignment: { horizontal: "center" },
+        border: _xlsBorderThin
+      };
+    }
+  }
+  // Freeze top row
+  ws8['!freeze'] = { xSplit: 0, ySplit: 1 };
+  XLSX.utils.book_append_sheet(wb, ws8, '🔍 Q&R Détail');
+}
+
 function setAnalysisTab(tab) {
   _anCurrentTab = tab;
   document.querySelectorAll('[data-antab]').forEach(el => {
@@ -10365,6 +12405,11 @@ function renderAnalysisTable() {
         const pq = ps.perQ[q];
         if (!pq || pq.played === false) {
           html += '<td class="notplayed">—</td>';
+        } else if (pq.poll === true) {
+          const L = (pq.choice != null && pq.choice >= 0) ? String.fromCharCode(65 + pq.choice) : '•';
+          html += '<td class="absent" title="Sondage">📊' + L + '</td>';
+        } else if (pq.order === true) {
+          html += '<td class="absent" title="Ordre">🔢' + (pq.orderCorrect != null ? pq.orderCorrect : 0) + '/' + (pq.stepsN || 4) + '</td>';
         } else if (pq.absent === true) {
           // 🆕 Absent (parti pendant cette question)
           html += '<td class="absent" title="Absent">⏸</td>';
@@ -11312,6 +13357,7 @@ function closeAnStudentModal() {
 window.goToAnalysis = goToAnalysis;
 window.onAnalysisFilterChange = onAnalysisFilterChange;
 window.resetAnalysisFilters = resetAnalysisFilters;
+window.exportFullAnalysisToExcel = exportFullAnalysisToExcel;
 window.setAnalysisTab = setAnalysisTab;
 window.setAnalysisSort = setAnalysisSort;
 window.showAnQuestionDetail = showAnQuestionDetail;
