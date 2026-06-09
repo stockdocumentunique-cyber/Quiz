@@ -4657,14 +4657,22 @@ async function createGame() {
   if (currentPin && role === 'teacher') {
     const ok = confirm(t('td_session_active_warn') ||
       'Une session est déjà active (code: ' + currentPin + '). Tu dois la clôturer avant d\'en créer une nouvelle. Clôturer maintenant ?');
-    if (ok) {
-      try { await fb.remove(fb.ref(fb.db, 'games/' + currentPin)); } catch(e) {}
-      unsubAll();
-      currentPin = null; _currentQ = -1; _lastQIdxShown = -1;
-    } else {
-      return;
-    }
+    if (!ok) return;
   }
+  // 🆕 Clôture AUTOMATIQUE : supprime TOUTES les anciennes parties (modèle « 1 seule session à la fois »)
+  // → évite qu'un stagiaire soit reconnecté à une ancienne partie abandonnée (même sans clôture manuelle)
+  try {
+    const _allGamesSnap = await fb.get(fb.ref(fb.db, 'games'));
+    if (_allGamesSnap.exists()) {
+      const _oldPins = Object.keys(_allGamesSnap.val());
+      if (_oldPins.length) {
+        console.log('🧹 Clôture auto de', _oldPins.length, 'ancienne(s) partie(s) avant la nouvelle');
+        await Promise.all(_oldPins.map(_p => fb.remove(fb.ref(fb.db, 'games/' + _p)).catch(()=>{})));
+      }
+    }
+  } catch(e) { console.warn('Clôture auto échouée:', e); }
+  unsubAll();
+  currentPin = null; _currentQ = -1; _lastQIdxShown = -1;
   role = 'teacher';
   let pin, exists = true, attempts = 0;
   while (exists && attempts < 10) {
