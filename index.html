@@ -2096,22 +2096,12 @@
     </div>
   </div>
   <div class="max-w-5xl mx-auto px-6 pt-16 pb-12 text-center relative">
-    <div class="badge mb-6">🔥 <span data-i18n="live_mode">Mode en direct — temps réel</span></div>
-    <h1 class="display-fr text-5xl md:text-7xl mb-4 leading-tight" data-i18n="hero_title">Plateforme interactive<br><span style="color: var(--copag-cyan)">pour l'industrie laitière</span></h1>
-    <p class="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-3" data-i18n="hero_sub">Apprenez en jouant. Le formateur lance le quiz, les apprenants rejoignent depuis leurs téléphones.</p>
+    <h1 class="display-fr text-5xl md:text-7xl mb-4 leading-tight" data-i18n="hero_title">COPAG Academy<br><span style="color: var(--copag-cyan)">Former, évaluer, progresser</span></h1>
+    <p class="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-3" data-i18n="hero_sub">Le formateur lance le quiz, les apprenants rejoignent depuis leurs téléphones.</p>
     <p class="italic text-base text-gray-500 mb-10" data-i18n="tagline" style="color: var(--copag-cyan); font-weight: 600;">Compétences d'aujourd'hui, Avenir assuré</p>
     <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-6">
       <button class="btn btn-primary text-lg" onclick="goToTeacher()" data-i18n="enter_teacher">👨‍🏫 Espace formateur</button>
       <button class="btn btn-ghost text-lg" onclick="openStudentJoin()" data-i18n="enter_student">🎮 Espace Apprenant</button>
-    </div>
-    <div class="flex items-center justify-center mb-16">
-      <button class="btn btn-ghost text-sm py-2 px-4" onclick="goToGeneralLeaderboard()" data-i18n="lb_general_btn" style="border-color: var(--copag-cyan); color: var(--copag-cyan);">🏆 Classement général</button>
-    </div>
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
-      <div class="card p-5"><div class="text-3xl mb-2">⚡</div><div class="font-bold mb-1" data-i18n="f1_t">Temps réel</div><div class="text-sm text-gray-500" data-i18n="f1_d">Sync instantanée Firebase</div></div>
-      <div class="card p-5"><div class="text-3xl mb-2">🏆</div><div class="font-bold mb-1" data-i18n="f2_t">Compétition</div><div class="text-sm text-gray-500" data-i18n="f2_d">Classement vivant</div></div>
-      <div class="card p-5"><div class="text-3xl mb-2">📱</div><div class="font-bold mb-1" data-i18n="f3_t">Mobile-first</div><div class="text-sm text-gray-500" data-i18n="f3_d">Sur tous les appareils</div></div>
-      <div class="card p-5"><div class="text-3xl mb-2">🌍</div><div class="font-bold mb-1" data-i18n="f4_t">Bilingue</div><div class="text-sm text-gray-500" data-i18n="f4_d">Arabe & Français</div></div>
     </div>
   </div>
 </section>
@@ -2163,6 +2153,7 @@
       <button class="btn btn-ghost py-2 px-4 text-sm" onclick="goToMyGroups()" data-i18n="td_view_my_groups">🎓 Groupes</button>
       <button class="btn btn-ghost py-2 px-4 text-sm" onclick="goToAnalysis()" data-i18n="td_view_analysis">📊 Analyse</button>
       <button class="btn btn-ghost py-2 px-4 text-sm" onclick="goToHistory()" data-i18n="td_view_history">📋 Historique</button>
+      <button class="btn btn-ghost py-2 px-4 text-sm" onclick="goToGeneralLeaderboard()" data-i18n="lb_general_btn">🏆 Classement général</button>
       <button class="btn btn-ghost py-2 px-4 text-sm" onclick="openSettingsModal()" data-i18n="td_settings">🔧 Paramètres</button>
     </div>
     <h3 class="font-bold text-xl mb-4 flex items-center justify-between flex-wrap gap-2">
@@ -2626,8 +2617,8 @@
 const I18N = {
   fr: {
     live_mode: "Mode en direct — temps réel",
-    hero_title: 'Plateforme interactive<br><span style="color: var(--copag-cyan)">pour l\'industrie laitière</span>',
-    hero_sub: "Apprenez en jouant. Le formateur lance le quiz, les apprenants rejoignent depuis leurs téléphones.",
+    hero_title: 'COPAG Academy<br><span style="color: var(--copag-cyan)">Former, évaluer, progresser</span>',
+    hero_sub: "Le formateur lance le quiz, les apprenants rejoignent depuis leurs téléphones.",
     tagline: "Compétences d'aujourd'hui, Avenir assuré",
     enter_teacher: "👨‍🏫 Espace Formateur", enter_student: "🎮 Espace Apprenant",
     f1_t: "Temps réel", f1_d: "Sync instantanée Firebase",
@@ -3185,8 +3176,8 @@ const I18N = {
   },
   ar: {
     live_mode: "وضع الوقت الحقيقي",
-    hero_title: 'منصة تدريبية تفاعلية<br><span style="color: var(--copag-cyan)">لصناعة الحليب</span>',
-    hero_sub: "تعلّم بطريقة ممتعة. المعلم يبدأ اللعبة، والمتدربون ينضمون من هواتفهم.",
+    hero_title: 'COPAG Academy<br><span style="color: var(--copag-cyan)">نُكوّن، نُقيّم، نتقدّم</span>',
+    hero_sub: "المكوّن يُطلق الكويز، والمتدربون يلتحقون من هواتفهم.",
     tagline: "كفاءات اليوم، مستقبل مضمون",
     enter_teacher: "👨‍🏫 لوحة المعلم", enter_student: "🎮 فضاء المتدرب",
     f1_t: "وقت حقيقي", f1_d: "مزامنة فورية مع Firebase",
