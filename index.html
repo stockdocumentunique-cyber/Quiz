@@ -1437,17 +1437,11 @@
           </select>
         </div>
       </div>
-      <!-- 🆕 IMG/2 : Image de la question — upload depuis le PC (Firebase Storage) + URL optionnel -->
+      <!-- 🆕 IMG/1 : URL de l'image (optionnel) -->
       <div class="mb-4">
-        <label class="block text-sm font-bold mb-2" data-i18n="qe_q_image">🖼️ Image de la question <span style="color:#9ca3af; font-weight:normal; font-size:12px;">— optionnel</span></label>
-        <div class="flex items-center gap-2 mb-2" style="flex-wrap:wrap;">
-          <button type="button" id="qe-upload-btn" class="btn btn-ghost py-2 px-3 text-sm" style="color:#059669;border-color:#a7f3d0;" onclick="document.getElementById('qe-q-image-file').click()" data-i18n="qe_q_image_pick">📁 Choisir une image (PC)</button>
-          <input type="file" id="qe-q-image-file" accept="image/*" style="display:none;" onchange="uploadQuestionImage(event)">
-          <button type="button" class="btn btn-ghost py-2 px-3 text-sm" style="color:#dc2626;border-color:#fecaca;" onclick="document.getElementById('qe-q-image').value='';updateImagePreview();" data-i18n="qe_q_image_clear">🗑️ Retirer</button>
-          <span id="qe-upload-status" class="text-xs font-bold" style="display:none;"></span>
-        </div>
-        <input type="text" id="qe-q-image" placeholder="… ou colle un lien (https://…)" oninput="updateImagePreview()" style="width:100%; padding: 10px 14px; border-radius: 10px; border: 2px solid #e5e7eb; font-family: inherit; font-size: 13px;">
-        <p class="text-xs text-gray-500 mt-1" data-i18n="qe_q_image_hint">Choisis une image depuis ton PC (elle est compressée puis téléversée), ou colle un lien. Elle s'affiche au-dessus des réponses.</p>
+        <label class="block text-sm font-bold mb-2" data-i18n="qe_q_image">🖼️ Image (URL) <span style="color:#9ca3af; font-weight:normal; font-size:12px;">— optionnel</span></label>
+        <input type="text" id="qe-q-image" placeholder="https://exemple.com/image.jpg ou laisser vide" oninput="updateImagePreview()" style="width:100%; padding: 10px 14px; border-radius: 10px; border: 2px solid #e5e7eb; font-family: inherit; font-size: 13px;">
+        <p class="text-xs text-gray-500 mt-1" data-i18n="qe_q_image_hint">Colle l'URL d'une image (Imgur, GitHub, Drive public...). Elle sera affichée au-dessus des options.</p>
         <img id="qe-q-image-preview" class="q-edit-image-preview" style="display:none;" onerror="this.style.display='none'">
       </div>
 
@@ -2602,7 +2596,6 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
   import { getDatabase, ref, set, get, update, onValue, off, push, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
-  import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCLaIBinNdfPRdehw3RSNG7sulbymCcXao",
@@ -2616,8 +2609,7 @@
 
   const app = initializeApp(firebaseConfig);
   const db = getDatabase(app);
-  const storage = getStorage(app);
-  window.fb = { db, ref, set, get, update, onValue, off, push, remove, onDisconnect, storage, sRef, uploadBytes, getDownloadURL };
+  window.fb = { db, ref, set, get, update, onValue, off, push, remove, onDisconnect };
   window.dispatchEvent(new Event('firebase-ready'));
 </script>
 
@@ -4143,6 +4135,7 @@ function shuffleQuestionsAndOptions(questions) {
     const newCorrect = perm.indexOf(oldCorrect);
     
     return {
+      ...q, // 🆕 IMG FIX : garder imageUrl, type, pollScoring (et tout autre champ) après le mélange
       fr: {
         q: q.fr.q,
         options: perm.map(i => q.fr.options[i]),
@@ -9538,74 +9531,6 @@ function updateImagePreview() {
     img.style.display = 'none';
   }
 }
-
-// 🆕 IMG/2 : compresser/redimensionner l'image avant l'upload (allège et accélère le chargement)
-function _compressImage(file, maxDim, quality) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const img = new Image();
-      img.onload = () => {
-        let w = img.width, h = img.height;
-        if (w > h && w > maxDim) { h = Math.round(h * maxDim / w); w = maxDim; }
-        else if (h >= w && h > maxDim) { w = Math.round(w * maxDim / h); h = maxDim; }
-        const canvas = document.createElement('canvas');
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        canvas.toBlob(
-          (blob) => blob ? resolve(blob) : reject(new Error('compression échouée')),
-          'image/jpeg',
-          quality
-        );
-      };
-      img.onerror = () => reject(new Error('image illisible'));
-      img.src = e.target.result;
-    };
-    reader.onerror = () => reject(new Error('lecture du fichier échouée'));
-    reader.readAsDataURL(file);
-  });
-}
-
-// 🆕 IMG/2 : choisir une image du PC -> compresser -> téléverser sur Firebase Storage -> remplir l'URL
-async function uploadQuestionImage(event) {
-  const file = event.target.files && event.target.files[0];
-  event.target.value = ''; // reset pour pouvoir re-choisir le même fichier
-  if (!file) return;
-  if (!file.type || !file.type.startsWith('image/')) {
-    alert(LANG === 'ar' ? 'الرجاء اختيار صورة فقط.' : 'Choisis un fichier image uniquement.');
-    return;
-  }
-  const fb = window.fb;
-  const statusEl = $('qe-upload-status');
-  const btn = $('qe-upload-btn');
-  const setStatus = (txt, color) => {
-    if (!statusEl) return;
-    statusEl.textContent = txt;
-    statusEl.style.color = color || '#0369a1';
-    statusEl.style.display = '';
-  };
-  try {
-    if (btn) btn.disabled = true;
-    setStatus(LANG === 'ar' ? '⏳ ضغط الصورة...' : '⏳ Compression...');
-    const blob = await _compressImage(file, 1280, 0.82);
-    setStatus((LANG === 'ar' ? '⏳ جاري الرفع... ' : '⏳ Téléversement... ') + Math.round(blob.size / 1024) + ' Ko');
-    const name = 'question-images/' + Date.now() + '_' + Math.floor(Math.random() * 100000) + '.jpg';
-    const storageReference = fb.sRef(fb.storage, name);
-    await fb.uploadBytes(storageReference, blob, { contentType: 'image/jpeg' });
-    const url = await fb.getDownloadURL(storageReference);
-    $('qe-q-image').value = url;
-    updateImagePreview();
-    setStatus(LANG === 'ar' ? '✅ تم رفع الصورة' : '✅ Image téléversée', '#059669');
-  } catch (e) {
-    console.error('uploadQuestionImage failed:', e);
-    const code = (e && e.code) ? e.code : (e && e.message) ? e.message : 'erreur';
-    setStatus((LANG === 'ar' ? '❌ فشل: ' : '❌ Échec : ') + code + (LANG === 'ar' ? ' — تحقق من قواعد Storage' : ' — vérifie les règles Storage'), '#dc2626');
-  } finally {
-    if (btn) btn.disabled = false;
-  }
-}
-window.uploadQuestionImage = uploadQuestionImage;
 
 function onQeTypeChange() {
   const type = $('qe-q-type').value || 'mcq';
