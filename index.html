@@ -558,6 +558,11 @@
   .topbar { position: sticky; top: 0; z-index: 20; background: rgba(255,255,255,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid #e6eeff; }
   .connecting-overlay { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
   .spinner { width: 48px; height: 48px; border: 4px solid var(--blue-100); border-top-color: var(--blue-600); border-radius: 50%; animation: spin 1s linear infinite; }
+  /* 🆕 OPEN : nuage de mots formateur */
+  #open-cloud-teacher { display:flex; flex-wrap:wrap; gap:10px 18px; align-items:center; justify-content:center; padding:18px; background:#f8fafc; border:2px dashed #cbd5e1; border-radius:16px; min-height:120px; margin-bottom:20px; }
+  #open-cloud-teacher .open-cloud-empty { color:#94a3b8; font-size:15px; }
+  .open-word { font-weight:800; line-height:1.1; transition: font-size .3s ease; }
+  .open-word .open-word-cnt { font-size:.55em; color:#64748b; margin-inline-start:3px; vertical-align:super; background:#e2e8f0; border-radius:8px; padding:1px 5px; }
   @keyframes spin { to { transform: rotate(360deg); } }
   .toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: white; padding: 12px 24px; border-radius: 999px; font-weight: 700; z-index: 1000; animation: toastIn 0.3s ease; }
   @keyframes toastIn { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
@@ -1428,7 +1433,9 @@
           <option value="mcq" data-i18n="act_type_mcq">❓ QCM (1 bonne réponse)</option>
           <option value="poll" data-i18n="act_type_poll">📊 Sondage (sans bonne réponse)</option>
           <option value="order" data-i18n="act_type_order">🔢 Ordonner les étapes</option>
+          <option value="open" data-i18n="act_type_open">📝 Texte libre (brainstorming)</option>
         </select>
+        <p id="qe-open-note" class="text-xs mt-2" style="display:none;color:#0369a1;font-weight:600;">📝 Pas de réponses à saisir : l'apprenant écrit librement. Les réponses s'affichent en direct chez le formateur.</p>
         <div id="qe-poll-scoring-wrap" class="mt-3" style="display:none;">
           <label class="block text-sm font-bold mb-2" data-i18n="act_poll_scoring_label">🏆 Points pour ce sondage</label>
           <select id="qe-poll-scoring" style="width:100%; padding:10px 14px; border-radius:10px; border:2px solid #e5e7eb; font-family:inherit; font-size:14px; background:white;">
@@ -2396,6 +2403,7 @@
         
         <!-- Grille des tuiles (avec barres de distribution intégrées) -->
         <div class="grid md:grid-cols-2 gap-4 mb-5" id="answers-grid-teacher"></div>
+        <div id="open-cloud-teacher" style="display:none;"></div>
         
         <button class="btn btn-primary w-full" onclick="revealAnswer()" id="reveal-btn" data-i18n="q_skip">⏭️ Révéler la réponse</button>
         <button class="btn btn-ghost w-full mt-3" onclick="confirmStopQuiz()" style="color:#ef4444;border-color:#fecaca;background:#fef2f2;" data-i18n="stop_quiz_btn">🛑 Arrêter le quiz</button>
@@ -3167,6 +3175,7 @@ const I18N = {
     poll_results: "Résultats du vote",
     live_votes: "Votes",
     act_type_order: "🔢 Ordonner les étapes",
+    act_type_open: "📝 Texte libre (brainstorming)",
     act_order_badge: "Ordre",
     order_validate: "✅ Valider mon classement",
     order_drag_hint: "Glisse les étapes ou utilise ▲▼ pour les ordonner",
@@ -3726,6 +3735,7 @@ const I18N = {
     poll_results: "نتائج التصويت",
     live_votes: "أصوات",
     act_type_order: "🔢 ترتيب المراحل",
+    act_type_open: "📝 نص حر (عصف ذهني)",
     act_order_badge: "ترتيب",
     order_validate: "✅ تأكيد الترتيب",
     order_drag_hint: "اسحب المراحل أو استعمل ▲▼ لترتيبها",
@@ -4890,6 +4900,14 @@ function refreshTeacherLiveView(players, allAnswers) {
   const submittedIds = Object.keys(qAns);
   $('answers-received').textContent = submittedIds.length;
   
+  // 🆕 OPEN : nuage de mots live. PAS d'auto-révélation ni minuteur : le formateur clique "Révéler".
+  if (QUESTIONS[_currentQ] && QUESTIONS[_currentQ].type === 'open') {
+    renderOpenCloud(qAns);
+    updateLiveDonut(totalPlayers > 0 ? Math.round((submittedIds.length / totalPlayers) * 100) : null);
+    updateSidebarStudents(players, qAns);
+    return;
+  }
+  
   // === B4 : Distribution par choix ===
   const counts = [0,0,0,0];
   Object.values(qAns).forEach(a => {
@@ -4942,6 +4960,46 @@ function refreshTeacherLiveView(players, allAnswers) {
     }, 600);
   }
 }
+
+// 🆕 OPEN : nuage de mots — taille proportionnelle à la fréquence (style word cloud)
+function _openWordColor(txt) {
+  const PAL = ['#e6342b','#f08c00','#2f9e44','#1c7ed6','#ae3ec9','#0ca678','#e64980','#f59f00','#4263eb','#d6336c','#37b24d','#7048e8'];
+  let h = 0; for (let i = 0; i < txt.length; i++) h = (h * 31 + txt.charCodeAt(i)) >>> 0;
+  return PAL[h % PAL.length];
+}
+function renderOpenCloud(qAns) {
+  const cloud = document.getElementById('open-cloud-teacher');
+  if (!cloud) return;
+  const freq = {}, disp = {};
+  Object.values(qAns || {}).forEach(a => {
+    let arr = [];
+    if (a && Array.isArray(a.texts)) arr = a.texts;
+    else if (a && a.text) arr = [a.text];
+    arr.forEach(t0 => {
+      const txt = String(t0 || '').trim(); if (!txt) return;
+      const key = txt.toLowerCase();
+      freq[key] = (freq[key] || 0) + 1;
+      if (!disp[key]) disp[key] = txt;
+    });
+  });
+  const entries = Object.keys(freq).map(k => ({ text: disp[k], count: freq[k] }));
+  if (entries.length === 0) {
+    cloud.innerHTML = '<div class="open-cloud-empty">' + (LANG==='ar'?'في انتظار الأجوبة...':'En attente des réponses...') + '</div>';
+    return;
+  }
+  const maxC = Math.max.apply(null, entries.map(e => e.count));
+  const minC = Math.min.apply(null, entries.map(e => e.count));
+  const sizeFor = (c) => { if (maxC === minC) return 40; const tn = (c - minC) / (maxC - minC); return Math.round(24 + Math.sqrt(tn) * 52); };
+  entries.sort((a, b) => b.count - a.count);
+  const arranged = []; // gros mots vers le centre
+  entries.forEach((e, i) => { if (i % 2 === 0) arranged.push(e); else arranged.unshift(e); });
+  cloud.innerHTML = arranged.map(e => {
+    const size = sizeFor(e.count);
+    const title = e.count > 1 ? (e.text + ' ×' + e.count) : e.text;
+    return '<span class="open-word" title="' + escapeHtml(title) + '" style="font-size:' + size + 'px;color:' + _openWordColor(e.text.toLowerCase()) + ';">' + escapeHtml(e.text) + '</span>';
+  }).join('');
+}
+window.renderOpenCloud = renderOpenCloud;
 
 // 🆕 B3 : Met à jour le donut de précision live
 function updateLiveDonut(pct) {
@@ -5213,8 +5271,9 @@ function showTeacherQuestion(info) {
   const typeQ = QUESTIONS[qIdx].type || 'mcq';
   const isPollQ = typeQ === 'poll';
   const isOrderQ = typeQ === 'order';
+  const isOpenQ = typeQ === 'open'; // 🆕 OPEN
   const screen = document.getElementById('screen-quiz-teacher');
-  if (screen) screen.classList.toggle('spoiler-hidden', !isPollQ);
+  if (screen) screen.classList.toggle('spoiler-hidden', !(isPollQ || isOpenQ));
   const ldLabel = document.querySelector('#live-donut .ld-label');
   if (ldLabel) ldLabel.textContent = isPollQ ? (t('live_votes')||'Votes') : (isOrderQ ? (t('live_answers')||'Réponses') : t('live_precision'));
   const arCorrectLbl = document.querySelector('#screen-answer-reveal [data-i18n="ar_correct"]');
@@ -5228,6 +5287,9 @@ function showTeacherQuestion(info) {
 
   const grid = $('answers-grid-teacher');
   grid.innerHTML = '';
+  const _openCloud = document.getElementById('open-cloud-teacher');
+  if (_openCloud) { _openCloud.style.display = (QUESTIONS[qIdx].type === 'open') ? '' : 'none'; if (QUESTIONS[qIdx].type === 'open') _openCloud.innerHTML = '<div class="open-cloud-empty">' + (LANG==='ar'?'في انتظار الأجوبة...':'En attente des réponses...') + '</div>'; }
+  grid.style.display = (QUESTIONS[qIdx].type === 'open') ? 'none' : '';
   if (QUESTIONS[qIdx].type === 'order') {
     grid.className = 'order-list-teacher mb-5';
     const sidx = q.options.map((_, i) => i);
@@ -5260,7 +5322,15 @@ function showTeacherQuestion(info) {
   resetSidebarStudents();
 
   goTo('screen-quiz-teacher');
-  startTeacherTimer(info.questionStartTime, info.timePerQuestion || 30);
+  if (QUESTIONS[qIdx].type === 'open') {
+    // 🆕 OPEN : pas de minuteur — reste ouvert jusqu'au clic "Révéler"
+    clearInterval(timerInterval);
+    const _tn = $('timer-num-teacher'); if (_tn) _tn.textContent = '∞';
+    const _tl = $('time-left-teacher'); if (_tl) _tl.textContent = '∞';
+    const _tc = $('timer-circle'); if (_tc) _tc.style.strokeDashoffset = 0;
+  } else {
+    startTeacherTimer(info.questionStartTime, info.timePerQuestion || 30);
+  }
 }
 
 function startTeacherTimer(startTs, total) {
@@ -5314,6 +5384,7 @@ async function revealAnswer() {
   const q = QUESTIONS[qIdx][LANG];
   if (QUESTIONS[qIdx].type === 'poll') { await revealPoll(qIdx, q); return; }
   if (QUESTIONS[qIdx].type === 'order') { await revealOrder(qIdx, q); return; }
+  if (QUESTIONS[qIdx].type === 'open') { await revealOpen(qIdx, q); return; }
   const correctIdx = q.correct;
 
   const [playersSnap, answersSnap, infoSnap] = await Promise.all([
@@ -5687,6 +5758,82 @@ async function revealPoll(qIdx, q) {
 }
 window.revealPoll = revealPoll;
 
+// 🆕 OPEN : révélation texte libre (0 point) + liste qui a dit quoi
+async function revealOpen(qIdx, q) {
+  const fb = window.fb;
+  const [playersSnap, answersSnap, infoSnap] = await Promise.all([
+    fb.get(fb.ref(fb.db, 'games/' + currentPin + '/players')),
+    fb.get(fb.ref(fb.db, 'games/' + currentPin + '/answers/' + qIdx)),
+    fb.get(fb.ref(fb.db, 'games/' + currentPin + '/info'))
+  ]);
+  const players = playersSnap.val() || {};
+  const answers = answersSnap.val() || {};
+  const info = infoSnap.val() || {};
+  const updates = {};
+  let answeredCount = 0;
+  Object.keys(players).forEach(pid => {
+    const ans = answers[pid];
+    const fullTime = (info.timePerQuestion || 30);
+    updates['players/' + pid + '/totalTimeSession'] = (players[pid].totalTimeSession || 0) + (ans ? (ans.time || 0) : fullTime);
+    if (ans) {
+      answeredCount++;
+      updates['answers/' + qIdx + '/' + pid + '/pointsGained'] = 0;
+      updates['answers/' + qIdx + '/' + pid + '/isOpen'] = true;
+    }
+  });
+  updates['info/state'] = 'reveal';
+  updates['info/correctAnswer'] = -1;
+  await fb.update(fb.ref(fb.db, 'games/' + currentPin), updates);
+
+  const screen = document.getElementById('screen-quiz-teacher');
+  if (screen) screen.classList.remove('spoiler-hidden');
+
+  const totalPlayers = Object.keys(players).length;
+  const partPct = totalPlayers > 0 ? Math.round((answeredCount / totalPlayers) * 100) : 0;
+
+  $('reveal-correct').textContent = '📝 ' + (LANG==='ar'?'الأجوبة':'Réponses');
+  $('reveal-explanation').textContent = q.explanation || (LANG==='ar'?'شكرا على مشاركتكم 👍':'Merci pour vos réponses 👍');
+  $('stat-correct').textContent = answeredCount;
+  $('stat-wrong').textContent = totalPlayers - answeredCount;
+  $('stat-fastest').textContent = '—';
+  $('stat-rate').textContent = partPct;
+  $('reveal-stat-correct').textContent = answeredCount;
+  $('reveal-stat-wrong').textContent = totalPlayers - answeredCount;
+  $('reveal-stat-skip').textContent = totalPlayers - answeredCount;
+  $('reveal-stat-total').textContent = totalPlayers;
+  $('reveal-stat-total2').textContent = totalPlayers;
+  $('reveal-stat-total3').textContent = totalPlayers;
+  $('reveal-big-pct').textContent = partPct + '%';
+  $('reveal-suspense-correct').textContent = answeredCount;
+  $('reveal-suspense-total').textContent = totalPlayers;
+  const bigDonut = $('reveal-big-donut'); const bigCircle = $('reveal-donut-circle');
+  if (bigDonut && bigCircle) { bigCircle.style.strokeDashoffset = 263.9 * (1 - partPct / 100); bigDonut.classList.remove('precision-mid', 'precision-low'); }
+
+  const optsList = $('reveal-options-list');
+  if (optsList) {
+    const rows = [];
+    Object.keys(players).forEach(pid => {
+      const ans = answers[pid]; if (!ans) return;
+      const arr = Array.isArray(ans.texts) ? ans.texts : (ans.text ? [ans.text] : []);
+      arr.forEach(tx => { if (tx) rows.push({ name: players[pid].name || '—', text: tx }); });
+    });
+    optsList.innerHTML = rows.length
+      ? rows.map(r => '<div class="reveal-option-row"><div class="opt-text"><b>' + escapeHtml(r.name) + ' :</b> ' + escapeHtml(r.text) + '</div></div>').join('')
+      : '<div class="reveal-option-row"><div class="opt-text">' + (LANG==='ar'?'لا أجوبة':'Aucune réponse') + '</div></div>';
+  }
+  const studList = $('reveal-students-list');
+  if (studList) {
+    const arr = Object.keys(players).map(pid => {
+      const ans = answers[pid];
+      return { name: players[pid].name || '—', answered: !!ans };
+    }).sort((a, b) => (a.answered === b.answered) ? a.name.localeCompare(b.name) : (a.answered ? -1 : 1));
+    studList.innerHTML = arr.map(s => '<div class="reveal-student-row ' + (s.answered ? 'correct' : 'skip') + '"><span class="sn-name">' + escapeHtml(s.name) + '</span><span class="sn-status">' + (s.answered ? '✓' : '—') + '</span></div>').join('');
+  }
+
+  setTimeout(() => { goTo('screen-answer-reveal'); _revealStatsShown = false; applyRevealStatsVisibility(); }, 1200);
+}
+window.revealOpen = revealOpen;
+
 async function showLeaderboard() {
   const fb = window.fb;
   await fb.update(fb.ref(fb.db, 'games/' + currentPin + '/info'), { state: 'leaderboard' });
@@ -5840,6 +5987,9 @@ async function showFinal() {
             correct: aData.correct === true,
             poll: qIsPoll,
             order: qIsOrder,
+            open: (aData.isOpen === true) || undefined,
+            text: aData.text || undefined,
+            texts: Array.isArray(aData.texts) ? aData.texts : (aData.text ? [aData.text] : undefined),
             orderCorrect: (aData.orderCorrect != null ? aData.orderCorrect : null)
           };
         }
@@ -5913,12 +6063,16 @@ async function showFinal() {
             const qIsPollP = qTypeP === 'poll';
             const qIsOrderP = qTypeP === 'order';
             const stepsN = (questionsData[qIdx] && questionsData[qIdx].optionsFr) ? questionsData[qIdx].optionsFr.length : 4;
+            const qIsOpenP = qTypeP === 'open'; // 🆕 OPEN
             perQuestion.push({
               qIdx,
               choice: ans.choice,
-              correct: (qIsPollP || qIsOrderP) ? null : ans.correct,
+              correct: (qIsPollP || qIsOrderP || qIsOpenP) ? null : ans.correct,
               poll: qIsPollP || undefined,
               order: qIsOrderP || undefined,
+              open: qIsOpenP || undefined,
+              openText: qIsOpenP ? (ans.text || '') : undefined,
+              openTexts: qIsOpenP ? (Array.isArray(ans.texts) ? ans.texts : (ans.text ? [ans.text] : [])) : undefined,
               orderCorrect: qIsOrderP ? (ans.orderCorrect != null ? ans.orderCorrect : 0) : undefined,
               stepsN: qIsOrderP ? stepsN : undefined,
               played: true
@@ -6743,6 +6897,8 @@ function showStudentQuestion(info) {
   grid.innerHTML = '';
   if (QUESTIONS[qIdx].type === 'order') {
     renderStudentOrder(qIdx, q, info);
+  } else if (QUESTIONS[qIdx].type === 'open') {
+    renderStudentOpen(qIdx, info);
   } else {
   grid.className = 'grid grid-cols-2 gap-3';
   // 🆕 B2 : Tuiles Kahoot côté apprenant
@@ -6766,6 +6922,14 @@ function showStudentQuestion(info) {
   resetTickState(); // 🆕 Phase A : reset état du tic-tac
   // 🆕 Récupérer le badge du timer pour appliquer la classe urgente
   const stuBadgeEl = $('student-time-left') ? $('student-time-left').closest('.badge') : null;
+  
+  if (QUESTIONS[qIdx].type === 'open') {
+    // 🆕 OPEN : pas de minuteur côté apprenant
+    if ($('student-time-left')) $('student-time-left').textContent = '∞';
+    if (stuBadgeEl) stuBadgeEl.classList.remove('timer-urgent-badge');
+    goTo('screen-student-question');
+    return;
+  }
   
   const update = () => {
     // 🆕 BUG FIX : utiliser serverNow() pour synchro horloge entre tous les appareils
@@ -6877,6 +7041,52 @@ async function submitOrder(info, isAuto) {
 window.renderStudentOrder = renderStudentOrder;
 window.moveOrderStep = moveOrderStep;
 window.submitOrder = submitOrder;
+
+// 🆕 OPEN : zone de texte libre côté apprenant (réponses MULTIPLES, sans minuteur)
+function renderStudentOpen(qIdx, info) {
+  const grid = $('student-answers-grid');
+  grid.className = '';
+  grid.style.display = '';
+  grid.classList.remove('hidden');
+  grid.innerHTML =
+    '<div style="display:flex;flex-direction:column;gap:10px;">'
+    + '<textarea id="open-answer-input" rows="2" placeholder="' + (LANG==='ar'?'اكتب جوابك هنا...':'Écris ta réponse ici...') + '" style="width:100%;padding:14px;border-radius:12px;border:2px solid #e5e7eb;font-family:inherit;font-size:16px;resize:vertical;box-sizing:border-box;"></textarea>'
+    + '<button type="button" id="open-send-btn" class="btn btn-primary w-full py-3 text-lg">' + (LANG==='ar'?'📨 إرسال':'📨 Envoyer') + '</button>'
+    + '<div id="open-sent-note" class="text-sm" style="display:none;color:#059669;font-weight:700;text-align:center;"></div>'
+    + '<div id="open-sent-list" style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;"></div>'
+    + '</div>';
+  const btn = $('open-send-btn'); if (btn) btn.onclick = () => submitOpenAnswer(info);
+  const inp = $('open-answer-input');
+  if (inp) { setTimeout(() => inp.focus(), 150); inp.onkeydown = (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); submitOpenAnswer(info); } }; }
+}
+window.renderStudentOpen = renderStudentOpen;
+
+function renderStudentOpenSent(texts) {
+  const note = $('open-sent-note'); const list = $('open-sent-list');
+  if (note) { note.style.display = ''; note.textContent = (LANG==='ar' ? ('✅ ' + texts.length + ' جواب — يمكنك إضافة المزيد') : ('✅ ' + texts.length + ' réponse(s) envoyée(s) — tu peux en ajouter d\'autres')); }
+  if (list) list.innerHTML = texts.map(tx => '<span style="background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;border-radius:999px;padding:5px 12px;font-size:14px;">' + escapeHtml(tx) + '</span>').join('');
+}
+window.renderStudentOpenSent = renderStudentOpenSent;
+
+async function submitOpenAnswer(info) {
+  const inp = $('open-answer-input'); if (!inp) return;
+  const text = (inp.value || '').trim();
+  if (!text) { inp.focus(); return; }
+  const fb = window.fb;
+  const qIdx = info.currentQuestion;
+  const path = 'games/' + currentPin + '/answers/' + qIdx + '/' + currentPlayerId;
+  let existing = {};
+  try { const snap = await fb.get(fb.ref(fb.db, path)); if (snap.exists()) existing = snap.val() || {}; } catch(e) {}
+  const texts = Array.isArray(existing.texts) ? existing.texts.slice() : (existing.text ? [existing.text] : []);
+  texts.push(text);
+  const time = (serverNow() - info.questionStartTime) / 1000;
+  await fb.set(fb.ref(fb.db, path), {
+    choice: -1, isOpen: true, texts: texts, text: texts[0], time: time, name: currentPlayerName
+  });
+  inp.value = ''; inp.focus();
+  renderStudentOpenSent(texts);
+}
+window.submitOpenAnswer = submitOpenAnswer;
 
 async function studentAnswer(idx, info) {
   const fb = window.fb;
@@ -9544,8 +9754,16 @@ function onQeTypeChange() {
   const type = $('qe-q-type').value || 'mcq';
   const isPoll = type === 'poll';
   const isOrder = type === 'order';
+  const isOpen = type === 'open'; // 🆕 OPEN
   const sw = $('qe-poll-scoring-wrap');
-  if (sw) sw.style.display = isPoll ? '' : 'none';
+  if (sw) sw.style.display = (isPoll && !isOpen) ? '' : 'none';
+  // 🆕 OPEN : pas d'options (l'apprenant écrit librement)
+  const _note = $('qe-open-note'); if (_note) _note.style.display = isOpen ? '' : 'none';
+  const _frBlock = $('qe-options-fr-container') ? $('qe-options-fr-container').closest('.mb-4') : null;
+  if (_frBlock) _frBlock.style.display = isOpen ? 'none' : '';
+  const _arLbl = document.querySelector('label[data-i18n="qe_options_ar"]');
+  if (_arLbl) _arLbl.style.display = isOpen ? 'none' : '';
+  const _arCont = $('qe-options-ar-container'); if (_arCont) _arCont.style.display = isOpen ? 'none' : '';
   ['qe-options-fr-container','qe-options-ar-container'].forEach(id => {
     const c = $(id); if (c) c.classList.toggle('qe-poll-mode', isPoll || isOrder);
   });
@@ -9566,6 +9784,7 @@ async function saveQuestion() {
   const pollScoring = $('qe-poll-scoring').value || 'none';
   const isPoll = qType === 'poll';
   const isOrder = qType === 'order';
+  const isOpen = qType === 'open'; // 🆕 OPEN
   
   // Récupérer options FR + AR
   const frInputs = document.querySelectorAll('#qe-options-fr-container input[type="text"]');
@@ -9584,17 +9803,19 @@ async function saveQuestion() {
     errEl.classList.remove('hidden');
     return;
   }
-  if (optionsFr.some(o => !o)) {
+  if (!isOpen && optionsFr.some(o => !o)) {
     errEl.textContent = t('qe_err_options');
     errEl.classList.remove('hidden');
     return;
   }
-  if (!isPoll && !isOrder && correctIdx < 0) {
+  if (!isPoll && !isOrder && !isOpen && correctIdx < 0) {
     errEl.textContent = t('qe_err_correct');
     errEl.classList.remove('hidden');
     return;
   }
-  const finalCorrectIdx = (isPoll || isOrder) ? -1 : correctIdx;
+  const finalCorrectIdx = (isPoll || isOrder || isOpen) ? -1 : correctIdx;
+  const finalOptionsFr = isOpen ? [] : optionsFr; // 🆕 OPEN : pas d'options
+  const finalOptionsAr = isOpen ? [] : optionsAr;
   
   // Synchroniser correctIdx entre FR et AR : on prend la valeur du dernier coché (en cas d'incohérence)
   // Le radio FR et AR doivent rester synchronisés. On force le sync au moment du save.
@@ -9612,7 +9833,7 @@ async function saveQuestion() {
       const payload = {
         ...existing,
         qFr, qAr,
-        optionsFr, optionsAr,
+        optionsFr: finalOptionsFr, optionsAr: finalOptionsAr,
         correctIdx: finalCorrectIdx,
         type: qType,
         pollScoring,
@@ -9627,7 +9848,7 @@ async function saveQuestion() {
       const maxOrder = _qeQuestions.reduce((m, q) => Math.max(m, q.order != null ? q.order : 0), -1);
       const payload = {
         qFr, qAr,
-        optionsFr, optionsAr,
+        optionsFr: finalOptionsFr, optionsAr: finalOptionsAr,
         correctIdx: finalCorrectIdx,
         type: qType,
         pollScoring,
@@ -12492,6 +12713,7 @@ function renderAnalysisQuestions() {
       const correctIdx = q.correctIdx != null ? q.correctIdx : 0;
       const options = q.optionsFr || q.options || ['', '', '', ''];
       
+      const isOpenQ = (q.type === 'open'); // 🆕 OPEN
       if (!qStats.has(qText)) {
         qStats.set(qText, {
           qText,
@@ -12501,6 +12723,8 @@ function renderAnalysisQuestions() {
           totalCorrect: 0,
           distribution: [0, 0, 0, 0],
           notAnswered: 0,
+          isOpen: isOpenQ,
+          openAnswers: [],
           sessionIds: []
         });
       }
@@ -12513,6 +12737,11 @@ function renderAnalysisQuestions() {
         const pq = p.perQuestion[qIdx];
         if (!pq || pq.played === false) return;
         stat.totalPlayers++;
+        if (stat.isOpen) { // 🆕 OPEN : collecter TOUS les textes + le nom
+          const _arr = Array.isArray(pq.openTexts) ? pq.openTexts : (pq.openText ? [pq.openText] : (pq.text ? [pq.text] : []));
+          _arr.forEach(_t => { if (_t && !pq.absent) stat.openAnswers.push({ name: p.name || '—', text: _t }); });
+          return;
+        }
         if (pq.correct) stat.totalCorrect++;
         if (typeof pq.choice === 'number' && pq.choice >= 0 && pq.choice < 4) {
           stat.distribution[pq.choice]++;
@@ -12561,8 +12790,20 @@ function renderAnalysisQuestions() {
   }
   
   filtered.forEach((q, idx) => {
-    const cls = q.pct >= 80 ? 'easy' : (q.pct >= 50 ? 'medium' : 'hard');
     const qDisplay = q.qText.length > 100 ? q.qText.slice(0, 100) + '...' : q.qText;
+    if (q.isOpen) { // 🆕 OPEN : carte "réponses" cliquable
+      const odata = JSON.stringify({ qText: q.qText, isOpen: true, openAnswers: q.openAnswers, totalPlayers: q.totalPlayers });
+      html += `<div class="an-q-card medium" onclick='showAnQuestionAggDetail(${JSON.stringify(odata).replace(/'/g, "&apos;")})'>
+        <div class="num">📝</div>
+        <div class="text">
+          <div class="label">${escapeHtml(qDisplay)}</div>
+          <div class="sub">${q.openAnswers.length} ${(LANG==='ar'?'أجوبة':'réponses')} • ${q.sessionIds.length} ${t('an_sess_count')}</div>
+        </div>
+        <div class="pct">📝</div>
+      </div>`;
+      return;
+    }
+    const cls = q.pct >= 80 ? 'easy' : (q.pct >= 50 ? 'medium' : 'hard');
     const data = JSON.stringify({ qText: q.qText, correctIdx: q.correctIdx, options: q.options, distribution: q.distribution, totalPlayers: q.totalPlayers, totalCorrect: q.totalCorrect, notAnswered: q.notAnswered });
     html += `<div class="an-q-card ${cls}" onclick='showAnQuestionAggDetail(${JSON.stringify(data).replace(/'/g, "&apos;")})'>
       <div class="num">Q${idx + 1}</div>
@@ -12585,6 +12826,20 @@ function showAnQuestionAggDetail(jsonStr) {
   $('an-q-modal-title').textContent = '❓ ' + (qText.length > 60 ? qText.slice(0, 60) + '...' : qText);
   
   let body = '<div class="card p-4 mb-4" style="background:#f9fafb;"><p style="font-weight:600; font-size:14px;">' + escapeHtml(qText) + '</p></div>';
+  
+  // 🆕 OPEN : afficher toutes les réponses + qui les a dites
+  if (data.isOpen) {
+    const oa = data.openAnswers || [];
+    body += '<h4 class="font-bold text-sm mb-3" style="color: var(--copag-navy);">📝 ' + (LANG==='ar'?'كل الأجوبة':'Toutes les réponses') + ' (' + oa.length + ')</h4>';
+    if (oa.length === 0) {
+      body += '<p class="text-sm text-gray-500">' + (LANG==='ar'?'لا أجوبة':'Aucune réponse') + '</p>';
+    } else {
+      body += oa.map(a => '<div class="an-dist-row"><div class="opt-text" style="text-align:start;"><b>' + escapeHtml(a.name) + ' :</b> ' + escapeHtml(a.text) + '</div></div>').join('');
+    }
+    $('an-q-modal-body').innerHTML = body;
+    $('an-question-modal').classList.remove('hidden');
+    return;
+  }
   
   body += '<h4 class="font-bold text-sm mb-3" style="color: var(--copag-navy);">📊 ' + t('an_q_dist_title') + ' (' + totalPlayers + ' réponses)</h4>';
   
